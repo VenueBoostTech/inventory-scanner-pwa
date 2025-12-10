@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Smartphone, CheckCircle2 } from 'lucide-react';
@@ -56,11 +57,20 @@ const mockLoginHistory = [
 ];
 
 export function RecentLoginsScreen() {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <div className="min-h-screen bg-background pb-20">
-      <ScreenHeader title="Recent Logins" />
-      <div className="space-y-3 px-4 py-4">
-        {mockLoginHistory.map((session) => (
+      <ScreenHeader title="Recent Logins" showBack />
+      <div className="space-y-4 px-4 py-4">
+        <div className="space-y-1">
+          <h1 className="text-xl font-semibold text-foreground">Recent Logins</h1>
+          <p className="text-sm text-muted-foreground">View your recent login sessions and active devices</p>
+        </div>
+        <div className="space-y-3">
+          {mockLoginHistory.map((session) => (
           <Card key={session.id} className="border border-border bg-white shadow-none">
             <CardContent className="px-3 py-3">
               <div className="flex items-start gap-3">
@@ -89,7 +99,8 @@ export function RecentLoginsScreen() {
               </div>
             </CardContent>
           </Card>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );

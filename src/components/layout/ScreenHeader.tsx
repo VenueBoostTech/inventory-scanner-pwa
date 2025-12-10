@@ -1,12 +1,13 @@
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Scan, Bell } from 'lucide-react';
+import { Scan, Bell, ArrowLeft } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 
 interface ScreenHeaderProps {
   title: string;
   action?: ReactNode;
+  showBack?: boolean;
 }
 
 const LogoMark = ({ className }: { className?: string }) => (
@@ -26,14 +27,25 @@ const LogoMark = ({ className }: { className?: string }) => (
   </div>
 );
 
-export function ScreenHeader({ title, action }: ScreenHeaderProps) {
+export function ScreenHeader({ title, action, showBack }: ScreenHeaderProps) {
   const navigate = useNavigate();
 
   return (
     <header className="sticky top-0 z-10 border-b bg-white px-4 pt-safe-top">
       <div className="flex h-16 items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <LogoMark />
+          {showBack ? (
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="rounded-full p-2 hover:bg-[#043f3b]/5"
+              aria-label="Back"
+            >
+              <ArrowLeft className="h-5 w-5 text-[#043f3b]" />
+            </button>
+          ) : (
+            <LogoMark />
+          )}
         </div>
         <div className="flex items-center gap-3 text-[#043f3b]">
           <button

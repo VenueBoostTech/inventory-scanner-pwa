@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { MapPin, Info } from 'lucide-react';
@@ -20,6 +21,10 @@ const mockWarehouses = [
 ];
 
 export function MyWarehousesScreen() {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const profile = authStore((state) => state.profile);
   const warehouseIds = profile?.permissions?.warehouseIds || [];
 
@@ -28,8 +33,12 @@ export function MyWarehousesScreen() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <ScreenHeader title="My Warehouses" />
+      <ScreenHeader title="My Warehouses" showBack />
       <div className="space-y-4 px-4 py-4">
+        <div className="space-y-1">
+          <h1 className="text-xl font-semibold text-foreground">My Warehouses</h1>
+          <p className="text-sm text-muted-foreground">Warehouses you have access to</p>
+        </div>
         <Card className="border border-border bg-white shadow-none">
           <CardContent className="px-3 py-4">
             <h3 className="mb-4 text-sm font-semibold text-foreground">Warehouses I can access:</h3>

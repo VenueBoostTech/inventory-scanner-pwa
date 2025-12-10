@@ -15,7 +15,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { authStore } from '@/stores/authStore';
-import { ChevronRight, Lock, LogOut, Phone, Mail, Globe, Clock, Shield, Building2, Info, HelpCircle } from 'lucide-react';
+import { ChevronRight, Lock, LogOut, Phone, Mail, Globe, Clock, Shield, Building2, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export function ProfileScreen() {
@@ -26,6 +26,7 @@ export function ProfileScreen() {
   const [name, setName] = useState(profile?.name || '');
   const [phone, setPhone] = useState('+355 69 123 4567'); // Mock phone
   const [isEditing, setIsEditing] = useState(false);
+  const [isLanguageOpen, setIsLanguageOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -46,6 +47,23 @@ export function ProfileScreen() {
       toast({
         title: 'Profile updated',
         description: 'Your profile has been updated successfully',
+      });
+    }
+  };
+
+  const handleLanguageChange = (language: string) => {
+    if (profile) {
+      authStore.getState().setProfile({
+        ...profile,
+        preferences: {
+          ...profile.preferences,
+          language,
+        },
+      });
+      setIsLanguageOpen(false);
+      toast({
+        title: 'Language updated',
+        description: 'Your language preference has been updated',
       });
     }
   };
@@ -110,19 +128,16 @@ export function ProfileScreen() {
                   <Lock className="h-3 w-3 text-muted-foreground" />
                 </div>
               </div>
-              <button
-                type="button"
-                className="flex w-full items-center justify-between gap-3 py-3 last:border-b-0"
-              >
+              <div className="flex items-center justify-between gap-3 py-3 last:border-b-0">
                 <div className="flex items-center gap-3">
                   <Phone className="h-4 w-4 text-muted-foreground" />
                   <div className="text-sm font-medium text-foreground">Phone</div>
                 </div>
                 <div className="flex flex-1 items-center justify-end gap-2">
                   <span className="text-sm text-muted-foreground">{phone}</span>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  <Lock className="h-3 w-3 text-muted-foreground" />
                 </div>
-              </button>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -155,6 +170,7 @@ export function ProfileScreen() {
             <CardContent className="px-3 py-0">
               <button
                 type="button"
+                onClick={() => setIsLanguageOpen(true)}
                 className="flex w-full items-center justify-between gap-3 border-b border-border py-3"
               >
                 <div className="flex items-center gap-3">
@@ -168,10 +184,7 @@ export function ProfileScreen() {
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>
               </button>
-              <button
-                type="button"
-                className="flex w-full items-center justify-between gap-3 py-3"
-              >
+              <div className="flex items-center justify-between gap-3 py-3">
                 <div className="flex items-center gap-3">
                   <Clock className="h-4 w-4 text-muted-foreground" />
                   <div className="text-sm font-medium text-foreground">Timezone</div>
@@ -180,9 +193,9 @@ export function ProfileScreen() {
                   <span className="text-sm text-muted-foreground">
                     {profile?.preferences?.timezone || 'Europe/Tirana'}
                   </span>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  <Lock className="h-3 w-3 text-muted-foreground" />
                 </div>
-              </button>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -230,30 +243,20 @@ export function ProfileScreen() {
                 </div>
                 <span className="text-sm text-muted-foreground">{profile?.clientName || '—'}</span>
               </div>
-              <div className="flex items-center justify-between gap-3 border-b border-border py-3">
+              <div className="flex items-center justify-between gap-3 py-3">
                 <div className="flex items-center gap-3">
                   <Info className="h-4 w-4 text-muted-foreground" />
                   <div className="text-sm font-medium text-foreground">App Version</div>
                 </div>
                 <span className="text-sm text-muted-foreground">1.0.0</span>
               </div>
-              <button
-                type="button"
-                className="flex w-full items-center justify-between gap-3 py-3"
-              >
-                <div className="flex items-center gap-3">
-                  <HelpCircle className="h-4 w-4 text-muted-foreground" />
-                  <div className="text-sm font-medium text-foreground">Help & Support</div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </button>
             </CardContent>
           </Card>
         </div>
 
         {/* Logout */}
         <Card className="border border-border bg-white shadow-none">
-          <CardContent className="px-3 py-3">
+          <CardContent className="px-0 py-0">
             <Button
               className="w-full border-none bg-red-700 text-white hover:bg-red-800"
               onClick={handleLogout}
@@ -294,6 +297,42 @@ export function ProfileScreen() {
               Save
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Language Selection Dialog */}
+      <Dialog open={isLanguageOpen} onOpenChange={setIsLanguageOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Select Language</DialogTitle>
+            <DialogDescription>Choose your preferred language</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-4">
+            <button
+              type="button"
+              onClick={() => handleLanguageChange('en')}
+              className={`w-full rounded-lg border p-3 text-left transition-colors ${
+                profile?.preferences?.language !== 'al'
+                  ? 'border-[#164945] bg-[#164945]/10'
+                  : 'border-border hover:bg-muted'
+              }`}
+            >
+              <div className="font-medium text-foreground">English</div>
+              <div className="text-xs text-muted-foreground">English</div>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleLanguageChange('al')}
+              className={`w-full rounded-lg border p-3 text-left transition-colors ${
+                profile?.preferences?.language === 'al'
+                  ? 'border-[#164945] bg-[#164945]/10'
+                  : 'border-border hover:bg-muted'
+              }`}
+            >
+              <div className="font-medium text-foreground">Albanian (Shqip)</div>
+              <div className="text-xs text-muted-foreground">Shqip</div>
+            </button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
