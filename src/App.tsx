@@ -7,6 +7,9 @@ import { ScanScreen } from '@/features/scanning/ScanScreen';
 import { ProductsScreen } from '@/features/products/ProductsScreen';
 import { ActivitiesScreen } from '@/features/activities/ActivitiesScreen';
 import { ProfileScreen } from '@/features/auth/ProfileScreen';
+import { RecentLoginsScreen } from '@/features/auth/RecentLoginsScreen';
+import { MyPermissionsScreen } from '@/features/auth/MyPermissionsScreen';
+import { MyWarehousesScreen } from '@/features/auth/MyWarehousesScreen';
 import { DashboardScreen } from '@/features/dashboard/DashboardScreen';
 import { authStore } from '@/stores/authStore';
 
@@ -42,8 +45,11 @@ function App() {
             <Route path="dashboard" element={<DashboardScreen />} />
             <Route path="scan" element={<ScanScreen />} />
             <Route path="products" element={<ProductsScreen />} />
-            <Route path="activities" element={<ActivitiesScreen />} />
+            <Route path="operations" element={<ActivitiesScreen />} />
             <Route path="account" element={<ProfileScreen />} />
+            <Route path="account/recent-logins" element={<RecentLoginsScreen />} />
+            <Route path="account/permissions" element={<MyPermissionsScreen />} />
+            <Route path="account/warehouses" element={<MyWarehousesScreen />} />
           </Route>
         </Routes>
       </BrowserRouter>
