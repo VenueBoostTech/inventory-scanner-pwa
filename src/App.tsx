@@ -6,9 +6,10 @@ import { AppShell } from '@/components/layout/AppShell';
 import { LoginScreen } from '@/features/auth/LoginScreen';
 import { ScanScreen } from '@/features/scanning/ScanScreen';
 import { ProductsScreen } from '@/features/products/ProductsScreen';
+import { OperationsScreen } from '@/features/activities/OperationsScreen';
 import { ActivitiesScreen } from '@/features/activities/ActivitiesScreen';
-import { ActivitiesDetailScreen } from '@/features/activities/ActivitiesDetailScreen';
 import { TransfersScreen } from '@/features/transfers/TransfersScreen';
+import { TransferDetailsScreen } from '@/features/transfers/TransferDetailsScreen';
 import { AdjustmentsScreen } from '@/features/adjustments/AdjustmentsScreen';
 import { AdjustmentDetailsScreen } from '@/features/adjustments/AdjustmentDetailsScreen';
 import { CountsScreen } from '@/features/counts/CountsScreen';
@@ -21,6 +22,8 @@ import { RecentLoginsScreen } from '@/features/auth/RecentLoginsScreen';
 import { MyPermissionsScreen } from '@/features/auth/MyPermissionsScreen';
 import { MyWarehousesScreen } from '@/features/auth/MyWarehousesScreen';
 import { DashboardScreen } from '@/features/dashboard/DashboardScreen';
+import { NotificationsScreen } from '@/features/notifications/NotificationsScreen';
+import { NotificationSettingsScreen } from '@/features/notifications/NotificationSettingsScreen';
 import { authStore } from '@/stores/authStore';
 
 const queryClient = new QueryClient({
@@ -56,9 +59,10 @@ function App() {
             <Route path="dashboard" element={<DashboardScreen />} />
             <Route path="scan" element={<ScanScreen />} />
             <Route path="products" element={<ProductsScreen />} />
-            <Route path="operations" element={<ActivitiesScreen />} />
-            <Route path="operations/activities" element={<ActivitiesDetailScreen />} />
+            <Route path="operations" element={<OperationsScreen />} />
+            <Route path="operations/activities" element={<ActivitiesScreen />} />
             <Route path="operations/transfers" element={<TransfersScreen />} />
+            <Route path="operations/transfers/:id" element={<TransferDetailsScreen />} />
             <Route path="operations/adjustments" element={<AdjustmentsScreen />} />
             <Route path="operations/adjustments/:id" element={<AdjustmentDetailsScreen />} />
             <Route path="operations/counts" element={<CountsScreen />} />
@@ -66,6 +70,8 @@ function App() {
             <Route path="operations/counts/:id/counting" element={<CountingScreen />} />
             <Route path="operations/counts/:id" element={<CountDetailsScreen />} />
             <Route path="operations/warehouses" element={<WarehousesScreen />} />
+            <Route path="notifications" element={<NotificationsScreen />} />
+            <Route path="notifications/settings" element={<NotificationSettingsScreen />} />
             <Route path="account" element={<ProfileScreen />} />
             <Route path="account/recent-logins" element={<RecentLoginsScreen />} />
             <Route path="account/permissions" element={<MyPermissionsScreen />} />

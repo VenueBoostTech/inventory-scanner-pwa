@@ -141,7 +141,7 @@ export function ScanScreen() {
             />
             {!isScanning && (
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-muted-foreground">
-                {t('scan.startScanning')}
+                {t('scan.scannerPlaceholder')}
               </div>
             )}
           </div>
