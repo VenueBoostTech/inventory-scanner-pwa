@@ -1,10 +1,37 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
-import { Package, Plus, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Package, Plus, Search, Filter, TrendingUp, TrendingDown, Minus, Eye, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 
 // Mock data
@@ -18,6 +45,9 @@ const mockAdjustments = [
     stockBefore: 100,
     stockAfter: 150,
     reason: 'Received shipment',
+    notes: 'PO #12345 - Received from Supplier ABC',
+    reference: 'PO-12345',
+    warehouse: { id: 'wh_001', name: 'Main Warehouse' },
     createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
     createdBy: { id: 'staff_001', name: 'John D.' },
   },
@@ -30,6 +60,7 @@ const mockAdjustments = [
     stockBefore: 80,
     stockAfter: 75,
     reason: 'Damaged items',
+    warehouse: { id: 'wh_001', name: 'Main Warehouse' },
     createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
     createdBy: { id: 'staff_002', name: 'Sarah M.' },
   },
@@ -42,22 +73,97 @@ const mockAdjustments = [
     stockBefore: 180,
     stockAfter: 200,
     reason: 'Inventory correction',
+    warehouse: { id: 'wh_001', name: 'Main Warehouse' },
     createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
     createdBy: { id: 'staff_003', name: 'Mike T.' },
   },
+  {
+    id: 'adj_004',
+    code: 'ADJ-004',
+    product: { id: 'prod_004', title: 'Milk', sku: 'MLK-001' },
+    adjustmentType: 'increase',
+    quantity: 100,
+    stockBefore: 0,
+    stockAfter: 100,
+    reason: 'Received shipment',
+    warehouse: { id: 'wh_001', name: 'Main Warehouse' },
+    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+    createdBy: { id: 'staff_001', name: 'John D.' },
+  },
+  {
+    id: 'adj_005',
+    code: 'ADJ-005',
+    product: { id: 'prod_005', title: 'Honey', sku: 'HON-001' },
+    adjustmentType: 'decrease',
+    quantity: -10,
+    stockBefore: 50,
+    stockAfter: 40,
+    reason: 'Expired items',
+    warehouse: { id: 'wh_001', name: 'Main Warehouse' },
+    createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+    createdBy: { id: 'staff_002', name: 'Sarah M.' },
+  },
 ];
+
+type SortOption = 'recent' | 'type' | 'warehouse';
 
 export function AdjustmentsScreen() {
   const { t } = useI18n();
+  const navigate = useNavigate();
   const { toast } = useToast();
+  const [search, setSearch] = useState('');
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [warehouseFilter, setWarehouseFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<SortOption>('recent');
 
-  const handleCreate = () => {
-    toast({
-      title: t('operations.newAdjustment'),
-      description: t('common.loading'),
+  const filteredAndSortedAdjustments = useMemo(() => {
+    let filtered = [...mockAdjustments];
+
+    // Apply search
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filtered = filtered.filter(
+        (adj) =>
+          adj.code.toLowerCase().includes(searchLower) ||
+          adj.product.title.toLowerCase().includes(searchLower) ||
+          adj.product.sku.toLowerCase().includes(searchLower) ||
+          (adj.reference && adj.reference.toLowerCase().includes(searchLower))
+      );
+    }
+
+    // Apply type filter
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter((adj) => adj.adjustmentType === typeFilter);
+    }
+
+    // Apply warehouse filter
+    if (warehouseFilter !== 'all') {
+      const warehouseNameLower = warehouseFilter.toLowerCase();
+      filtered = filtered.filter((adj) => {
+        const adjWarehouseLower = adj.warehouse.name.toLowerCase();
+        return warehouseNameLower === 'main' 
+          ? adjWarehouseLower.includes('main')
+          : adjWarehouseLower.includes('secondary');
+      });
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'recent':
+          return b.createdAt.getTime() - a.createdAt.getTime();
+        case 'type':
+          return a.adjustmentType.localeCompare(b.adjustmentType);
+        case 'warehouse':
+          return a.warehouse.name.localeCompare(b.warehouse.name);
+        default:
+          return 0;
+      }
     });
-    // TODO: Navigate to create adjustment screen
-  };
+
+    return filtered;
+  }, [search, typeFilter, warehouseFilter, sortBy]);
 
   const getQuantityDisplay = (adjustment: any) => {
     if (adjustment.adjustmentType === 'set') {
@@ -73,59 +179,268 @@ export function AdjustmentsScreen() {
     return adjustment.quantity > 0 ? 'text-emerald-600' : 'text-red-600';
   };
 
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case 'increase':
+        return t('operations.increase');
+      case 'decrease':
+        return t('operations.decrease');
+      case 'set':
+        return t('operations.set');
+      default:
+        return type;
+    }
+  };
+
+  const handleCreate = () => {
+    toast({
+      title: t('operations.newAdjustment'),
+      description: t('common.loading'),
+    });
+    // TODO: Navigate to create adjustment screen
+  };
+
+  const handleViewDetails = (adjustment: any) => {
+    navigate(`/operations/adjustments/${adjustment.id}`);
+  };
+
+  const clearFilters = () => {
+    setTypeFilter('all');
+    setWarehouseFilter('all');
+  };
+
   return (
     <div className="min-h-screen bg-background pb-20">
       <ScreenHeader title={t('operations.stockAdjustments')} showBack />
       <div className="space-y-4 px-4 py-4">
-        {/* Header with Create Button */}
-        <div className="flex items-center justify-between">
-          <div></div>
-          <Button
-            size="sm"
-            className="gap-2 border-none bg-[#164945] text-white hover:bg-[#123b37]"
+        {/* Title and Subtitle with Create Button */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl font-semibold text-foreground">{t('operations.stockAdjustments')}</h1>
+            <p className="text-sm text-muted-foreground">{t('operations.adjustmentsSubtitle')}</p>
+          </div>
+          <button
             onClick={handleCreate}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#164945] text-white hover:bg-[#123b37] transition-colors"
+            title={t('operations.newAdjustment')}
           >
-            <Plus className="h-4 w-4" />
-            {t('operations.new')}
-          </Button>
+            <Plus className="h-5 w-5 fill-current" />
+          </button>
         </div>
 
-        {/* Adjustments List */}
-        <div className="space-y-3">
-          {mockAdjustments.map((adjustment) => (
-            <Card key={adjustment.id} className="border border-border bg-white shadow-none">
-              <CardContent className="px-3 py-3">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                    <Package className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-semibold text-foreground">
-                        {adjustment.code}
-                      </p>
-                      <span className={`text-sm font-semibold ${getQuantityColor(adjustment)}`}>
-                        {getQuantityDisplay(adjustment)}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {adjustment.product.title} ({adjustment.product.sku})
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {t('operations.reason')}: {adjustment.reason === 'Received shipment' ? t('operations.receivedShipment') : adjustment.reason === 'Damaged items' ? t('operations.damagedItems') : adjustment.reason}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {format(adjustment.createdAt, 'MMM d, yyyy, h:mm a')} • {adjustment.createdBy.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {t('operations.stock')}: {adjustment.stockBefore} → {adjustment.stockAfter}
-                    </p>
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder={t('common.search')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+
+        {/* Filters and Sort Bar */}
+        <div className="flex items-center justify-between gap-2">
+          <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Filter className="h-4 w-4" />
+                {t('common.filter')}
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+              <SheetHeader className="text-left space-y-1">
+                <SheetTitle className="text-left">{t('common.filter')}</SheetTitle>
+                <SheetDescription className="text-left">{t('operations.filterAdjustments')}</SheetDescription>
+              </SheetHeader>
+              <div className="mt-4 space-y-4">
+                {/* Type Filter */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-left">{t('operations.adjustmentType')}</label>
+                  <div className="space-y-2">
+                    {[
+                      { value: 'all', label: t('operations.all') },
+                      { value: 'increase', label: t('operations.increase') },
+                      { value: 'decrease', label: t('operations.decrease') },
+                      { value: 'set', label: t('operations.set') },
+                    ].map((option) => (
+                      <label key={option.value} className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="type"
+                          value={option.value}
+                          checked={typeFilter === option.value}
+                          onChange={(e) => setTypeFilter(e.target.value)}
+                          className="h-4 w-4"
+                        />
+                        <span className="text-sm">{option.label}</span>
+                      </label>
+                    ))}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+
+                {/* Warehouse Filter */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-left">{t('operations.warehouse')}</label>
+                  <div className="space-y-2">
+                    {[
+                      { value: 'all', label: t('operations.all') },
+                      { value: 'main', label: 'Main Warehouse' },
+                      { value: 'secondary', label: 'Secondary Warehouse' },
+                    ].map((option) => (
+                      <label key={option.value} className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="warehouse"
+                          value={option.value}
+                          checked={warehouseFilter === option.value}
+                          onChange={(e) => setWarehouseFilter(e.target.value)}
+                          className="h-4 w-4"
+                        />
+                        <span className="text-sm">{option.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <SheetFooter className="mt-4 gap-2">
+                <Button variant="outline" onClick={clearFilters} className="w-full">
+                  {t('products.clearFilters')}
+                </Button>
+                <Button
+                  onClick={() => setFiltersOpen(false)}
+                  className="w-full border-none bg-[#164945] text-white hover:bg-[#123b37]"
+                >
+                  {t('common.apply')}
+                </Button>
+              </SheetFooter>
+            </SheetContent>
+          </Sheet>
+
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+            <SelectTrigger className="h-10 w-[140px]">
+              <SelectValue placeholder={t('common.sort')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="recent">{t('products.sortRecent')}</SelectItem>
+              <SelectItem value="type">{t('operations.adjustmentType')}</SelectItem>
+              <SelectItem value="warehouse">{t('operations.warehouse')}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
+
+        {/* Adjustments Table */}
+        <Card className="border border-border bg-white shadow-none">
+          <CardContent className="p-0">
+            <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="min-w-[100px]">ID</TableHead>
+                    <TableHead className="min-w-[150px]">{t('operations.product')}</TableHead>
+                    <TableHead className="min-w-[120px]">{t('operations.adjustmentType')}</TableHead>
+                    <TableHead className="min-w-[80px]">{t('operations.quantity')}</TableHead>
+                    <TableHead className="min-w-[140px]">{t('operations.stock')}</TableHead>
+                    <TableHead className="min-w-[120px]">{t('operations.reason')}</TableHead>
+                    <TableHead className="min-w-[100px]">{t('operations.date')}</TableHead>
+                    <TableHead className="min-w-[80px] text-right">{t('common.actions')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredAndSortedAdjustments.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8 text-sm text-muted-foreground">
+                        {t('operations.noAdjustments')}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredAndSortedAdjustments.map((adjustment) => (
+                      <TableRow key={adjustment.id}>
+                        <TableCell className="font-medium">{adjustment.code}</TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{adjustment.product.title}</div>
+                            <div className="text-xs text-muted-foreground">{adjustment.product.sku}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm">{getTypeLabel(adjustment.adjustmentType)}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className={`text-sm font-semibold ${getQuantityColor(adjustment)}`}>
+                            {getQuantityDisplay(adjustment)}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {adjustment.stockBefore} → {adjustment.stockAfter}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {adjustment.reason === 'Received shipment' 
+                            ? t('operations.receivedShipment') 
+                            : adjustment.reason === 'Damaged items' 
+                            ? t('operations.damagedItems')
+                            : adjustment.reason === 'Expired items'
+                            ? t('operations.expiredItems')
+                            : adjustment.reason === 'Inventory correction'
+                            ? t('operations.inventoryCorrection')
+                            : adjustment.reason}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {format(adjustment.createdAt, 'MMM d')}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <button
+                            onClick={() => handleViewDetails(adjustment)}
+                            className="p-1 hover:bg-muted rounded"
+                            title={t('operations.viewDetails')}
+                          >
+                            <Eye className="h-4 w-4 text-muted-foreground" />
+                          </button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Pagination */}
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>{t('operations.showing')} 1-10 {t('operations.of')} 320</span>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" disabled>
+              {t('operations.prev')}
+            </Button>
+            <Button variant="outline" size="sm" className="bg-[#164945] text-white hover:bg-[#123b37]">
+              1
+            </Button>
+            <Button variant="outline" size="sm">
+              2
+            </Button>
+            <Button variant="outline" size="sm">
+              {t('operations.next')}
+            </Button>
+          </div>
+        </div>
+
+        {/* Info Section */}
+        <Card className="border border-amber-200 bg-amber-50/50 shadow-none">
+          <CardContent className="px-3 py-3">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-amber-900 mb-1">
+                  {t('operations.note')}
+                </p>
+                <p className="text-xs text-amber-800">
+                  {t('operations.adjustmentsImmutable')}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

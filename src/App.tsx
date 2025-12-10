@@ -10,6 +10,7 @@ import { ActivitiesScreen } from '@/features/activities/ActivitiesScreen';
 import { ActivitiesDetailScreen } from '@/features/activities/ActivitiesDetailScreen';
 import { TransfersScreen } from '@/features/transfers/TransfersScreen';
 import { AdjustmentsScreen } from '@/features/adjustments/AdjustmentsScreen';
+import { AdjustmentDetailsScreen } from '@/features/adjustments/AdjustmentDetailsScreen';
 import { CountsScreen } from '@/features/counts/CountsScreen';
 import { CountDetailsScreen } from '@/features/counts/CountDetailsScreen';
 import { CountReportScreen } from '@/features/counts/CountReportScreen';
@@ -58,6 +59,7 @@ function App() {
             <Route path="operations/activities" element={<ActivitiesDetailScreen />} />
             <Route path="operations/transfers" element={<TransfersScreen />} />
             <Route path="operations/adjustments" element={<AdjustmentsScreen />} />
+            <Route path="operations/adjustments/:id" element={<AdjustmentDetailsScreen />} />
             <Route path="operations/counts" element={<CountsScreen />} />
             <Route path="operations/counts/:id" element={<CountDetailsScreen />} />
             <Route path="operations/counts/:id/report" element={<CountReportScreen />} />

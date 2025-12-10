@@ -314,6 +314,22 @@
     "discrepancyItemsOnly": "Vetëm Artikujt me Mospërputhje",
     "applyAdjustments": "Apliko Rregullimet në Inventar",
     "filterCounts": "Filtro numërimet e stokut sipas kritereve të ndryshme",
-    "all": "Të gjitha"
+    "all": "Të gjitha",
+    "filterAdjustments": "Filtro rregullimet e stokut sipas kritereve të ndryshme",
+    "noAdjustments": "Nuk u gjetën rregullime.",
+    "note": "Shënim",
+    "adjustmentsImmutable": "Rregullimet e stokut janë zakonisht të pandryshueshme - pas krijimit, nuk mund të redaktohen ose fshihen. Për të kthyer një rregullim, krijoni një rregullim të ri të kundërt.",
+    "adjustmentDetails": "Detajet e rregullimit",
+    "barcode": "Kodi",
+    "stockBefore": "Stoku Para",
+    "stockAfter": "Stoku Pas",
+    "reference": "Referenca",
+    "metadata": "Metatë dhëna",
+    "createdAt": "Krijuar Më",
+    "source": "Burimi",
+    "mobileApp": "Aplikacioni Mobil",
+    "adminPanel": "Paneli i Administratorit",
+    "expiredItems": "Artikuj të skaduar",
+    "inventoryCorrection": "Korrigjim inventari"
   }
 }

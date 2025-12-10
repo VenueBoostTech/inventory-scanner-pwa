@@ -314,6 +314,22 @@
     "discrepancyItemsOnly": "Discrepancy Items Only",
     "applyAdjustments": "Apply Adjustments to Inventory",
     "filterCounts": "Filter stock counts by various criteria",
-    "all": "All"
+    "all": "All",
+    "filterAdjustments": "Filter stock adjustments by various criteria",
+    "noAdjustments": "No adjustments found.",
+    "note": "Note",
+    "adjustmentsImmutable": "Stock adjustments are typically immutable - once created, they cannot be edited or deleted. To reverse an adjustment, create a new opposite adjustment.",
+    "adjustmentDetails": "Adjustment details",
+    "barcode": "Barcode",
+    "stockBefore": "Stock Before",
+    "stockAfter": "Stock After",
+    "reference": "Reference",
+    "metadata": "Metadata",
+    "createdAt": "Created At",
+    "source": "Source",
+    "mobileApp": "Mobile App",
+    "adminPanel": "Admin Panel",
+    "expiredItems": "Expired items",
+    "inventoryCorrection": "Inventory correction"
   }
 }
