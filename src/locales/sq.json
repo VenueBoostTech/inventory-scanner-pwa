@@ -119,6 +119,7 @@
     "scanItems": "Skano artikujt në depon",
     "holdSteady": "Mbaj qetë mbi një kod për të identifikuar produktin dhe për të marrë informacionin e stokut.",
     "startScanning": "Fillo skanimin",
+    "scannerPlaceholder": "Parapamja e kamerës do të shfaqet këtu",
     "stop": "Ndalo",
     "lastScan": "Skanimi i fundit:",
     "noScansYet": "Nuk ka skanime ende",

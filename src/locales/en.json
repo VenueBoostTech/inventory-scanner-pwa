@@ -119,6 +119,7 @@
     "scanItems": "Scan items in the warehouse",
     "holdSteady": "Hold steady over a barcode to identify the product and pull stock info.",
     "startScanning": "Start scanning",
+    "scannerPlaceholder": "Camera preview will appear here",
     "stop": "Stop",
     "lastScan": "Last scan:",
     "noScansYet": "No scans yet",
