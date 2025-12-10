@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { useI18n } from '@/lib/i18n';

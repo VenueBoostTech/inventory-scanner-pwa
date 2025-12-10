@@ -55,7 +55,9 @@
       "currentPassword": "Fjalëkalimi Aktual",
       "newPassword": "Fjalëkalimi i Ri",
       "confirmPassword": "Konfirmo Fjalëkalimin e Ri",
-      "changePasswordButton": "Ndrysho Fjalëkalimin"
+      "changePasswordButton": "Ndrysho Fjalëkalimin",
+      "languageUpdated": "Gjuha u përditësua",
+      "languageUpdatedDesc": "Preferenca juaj e gjuhës u përditësua me sukses"
     },
     "recentLogins": {
       "title": "Hyrjet e Fundit",

@@ -55,7 +55,9 @@
       "currentPassword": "Current Password",
       "newPassword": "New Password",
       "confirmPassword": "Confirm New Password",
-      "changePasswordButton": "Change Password"
+      "changePasswordButton": "Change Password",
+      "languageUpdated": "Language updated",
+      "languageUpdatedDesc": "Your language preference has been updated successfully"
     },
     "recentLogins": {
       "title": "Recent Logins",

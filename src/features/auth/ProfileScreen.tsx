@@ -66,8 +66,8 @@ export function ProfileScreen() {
     }
     setIsLanguageOpen(false);
     toast({
-      title: t('auth.profile.language'),
-      description: t('auth.profile.language'),
+      title: t('auth.profile.languageUpdated'),
+      description: t('auth.profile.languageUpdatedDesc'),
     });
   };
 
