@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useI18n } from '@/lib/i18n';
 import {
   Card,
   CardContent,
@@ -173,6 +174,7 @@ const mockRecentActivities = [
 ];
 
 export function DashboardScreen() {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [dateFilter, setDateFilter] = useState<DateFilter>('today');
 
@@ -235,7 +237,7 @@ export function DashboardScreen() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <ScreenHeader title="Dashboard" />
+      <ScreenHeader title={t('dashboard.title')} />
       <div className="space-y-4 px-4 py-4">
         {/* Date Filter Bar */}
         <Card className="border border-border bg-white shadow-none">
@@ -252,11 +254,11 @@ export function DashboardScreen() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="today">Today</SelectItem>
-                  <SelectItem value="yesterday">Yesterday</SelectItem>
-                  <SelectItem value="this_week">This Week</SelectItem>
-                  <SelectItem value="last_7_days">Last 7 Days</SelectItem>
-                  <SelectItem value="this_month">This Month</SelectItem>
+                  <SelectItem value="today">{t('dashboard.dateFilter.today')}</SelectItem>
+                  <SelectItem value="yesterday">{t('dashboard.dateFilter.yesterday')}</SelectItem>
+                  <SelectItem value="this_week">{t('dashboard.dateFilter.thisWeek')}</SelectItem>
+                  <SelectItem value="last_7_days">{t('dashboard.dateFilter.last7Days')}</SelectItem>
+                  <SelectItem value="this_month">{t('dashboard.dateFilter.thisMonth')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -273,7 +275,7 @@ export function DashboardScreen() {
                 </div>
                 <div className="flex-1">
                   <p className="text-2xl font-bold text-foreground">{mockStats.scans}</p>
-                  <p className="text-xs text-muted-foreground">Scans</p>
+                  <p className="text-xs text-muted-foreground">{t('dashboard.scans')}</p>
                 </div>
               </div>
             </CardContent>
@@ -287,7 +289,7 @@ export function DashboardScreen() {
                 </div>
                 <div className="flex-1">
                   <p className="text-2xl font-bold text-foreground">{mockStats.adjustments}</p>
-                  <p className="text-xs text-muted-foreground">Adjustments</p>
+                  <p className="text-xs text-muted-foreground">{t('dashboard.adjustments')}</p>
                 </div>
               </div>
             </CardContent>
@@ -301,7 +303,7 @@ export function DashboardScreen() {
                 </div>
                 <div className="flex-1">
                   <p className="text-2xl font-bold text-foreground">{mockStats.stockCounts}</p>
-                  <p className="text-xs text-muted-foreground">Stock Counts</p>
+                  <p className="text-xs text-muted-foreground">{t('dashboard.stockCounts')}</p>
                 </div>
               </div>
             </CardContent>
@@ -315,7 +317,7 @@ export function DashboardScreen() {
                 </div>
                 <div className="flex-1">
                   <p className="text-2xl font-bold text-foreground">{mockStats.transfers}</p>
-                  <p className="text-xs text-muted-foreground">Transfers</p>
+                  <p className="text-xs text-muted-foreground">{t('dashboard.transfers')}</p>
                 </div>
               </div>
             </CardContent>
@@ -325,9 +327,9 @@ export function DashboardScreen() {
         {/* Quick Actions */}
         <Card className="border border-border bg-white shadow-none">
           <CardHeader className="px-3 pt-3 pb-2">
-            <CardTitle className="text-base font-semibold text-foreground">Quick Actions</CardTitle>
+            <CardTitle className="text-base font-semibold text-foreground">{t('dashboard.quickActions')}</CardTitle>
             <CardDescription className="text-sm text-muted-foreground">
-              Common operations at your fingertips
+              {t('dashboard.commonOperations')}
             </CardDescription>
           </CardHeader>
           <CardContent className="px-3 pb-3">
@@ -338,7 +340,7 @@ export function DashboardScreen() {
                 onClick={() => navigate('/scan')}
               >
                 <Scan className="h-6 w-6 text-[#164945]" />
-                <span className="text-xs font-semibold text-foreground">SCAN</span>
+                <span className="text-xs font-semibold text-foreground">{t('dashboard.scan')}</span>
               </Button>
               <Button
                 variant="outline"
@@ -354,7 +356,7 @@ export function DashboardScreen() {
                 onClick={() => navigate('/operations')}
               >
                 <ClipboardList className="h-6 w-6 text-[#164945]" />
-                <span className="text-xs font-semibold text-foreground">COUNT</span>
+                <span className="text-xs font-semibold text-foreground">{t('dashboard.count')}</span>
               </Button>
             </div>
           </CardContent>
@@ -365,19 +367,19 @@ export function DashboardScreen() {
           <CardContent className="px-3 py-3">
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-amber-600" />
-              <span className="text-sm font-semibold text-amber-900">Attention</span>
+              <span className="text-sm font-semibold text-amber-900">{t('dashboard.attention')}</span>
             </div>
             <div className="mt-2 flex items-center gap-4 text-sm">
               <div className="flex items-center gap-1.5">
                 <div className="h-3 w-3 rounded-full bg-red-500" />
                 <span className="font-semibold text-foreground">{mockAlerts.outOfStock}</span>
-                <span className="text-muted-foreground">out of stock</span>
+                <span className="text-muted-foreground">{t('dashboard.outOfStock')}</span>
               </div>
               <span className="text-muted-foreground">•</span>
               <div className="flex items-center gap-1.5">
                 <div className="h-3 w-3 rounded-full bg-yellow-500" />
                 <span className="font-semibold text-foreground">{mockAlerts.lowStock}</span>
-                <span className="text-muted-foreground">low stock</span>
+                <span className="text-muted-foreground">{t('dashboard.lowStock')}</span>
               </div>
             </div>
           </CardContent>
@@ -388,10 +390,10 @@ export function DashboardScreen() {
           <CardHeader className="flex flex-row items-start justify-between gap-3 px-3 pt-3 pb-2">
             <div className="flex-1 min-w-0">
               <CardTitle className="text-base font-semibold text-foreground">
-                Recent Scans
+                {t('dashboard.recentScans')}
               </CardTitle>
               <CardDescription className="text-sm text-muted-foreground">
-                Latest barcode scans and lookups
+                {t('dashboard.latestLookups')}
               </CardDescription>
             </div>
             <div className="flex-shrink-0">
@@ -400,7 +402,7 @@ export function DashboardScreen() {
                 onClick={() => navigate('/scan')}
                 className="mt-2 flex items-center gap-1 text-sm font-medium text-[#164945] hover:underline cursor-pointer"
               >
-                See All
+                {t('common.seeAll')}
                 <ArrowRight className="h-4 w-4" />
               </button>
             </div>
@@ -438,10 +440,10 @@ export function DashboardScreen() {
           <CardHeader className="flex flex-row items-start justify-between gap-3 px-3 pt-3 pb-2">
             <div className="flex-1 min-w-0">
               <CardTitle className="text-base font-semibold text-foreground">
-                Recent Activities
+                {t('dashboard.recentActivities')}
               </CardTitle>
               <CardDescription className="text-sm text-muted-foreground">
-                Recent stock operations and changes
+                {t('dashboard.recentOperations')}
               </CardDescription>
             </div>
             <div className="flex-shrink-0">
@@ -450,7 +452,7 @@ export function DashboardScreen() {
                 onClick={() => navigate('/operations')}
                 className="mt-2 flex items-center gap-1 text-sm font-medium text-[#164945] hover:underline cursor-pointer"
               >
-                See All
+                {t('common.seeAll')}
                 <ArrowRight className="h-4 w-4" />
               </button>
             </div>

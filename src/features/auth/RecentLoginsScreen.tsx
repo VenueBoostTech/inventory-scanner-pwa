@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
+import { useI18n } from '@/lib/i18n';
 import { Smartphone, CheckCircle2 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 
@@ -57,17 +58,19 @@ const mockLoginHistory = [
 ];
 
 export function RecentLoginsScreen() {
+  const { t } = useI18n();
+  
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <ScreenHeader title="Recent Logins" showBack />
+      <ScreenHeader title={t('auth.recentLogins.title')} showBack />
       <div className="space-y-4 px-4 py-4">
         <div className="space-y-1">
-          <h1 className="text-xl font-semibold text-foreground">Recent Logins</h1>
-          <p className="text-sm text-muted-foreground">View your recent login sessions and active devices</p>
+          <h1 className="text-xl font-semibold text-foreground">{t('auth.recentLogins.title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('auth.recentLogins.subtitle')}</p>
         </div>
         <div className="space-y-3">
           {mockLoginHistory.map((session) => (
@@ -85,7 +88,7 @@ export function RecentLoginsScreen() {
                     {session.isCurrentSession && (
                       <div className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5">
                         <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                        <span className="text-xs font-medium text-emerald-600">Active now</span>
+                        <span className="text-xs font-medium text-emerald-600">{t('auth.recentLogins.activeNow')}</span>
                       </div>
                     )}
                   </div>

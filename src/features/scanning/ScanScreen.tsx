@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
+import { useI18n } from '@/lib/i18n';
 import { useScanner } from '@/hooks/useScanner';
 import { useScanBarcode } from '@/hooks/api/useProducts';
 import { useToast } from '@/hooks/use-toast';
@@ -27,6 +28,7 @@ import {
 } from '@/components/ui/sheet';
 
 export function ScanScreen() {
+  const { t } = useI18n();
   const [manualCode, setManualCode] = useState('');
   const [infoOpen, setInfoOpen] = useState(false);
   const [lastScan, setLastScan] = useState<{
@@ -52,20 +54,20 @@ export function ScanScreen() {
 
   const formatResult = (result: string) => {
     const map: Record<string, { label: string; className: string; icon: ReactElement }> = {
-      found: { label: 'Found', className: 'bg-emerald-50 text-emerald-700', icon: <CheckCircle2 className="h-4 w-4" /> },
-      not_found: { label: 'Not Found', className: 'bg-red-50 text-red-700', icon: <XCircle className="h-4 w-4" /> },
-      created: { label: 'Created', className: 'bg-blue-50 text-blue-700', icon: <Plus className="h-4 w-4" /> },
-      error: { label: 'Error', className: 'bg-amber-50 text-amber-700', icon: <AlertCircle className="h-4 w-4" /> },
+      found: { label: t('scan.found'), className: 'bg-emerald-50 text-emerald-700', icon: <CheckCircle2 className="h-4 w-4" /> },
+      not_found: { label: t('scan.notFound'), className: 'bg-red-50 text-red-700', icon: <XCircle className="h-4 w-4" /> },
+      created: { label: t('scan.created'), className: 'bg-blue-50 text-blue-700', icon: <Plus className="h-4 w-4" /> },
+      error: { label: t('common.error'), className: 'bg-amber-50 text-amber-700', icon: <AlertCircle className="h-4 w-4" /> },
     };
     return map[result] ?? map.found;
   };
 
   const formatAction = (action: string) => {
     const map: Record<string, { label: string; icon: ReactElement }> = {
-      lookup: { label: 'Lookup', icon: <Search className="h-4 w-4" /> },
-      add_product: { label: 'Added', icon: <Plus className="h-4 w-4" /> },
-      stock_adjust: { label: 'Adjusted', icon: <AlertCircle className="h-4 w-4" /> },
-      stock_count: { label: 'Counted', icon: <AlertCircle className="h-4 w-4" /> },
+      lookup: { label: t('scan.lookup'), icon: <Search className="h-4 w-4" /> },
+      add_product: { label: t('scan.added'), icon: <Plus className="h-4 w-4" /> },
+      stock_adjust: { label: t('scan.adjusted'), icon: <AlertCircle className="h-4 w-4" /> },
+      stock_count: { label: t('scan.counted'), icon: <AlertCircle className="h-4 w-4" /> },
     };
     return map[action] ?? map.lookup;
   };
@@ -101,13 +103,13 @@ export function ScanScreen() {
 
   return (
     <div className="min-h-screen bg-background">
-      <ScreenHeader title="Scan" />
+      <ScreenHeader title={t('scan.title')} />
       <div className="space-y-4 px-4 py-4">
         <div className="space-y-3 rounded-lg border border-border bg-white p-3">
           <div>
-            <p className="text-md font-semibold text-foreground">Scan items in the warehouse</p>
+            <p className="text-md font-semibold text-foreground">{t('scan.scanItems')}</p>
             <p className="text-sm text-muted-foreground">
-              Hold steady over a barcode to identify the product and pull stock info.
+              {t('scan.holdSteady')}
             </p>
             {isScanning ? (
               <Button
@@ -116,7 +118,7 @@ export function ScanScreen() {
                 className="mt-2 w-full border-none bg-[#164945] text-white hover:bg-[#123b37]"
                 onClick={() => void stopScanning()}
               >
-                Stop
+                {t('scan.stop')}
               </Button>
             ) : (
               <Button
@@ -124,7 +126,7 @@ export function ScanScreen() {
                 className="mt-2 w-full border-none bg-[#164945] text-white hover:bg-[#123b37]"
                 onClick={() => void startScanning(handleDecoded)}
               >
-                Start scanning
+                {t('scan.startScanning')}
               </Button>
             )}
           </div>
@@ -139,7 +141,7 @@ export function ScanScreen() {
             />
             {!isScanning && (
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-muted-foreground">
-                Start scanning to see the live camera preview.
+                {t('scan.startScanning')}
               </div>
             )}
           </div>
@@ -147,15 +149,15 @@ export function ScanScreen() {
           <div className="flex justify-end text-xs text-[#043f3b]">
             <div className="text-right">
               <span className="font-semibold uppercase tracking-wide text-[11px] text-[#043f3b]/80">
-                Last scan:
+                {t('scan.lastScan')}
               </span>{' '}
               <span className="font-semibold text-[13px] text-[#043f3b]">
-                {lastScan?.productName ?? 'No scans yet'}
+                {lastScan?.productName ?? t('scan.noScansYet')}
               </span>
               <div className="text-[11px] text-[#043f3b]/80">
                 {lastScan
                   ? `${lastScan.code} • ${format(lastScan.time, 'MMM d, yyyy h:mm a')}`
-                  : 'Scan a barcode to see details'}
+                  : t('scan.scanBarcode')}
               </div>
             </div>
           </div>
@@ -189,9 +191,9 @@ export function ScanScreen() {
         <Card className="border border-border bg-white shadow-none">
           <CardHeader className="flex flex-row items-start justify-between gap-3 px-3 pt-3 pb-2">
             <div className="flex-1 min-w-0">
-              <CardTitle className="text-md font-semibold text-foreground">Recent scans</CardTitle>
+              <CardTitle className="text-md font-semibold text-foreground">{t('scan.recentScans')}</CardTitle>
               <CardDescription className="text-sm text-muted-foreground">
-                Latest lookups and results.
+                {t('scan.latestLookups')}
               </CardDescription>
             </div>
             <div className="flex-shrink-0">
@@ -207,16 +209,16 @@ export function ScanScreen() {
           <CardContent className="px-3 mt-2 pb-3">
             {recentScans.length === 0 ? (
               <div className="rounded-md border border-dashed border-muted-foreground/30 px-3 py-4 text-center text-sm text-muted-foreground">
-                No scans yet. Start scanning or add a barcode manually.
+                {t('scan.noScans')}
               </div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="min-w-[200px]">Product</TableHead>
-                    <TableHead className="min-w-[120px]">Barcode</TableHead>
-                    <TableHead className="min-w-[180px]">Status</TableHead>
-                    <TableHead className="min-w-[100px] text-right">Time</TableHead>
+                    <TableHead className="min-w-[200px]">{t('scan.product')}</TableHead>
+                    <TableHead className="min-w-[120px]">{t('scan.barcode')}</TableHead>
+                    <TableHead className="min-w-[180px]">{t('scan.status')}</TableHead>
+                    <TableHead className="min-w-[100px] text-right">{t('scan.time')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -268,9 +270,9 @@ export function ScanScreen() {
                 <Info className="h-5 w-5 text-[#164945]" />
               </div>
               <div className="min-w-0 flex-1">
-                <CardTitle className="text-md font-semibold text-foreground">Need help with scanning?</CardTitle>
+                <CardTitle className="text-md font-semibold text-foreground">{t('scan.needHelp')}</CardTitle>
                 <CardDescription className="text-sm text-muted-foreground">
-                  Learn how scanning works and what to do if a barcode isn't found.
+                  {t('scan.learnHow')}
                 </CardDescription>
               </div>
             </div>
@@ -281,28 +283,26 @@ export function ScanScreen() {
                     type="button"
                     className="flex items-center gap-1 text-sm font-medium text-[#164945] hover:underline cursor-pointer"
                   >
-                    Learn more
+                    {t('common.learnMore')}
                     <ArrowRight className="h-4 w-4" />
                   </button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-[75%] sm:w-[400px]">
                     <SheetHeader className="text-left space-y-1">
-                      <SheetTitle className="text-left">Scanning Guide</SheetTitle>
+                      <SheetTitle className="text-left">{t('scan.scanningGuide')}</SheetTitle>
                       <SheetDescription className="text-left">
-                        Learn how scanning works and troubleshoot common issues
+                        {t('scan.learnTroubleshoot')}
                       </SheetDescription>
                     </SheetHeader>
                     <div className="mt-6 space-y-6">
                       {/* How Scanning Works */}
                       <div className="space-y-3">
-                        <h3 className="text-sm font-semibold text-foreground">How scanning works</h3>
+                        <h3 className="text-sm font-semibold text-foreground">{t('scan.howItWorks')}</h3>
                         <div className="space-y-2 text-sm text-muted-foreground">
-                          <p>
-                            • Point your camera at a barcode and hold steady until it's detected
-                          </p>
-                          <p>• The system will automatically look up the product in the database</p>
-                          <p>• If found, you'll see product details and stock information</p>
-                          <p>• You can also enter barcodes manually if the camera isn't available</p>
+                          <p>{t('scan.pointCamera')}</p>
+                          <p>{t('scan.autoLookup')}</p>
+                          <p>{t('scan.ifFound')}</p>
+                          <p>{t('scan.manualEntry')}</p>
                         </div>
                       </div>
 
@@ -311,24 +311,24 @@ export function ScanScreen() {
                         <div className="flex items-center gap-2">
                           <AlertCircle className="h-4 w-4 text-amber-600" />
                           <h3 className="text-sm font-semibold text-foreground">
-                            Why wasn't it found?
+                            {t('scan.whyNotFound')}
                           </h3>
                         </div>
                         <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50/50 p-3">
                           <div className="space-y-1">
                             <p className="text-sm font-medium text-foreground">
-                              1. Product doesn't exist yet
+                              {t('scan.productNotExist')}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              → Create a new product in the system first
+                              {t('scan.createProduct')}
                             </p>
                           </div>
                           <div className="space-y-1">
                             <p className="text-sm font-medium text-foreground">
-                              2. Product exists but barcode wasn't saved
+                              {t('scan.productExists')}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              → Search for the product by name, then link the barcode to it
+                              {t('scan.searchLink')}
                             </p>
                           </div>
                         </div>
@@ -338,10 +338,10 @@ export function ScanScreen() {
                       <div className="space-y-2 rounded-lg border border-emerald-200 bg-emerald-50/50 p-3">
                         <div className="flex items-center gap-2">
                           <Lightbulb className="h-4 w-4 text-emerald-600" />
-                          <p className="text-sm font-semibold text-foreground">Tip</p>
+                          <p className="text-sm font-semibold text-foreground">{t('scan.tip')}</p>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          After linking a barcode to a product, future scans will find it automatically!
+                          {t('scan.afterLinking')}
                         </p>
                       </div>
                     </div>
@@ -350,7 +350,7 @@ export function ScanScreen() {
                         onClick={() => setInfoOpen(false)}
                         className="w-full border-none bg-[#164945] text-white hover:bg-[#123b37]"
                       >
-                        Got it
+                        {t('common.gotIt')}
                       </Button>
                     </div>
                   </SheetContent>

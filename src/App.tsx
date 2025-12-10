@@ -1,11 +1,21 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
+import { I18nProvider } from '@/lib/i18n';
 import { AppShell } from '@/components/layout/AppShell';
 import { LoginScreen } from '@/features/auth/LoginScreen';
 import { ScanScreen } from '@/features/scanning/ScanScreen';
 import { ProductsScreen } from '@/features/products/ProductsScreen';
 import { ActivitiesScreen } from '@/features/activities/ActivitiesScreen';
+import { ActivitiesDetailScreen } from '@/features/activities/ActivitiesDetailScreen';
+import { TransfersScreen } from '@/features/transfers/TransfersScreen';
+import { AdjustmentsScreen } from '@/features/adjustments/AdjustmentsScreen';
+import { AdjustmentDetailsScreen } from '@/features/adjustments/AdjustmentDetailsScreen';
+import { CountsScreen } from '@/features/counts/CountsScreen';
+import { CountingScreen } from '@/features/counts/CountingScreen';
+import { CountDetailsScreen } from '@/features/counts/CountDetailsScreen';
+import { CountReportScreen } from '@/features/counts/CountReportScreen';
+import { WarehousesScreen } from '@/features/warehouses/WarehousesScreen';
 import { ProfileScreen } from '@/features/auth/ProfileScreen';
 import { RecentLoginsScreen } from '@/features/auth/RecentLoginsScreen';
 import { MyPermissionsScreen } from '@/features/auth/MyPermissionsScreen';
@@ -29,9 +39,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
+    <I18nProvider>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <Routes>
           <Route path="/login" element={<LoginScreen />} />
           <Route
             path="/"
@@ -46,15 +57,25 @@ function App() {
             <Route path="scan" element={<ScanScreen />} />
             <Route path="products" element={<ProductsScreen />} />
             <Route path="operations" element={<ActivitiesScreen />} />
+            <Route path="operations/activities" element={<ActivitiesDetailScreen />} />
+            <Route path="operations/transfers" element={<TransfersScreen />} />
+            <Route path="operations/adjustments" element={<AdjustmentsScreen />} />
+            <Route path="operations/adjustments/:id" element={<AdjustmentDetailsScreen />} />
+            <Route path="operations/counts" element={<CountsScreen />} />
+            <Route path="operations/counts/:id/report" element={<CountReportScreen />} />
+            <Route path="operations/counts/:id/counting" element={<CountingScreen />} />
+            <Route path="operations/counts/:id" element={<CountDetailsScreen />} />
+            <Route path="operations/warehouses" element={<WarehousesScreen />} />
             <Route path="account" element={<ProfileScreen />} />
             <Route path="account/recent-logins" element={<RecentLoginsScreen />} />
             <Route path="account/permissions" element={<MyPermissionsScreen />} />
             <Route path="account/warehouses" element={<MyWarehousesScreen />} />
           </Route>
-        </Routes>
-      </BrowserRouter>
-      <Toaster />
-    </QueryClientProvider>
+          </Routes>
+        </BrowserRouter>
+        <Toaster />
+      </QueryClientProvider>
+    </I18nProvider>
   );
 }
 

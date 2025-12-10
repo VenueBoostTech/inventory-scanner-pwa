@@ -15,12 +15,14 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { authStore } from '@/stores/authStore';
+import { useI18n } from '@/lib/i18n';
 import { ChevronRight, Lock, LogOut, Phone, Mail, Globe, Clock, Shield, Building2, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export function ProfileScreen() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t, language, setLanguage } = useI18n();
   const profile = authStore((state) => state.profile);
   const logout = authStore((state) => state.logout);
   const [name, setName] = useState(profile?.name || '');
@@ -51,21 +53,22 @@ export function ProfileScreen() {
     }
   };
 
-  const handleLanguageChange = (language: string) => {
+  const handleLanguageChange = (lang: 'en' | 'sq') => {
+    setLanguage(lang);
     if (profile) {
       authStore.getState().setProfile({
         ...profile,
         preferences: {
           ...profile.preferences,
-          language,
+          language: lang === 'sq' ? 'al' : 'en', // Map sq to al for profile
         },
       });
-      setIsLanguageOpen(false);
-      toast({
-        title: 'Language updated',
-        description: 'Your language preference has been updated',
-      });
     }
+    setIsLanguageOpen(false);
+    toast({
+      title: t('auth.profile.languageUpdated'),
+      description: t('auth.profile.languageUpdatedDesc'),
+    });
   };
 
   const getInitials = (name: string) => {
@@ -79,7 +82,7 @@ export function ProfileScreen() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <ScreenHeader title="Profile" />
+      <ScreenHeader title={t('auth.profile.title')} />
       <div className="space-y-4 px-4 py-4">
         {/* Profile Header */}
         <Card className="border border-border bg-white shadow-none">
@@ -101,7 +104,7 @@ export function ProfileScreen() {
         {/* Personal Info */}
         <div className="space-y-2">
           <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Personal Info
+            {t('auth.profile.personalInfo')}
           </h3>
           <Card className="border border-border bg-white shadow-none">
             <CardContent className="px-3 py-0">
@@ -111,7 +114,7 @@ export function ProfileScreen() {
                 className="flex w-full items-center justify-between gap-3 border-b border-border py-3 last:border-b-0"
               >
                 <div className="flex items-center gap-3">
-                  <div className="text-sm font-medium text-foreground">Name</div>
+                  <div className="text-sm font-medium text-foreground">{t('auth.profile.name')}</div>
                 </div>
                 <div className="flex flex-1 items-center justify-end gap-2">
                   <span className="text-sm text-muted-foreground">{name || '—'}</span>
@@ -121,7 +124,7 @@ export function ProfileScreen() {
               <div className="flex items-center justify-between gap-3 border-b border-border py-3 last:border-b-0">
                 <div className="flex items-center gap-3">
                   <Mail className="h-4 w-4 text-muted-foreground" />
-                  <div className="text-sm font-medium text-foreground">Email</div>
+                  <div className="text-sm font-medium text-foreground">{t('auth.profile.email')}</div>
                 </div>
                 <div className="flex flex-1 items-center justify-end gap-2">
                   <span className="text-sm text-muted-foreground">{profile?.email || '—'}</span>
@@ -131,7 +134,7 @@ export function ProfileScreen() {
               <div className="flex items-center justify-between gap-3 py-3 last:border-b-0">
                 <div className="flex items-center gap-3">
                   <Phone className="h-4 w-4 text-muted-foreground" />
-                  <div className="text-sm font-medium text-foreground">Phone</div>
+                  <div className="text-sm font-medium text-foreground">{t('auth.profile.phone')}</div>
                 </div>
                 <div className="flex flex-1 items-center justify-end gap-2">
                   <span className="text-sm text-muted-foreground">{phone}</span>
@@ -144,7 +147,7 @@ export function ProfileScreen() {
 
         {/* Security */}
         <div className="space-y-2">
-          <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Security</h3>
+          <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('auth.profile.security')}</h3>
           <Card className="border border-border bg-white shadow-none">
             <CardContent className="px-3 py-0">
               <ChangePasswordDialog />
@@ -155,7 +158,7 @@ export function ProfileScreen() {
               >
                 <div className="flex items-center gap-3">
                   <Clock className="h-4 w-4 text-muted-foreground" />
-                  <div className="text-sm font-medium text-foreground">Recent Logins</div>
+                  <div className="text-sm font-medium text-foreground">{t('auth.profile.recentLogins')}</div>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
               </button>
@@ -165,7 +168,7 @@ export function ProfileScreen() {
 
         {/* Preferences */}
         <div className="space-y-2">
-          <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Preferences</h3>
+          <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('auth.profile.preferences')}</h3>
           <Card className="border border-border bg-white shadow-none">
             <CardContent className="px-3 py-0">
               <button
@@ -175,11 +178,11 @@ export function ProfileScreen() {
               >
                 <div className="flex items-center gap-3">
                   <Globe className="h-4 w-4 text-muted-foreground" />
-                  <div className="text-sm font-medium text-foreground">Language</div>
+                  <div className="text-sm font-medium text-foreground">{t('auth.profile.language')}</div>
                 </div>
                 <div className="flex flex-1 items-center justify-end gap-2">
                   <span className="text-sm text-muted-foreground">
-                    {profile?.preferences?.language === 'al' ? 'Albanian (Shqip)' : 'English'}
+                    {(profile?.preferences?.language === 'al' || language === 'sq') ? t('auth.profile.albanian') : t('auth.profile.english')}
                   </span>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>
@@ -187,7 +190,7 @@ export function ProfileScreen() {
               <div className="flex items-center justify-between gap-3 py-3">
                 <div className="flex items-center gap-3">
                   <Clock className="h-4 w-4 text-muted-foreground" />
-                  <div className="text-sm font-medium text-foreground">Timezone</div>
+                  <div className="text-sm font-medium text-foreground">{t('auth.profile.timezone')}</div>
                 </div>
                 <div className="flex flex-1 items-center justify-end gap-2">
                   <span className="text-sm text-muted-foreground">
@@ -202,7 +205,7 @@ export function ProfileScreen() {
 
         {/* My Access */}
         <div className="space-y-2">
-          <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">My Access</h3>
+          <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('auth.profile.myAccess')}</h3>
           <Card className="border border-border bg-white shadow-none">
             <CardContent className="px-3 py-0">
               <button
@@ -212,7 +215,7 @@ export function ProfileScreen() {
               >
                 <div className="flex items-center gap-3">
                   <Shield className="h-4 w-4 text-muted-foreground" />
-                  <div className="text-sm font-medium text-foreground">My Permissions</div>
+                  <div className="text-sm font-medium text-foreground">{t('auth.profile.myPermissions')}</div>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
               </button>
@@ -223,7 +226,7 @@ export function ProfileScreen() {
               >
                 <div className="flex items-center gap-3">
                   <Building2 className="h-4 w-4 text-muted-foreground" />
-                  <div className="text-sm font-medium text-foreground">My Warehouses</div>
+                  <div className="text-sm font-medium text-foreground">{t('auth.profile.myWarehouses')}</div>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
               </button>
@@ -233,20 +236,20 @@ export function ProfileScreen() {
 
         {/* About */}
         <div className="space-y-2">
-          <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">About</h3>
+          <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('auth.profile.about')}</h3>
           <Card className="border border-border bg-white shadow-none">
             <CardContent className="px-3 py-0">
               <div className="flex items-center justify-between gap-3 border-b border-border py-3">
                 <div className="flex items-center gap-3">
                   <Building2 className="h-4 w-4 text-muted-foreground" />
-                  <div className="text-sm font-medium text-foreground">Company</div>
+                  <div className="text-sm font-medium text-foreground">{t('auth.profile.company')}</div>
                 </div>
                 <span className="text-sm text-muted-foreground">{profile?.clientName || '—'}</span>
               </div>
               <div className="flex items-center justify-between gap-3 py-3">
                 <div className="flex items-center gap-3">
                   <Info className="h-4 w-4 text-muted-foreground" />
-                  <div className="text-sm font-medium text-foreground">App Version</div>
+                  <div className="text-sm font-medium text-foreground">{t('auth.profile.appVersion')}</div>
                 </div>
                 <span className="text-sm text-muted-foreground">1.0.0</span>
               </div>
@@ -262,7 +265,7 @@ export function ProfileScreen() {
               onClick={handleLogout}
             >
               <LogOut className="mr-2 h-4 w-4" />
-              Logout
+              {t('common.logout')}
             </Button>
           </CardContent>
         </Card>
@@ -272,29 +275,29 @@ export function ProfileScreen() {
       <Dialog open={isEditing} onOpenChange={setIsEditing}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Name</DialogTitle>
-            <DialogDescription>Update your display name</DialogDescription>
+            <DialogTitle>{t('auth.profile.editName')}</DialogTitle>
+            <DialogDescription>{t('auth.profile.updateDisplayName')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name">{t('auth.profile.name')}</Label>
               <Input
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your name"
+                placeholder={t('auth.profile.name')}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditing(false)}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={handleSaveProfile}
               className="border-none bg-[#164945] text-white hover:bg-[#123b37]"
             >
-              Save
+              {t('common.save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -304,32 +307,32 @@ export function ProfileScreen() {
       <Dialog open={isLanguageOpen} onOpenChange={setIsLanguageOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Select Language</DialogTitle>
-            <DialogDescription>Choose your preferred language</DialogDescription>
+            <DialogTitle>{t('auth.profile.selectLanguage')}</DialogTitle>
+            <DialogDescription>{t('auth.profile.chooseLanguage')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-2 py-4">
             <button
               type="button"
               onClick={() => handleLanguageChange('en')}
               className={`w-full rounded-lg border p-3 text-left transition-colors ${
-                profile?.preferences?.language !== 'al'
+                (profile?.preferences?.language !== 'al' && language !== 'sq')
                   ? 'border-[#164945] bg-[#164945]/10'
                   : 'border-border hover:bg-muted'
               }`}
             >
-              <div className="font-medium text-foreground">English</div>
-              <div className="text-xs text-muted-foreground">English</div>
+              <div className="font-medium text-foreground">{t('auth.profile.english')}</div>
+              <div className="text-xs text-muted-foreground">{t('auth.profile.english')}</div>
             </button>
             <button
               type="button"
-              onClick={() => handleLanguageChange('al')}
+              onClick={() => handleLanguageChange('sq')}
               className={`w-full rounded-lg border p-3 text-left transition-colors ${
-                profile?.preferences?.language === 'al'
+                (profile?.preferences?.language === 'al' || language === 'sq')
                   ? 'border-[#164945] bg-[#164945]/10'
                   : 'border-border hover:bg-muted'
               }`}
             >
-              <div className="font-medium text-foreground">Albanian (Shqip)</div>
+              <div className="font-medium text-foreground">{t('auth.profile.albanian')}</div>
               <div className="text-xs text-muted-foreground">Shqip</div>
             </button>
           </div>
@@ -340,6 +343,7 @@ export function ProfileScreen() {
 }
 
 function ChangePasswordDialog() {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -383,57 +387,57 @@ function ChangePasswordDialog() {
         >
           <div className="flex items-center gap-3">
             <Lock className="h-4 w-4 text-muted-foreground" />
-            <div className="text-sm font-medium text-foreground">Change Password</div>
+            <div className="text-sm font-medium text-foreground">{t('auth.profile.changePassword')}</div>
           </div>
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
         </button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Change Password</DialogTitle>
-          <DialogDescription>Enter your current password and choose a new one</DialogDescription>
+          <DialogTitle>{t('auth.profile.changePasswordTitle')}</DialogTitle>
+          <DialogDescription>{t('auth.profile.changePasswordDesc')}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="current-password">Current Password</Label>
+            <Label htmlFor="current-password">{t('auth.profile.currentPassword')}</Label>
             <Input
               id="current-password"
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              placeholder="Enter current password"
+              placeholder={t('auth.profile.currentPassword')}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="new-password">New Password</Label>
+            <Label htmlFor="new-password">{t('auth.profile.newPassword')}</Label>
             <Input
               id="new-password"
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Enter new password"
+              placeholder={t('auth.profile.newPassword')}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="confirm-password">Confirm New Password</Label>
+            <Label htmlFor="confirm-password">{t('auth.profile.confirmPassword')}</Label>
             <Input
               id="confirm-password"
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirm new password"
+              placeholder={t('auth.profile.confirmPassword')}
             />
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             onClick={handleChangePassword}
             className="border-none bg-[#164945] text-white hover:bg-[#123b37]"
           >
-            Change Password
+            {t('auth.profile.changePasswordButton')}
           </Button>
         </DialogFooter>
       </DialogContent>

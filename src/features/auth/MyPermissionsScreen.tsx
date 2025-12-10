@@ -1,10 +1,13 @@
 import { useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
+import { useI18n } from '@/lib/i18n';
 import { CheckCircle2, XCircle, Info } from 'lucide-react';
 import { authStore } from '@/stores/authStore';
 
 export function MyPermissionsScreen() {
+  const { t } = useI18n();
+  
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -13,38 +16,38 @@ export function MyPermissionsScreen() {
   const permissions = profile?.permissions;
 
   const permissionItems = [
-    { key: 'canScan', label: 'Scan products', value: permissions?.canScan ?? false },
-    { key: 'canAdjustStock', label: 'Adjust stock', value: permissions?.canAdjustStock ?? false },
+    { key: 'canScan', label: t('auth.permissions.scanProducts'), value: permissions?.canScan ?? false },
+    { key: 'canAdjustStock', label: t('auth.permissions.adjustStock'), value: permissions?.canAdjustStock ?? false },
     {
       key: 'canPerformStockCount',
-      label: 'Perform stock counts',
+      label: t('auth.permissions.performStockCounts'),
       value: permissions?.canPerformStockCount ?? false,
     },
     {
       key: 'canInitiateTransfer',
-      label: 'Initiate transfers',
+      label: t('auth.permissions.initiateTransfers'),
       value: permissions?.canInitiateTransfer ?? false,
     },
     {
       key: 'canCompleteTransfer',
-      label: 'Complete transfers',
+      label: t('auth.permissions.completeTransfers'),
       value: permissions?.canCompleteTransfer ?? false,
     },
-    { key: 'canAddProducts', label: 'Add new products', value: permissions?.canAddProducts ?? false },
-    { key: 'canEditProducts', label: 'Edit products', value: permissions?.canEditProducts ?? false },
+    { key: 'canAddProducts', label: t('auth.permissions.addProducts'), value: permissions?.canAddProducts ?? false },
+    { key: 'canEditProducts', label: t('auth.permissions.editProducts'), value: permissions?.canEditProducts ?? false },
   ];
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <ScreenHeader title="My Permissions" showBack />
+      <ScreenHeader title={t('auth.permissions.title')} showBack />
       <div className="space-y-4 px-4 py-4">
         <div className="space-y-1">
-          <h1 className="text-xl font-semibold text-foreground">My Permissions</h1>
-          <p className="text-sm text-muted-foreground">View what actions you can perform in the system</p>
+          <h1 className="text-xl font-semibold text-foreground">{t('auth.permissions.title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('auth.permissions.subtitle')}</p>
         </div>
         <Card className="border border-border bg-white shadow-none">
           <CardContent className="px-3 py-4">
-            <h3 className="mb-4 text-sm font-semibold text-foreground">What I can do:</h3>
+            <h3 className="mb-4 text-sm font-semibold text-foreground">{t('auth.permissions.whatICanDo')}</h3>
             <div className="space-y-3">
               {permissionItems.map((item) => (
                 <div key={item.key} className="flex items-center gap-3">
@@ -65,7 +68,7 @@ export function MyPermissionsScreen() {
             <div className="flex items-start gap-2">
               <Info className="h-4 w-4 shrink-0 text-blue-600" />
               <p className="text-xs text-blue-900">
-                Contact your admin to change permissions.
+                {t('auth.permissions.contactAdmin')}
               </p>
             </div>
           </CardContent>

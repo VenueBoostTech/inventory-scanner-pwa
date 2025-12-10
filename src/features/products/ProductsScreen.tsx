@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
+import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -137,6 +138,7 @@ const mockProducts: ProductWithWarehouse[] = [
 ];
 
 export function ProductsScreen() {
+  const { t } = useI18n();
   const [search, setSearch] = useState('');
   const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
   const [sortBy, setSortBy] = useState<SortOption>('stock_low_high');
@@ -207,7 +209,7 @@ export function ProductsScreen() {
       return (
         <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">
           <CheckCircle2 className="h-3 w-3 mr-1" />
-          In Stock
+          {t('products.inStock')}
         </Badge>
       );
     }
@@ -215,14 +217,14 @@ export function ProductsScreen() {
       return (
         <Badge className="bg-yellow-50 text-yellow-700 border-yellow-200">
           <AlertTriangle className="h-3 w-3 mr-1" />
-          Low Stock
+          {t('products.lowStockStatus')}
         </Badge>
       );
     }
     return (
       <Badge className="bg-red-50 text-red-700 border-red-200">
         <XCircle className="h-3 w-3 mr-1" />
-        Out Stock
+        {t('products.outOfStock')}
       </Badge>
     );
   };
@@ -259,14 +261,14 @@ export function ProductsScreen() {
       return (
         <div className="flex items-center gap-1 text-xs text-amber-600">
           <AlertTriangle className="h-3 w-3" />
-          No barcode
+          {t('products.noBarcode')}
         </div>
       );
     }
     return (
       <div className="flex items-center gap-1 text-xs text-emerald-600">
         <Package className="h-3 w-3" />
-        Has barcode
+        {t('products.hasBarcode')}
       </div>
     );
   };
@@ -289,13 +291,13 @@ export function ProductsScreen() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <ScreenHeader title="Products" />
+      <ScreenHeader title={t('products.title')} />
       <div className="space-y-4 px-4 py-4">
         {/* Search Bar */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search name, SKU, barcode..."
+            placeholder={t('products.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -306,16 +308,16 @@ export function ProductsScreen() {
         <Tabs value={quickFilter} onValueChange={(v) => setQuickFilter(v as QuickFilter)}>
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="all" className="text-xs">
-              All ({counts.all})
+              {t('products.all')} ({counts.all})
             </TabsTrigger>
             <TabsTrigger value="low_stock" className="text-xs">
-              Low Stock ({counts.low_stock})
+              {t('products.lowStock')} ({counts.low_stock})
             </TabsTrigger>
             <TabsTrigger value="out_of_stock" className="text-xs">
-              Out Stock ({counts.out_of_stock})
+              {t('products.outStock')} ({counts.out_of_stock})
             </TabsTrigger>
             <TabsTrigger value="no_barcode" className="text-xs">
-              No Barcode ({counts.no_barcode})
+              {t('products.noBarcode')} ({counts.no_barcode})
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -326,24 +328,24 @@ export function ProductsScreen() {
             <SheetTrigger asChild>
               <Button variant="outline" size="sm" className="gap-2">
                 <Filter className="h-4 w-4" />
-                Filters
+                {t('common.filter')}
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-[300px] sm:w-[400px]">
               <SheetHeader className="text-left space-y-1">
-                <SheetTitle className="text-left">Filters</SheetTitle>
-                <SheetDescription className="text-left">Filter products by various criteria</SheetDescription>
+                <SheetTitle className="text-left">{t('common.filter')}</SheetTitle>
+                <SheetDescription className="text-left">{t('products.filterProducts')}</SheetDescription>
               </SheetHeader>
               <div className="mt-4 space-y-4">
                 {/* Stock Status Filter */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-left">Stock Status</label>
+                  <label className="text-sm font-medium text-left">{t('products.stockStatus')}</label>
                   <div className="space-y-2">
                     {[
-                      { value: 'all', label: 'All' },
-                      { value: 'in_stock', label: 'In Stock' },
-                      { value: 'low_stock', label: 'Low Stock' },
-                      { value: 'out_of_stock', label: 'Out of Stock' },
+                      { value: 'all', label: t('products.allStatus') },
+                      { value: 'in_stock', label: t('products.inStock') },
+                      { value: 'low_stock', label: t('products.lowStockStatus') },
+                      { value: 'out_of_stock', label: t('products.outOfStock') },
                     ].map((option) => (
                       <label key={option.value} className="flex items-center gap-2">
                         <input
@@ -362,13 +364,13 @@ export function ProductsScreen() {
 
                 {/* Category Filter */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-left">Category</label>
+                  <label className="text-sm font-medium text-left">{t('products.category')}</label>
                   <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select category..." />
+                      <SelectValue placeholder={t('products.selectCategory')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
+                      <SelectItem value="all">{t('products.allCategories')}</SelectItem>
                       {categories.map((cat) => (
                         <SelectItem key={cat} value={cat}>
                           {cat}
@@ -380,12 +382,12 @@ export function ProductsScreen() {
 
                 {/* Barcode Status Filter */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-left">Barcode Status</label>
+                  <label className="text-sm font-medium text-left">{t('products.barcodeStatus')}</label>
                   <div className="space-y-2">
                     {[
-                      { value: 'all', label: 'All' },
-                      { value: 'has_barcode', label: 'Has Barcode' },
-                      { value: 'no_barcode', label: 'Missing Barcode' },
+                      { value: 'all', label: t('products.allStatus') },
+                      { value: 'has_barcode', label: t('products.hasBarcode') },
+                      { value: 'no_barcode', label: t('products.missingBarcode') },
                     ].map((option) => (
                       <label key={option.value} className="flex items-center gap-2">
                         <input
@@ -404,13 +406,13 @@ export function ProductsScreen() {
               </div>
               <SheetFooter className="mt-4 gap-2">
                 <Button variant="outline" onClick={clearFilters} className="w-full">
-                  Clear Filters
+                  {t('products.clearFilters')}
                 </Button>
                 <Button
                   onClick={() => setFiltersOpen(false)}
                   className="w-full border-none bg-[#164945] text-white hover:bg-[#123b37]"
                 >
-                  Apply
+                  {t('common.apply')}
                 </Button>
               </SheetFooter>
             </SheetContent>
@@ -418,14 +420,14 @@ export function ProductsScreen() {
 
           <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
             <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Sort..." />
+              <SelectValue placeholder={t('common.sort')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="stock_low_high">Stock: Low to High</SelectItem>
-              <SelectItem value="stock_high_low">Stock: High to Low</SelectItem>
-              <SelectItem value="name_az">Name: A-Z</SelectItem>
-              <SelectItem value="name_za">Name: Z-A</SelectItem>
-              <SelectItem value="recent">Recently Updated</SelectItem>
+              <SelectItem value="stock_low_high">{t('products.sortLowHigh')}</SelectItem>
+              <SelectItem value="stock_high_low">{t('products.sortHighLow')}</SelectItem>
+              <SelectItem value="name_az">{t('products.sortNameAZ')}</SelectItem>
+              <SelectItem value="name_za">{t('products.sortNameZA')}</SelectItem>
+              <SelectItem value="recent">{t('products.sortRecent')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -435,7 +437,7 @@ export function ProductsScreen() {
           {filteredAndSortedProducts.length === 0 ? (
             <Card className="border border-border bg-white shadow-none">
               <CardContent className="px-3 py-8 text-center">
-                <p className="text-sm text-muted-foreground">No products found.</p>
+                <p className="text-sm text-muted-foreground">{t('products.noProducts')}</p>
               </CardContent>
             </Card>
           ) : (
@@ -458,14 +460,14 @@ export function ProductsScreen() {
                       <div className="flex flex-wrap items-center gap-2">
                         {getBarcodeStatus(product.barcode)}
                         <div className="text-xs text-muted-foreground">
-                          Stock: <span className="font-semibold text-foreground">{product.stockQuantity}</span>
+                          {t('products.stock')} <span className="font-semibold text-foreground">{product.stockQuantity}</span>
                         </div>
                         {getStockStatusBadge(product.stockStatus, product.stockQuantity)}
                       </div>
 
                       {/* Warehouse */}
                       <div className="text-xs text-muted-foreground">
-                        Warehouse: <span className="font-medium text-foreground">{product.warehouse.name}</span>
+                        {t('products.warehouse')} <span className="font-medium text-foreground">{product.warehouse.name}</span>
                       </div>
                     </div>
                   </div>

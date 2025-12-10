@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
+import { useI18n } from '@/lib/i18n';
 import { MapPin, Info } from 'lucide-react';
 import { authStore } from '@/stores/authStore';
 
@@ -21,6 +22,8 @@ const mockWarehouses = [
 ];
 
 export function MyWarehousesScreen() {
+  const { t } = useI18n();
+  
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -33,15 +36,15 @@ export function MyWarehousesScreen() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <ScreenHeader title="My Warehouses" showBack />
+      <ScreenHeader title={t('auth.warehouses.title')} showBack />
       <div className="space-y-4 px-4 py-4">
         <div className="space-y-1">
-          <h1 className="text-xl font-semibold text-foreground">My Warehouses</h1>
-          <p className="text-sm text-muted-foreground">Warehouses you have access to</p>
+          <h1 className="text-xl font-semibold text-foreground">{t('auth.warehouses.title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('auth.warehouses.subtitle')}</p>
         </div>
         <Card className="border border-border bg-white shadow-none">
           <CardContent className="px-3 py-4">
-            <h3 className="mb-4 text-sm font-semibold text-foreground">Warehouses I can access:</h3>
+            <h3 className="mb-4 text-sm font-semibold text-foreground">{t('auth.warehouses.warehousesICanAccess')}</h3>
             <div className="space-y-3">
               {accessibleWarehouses.length > 0 ? (
                 accessibleWarehouses.map((warehouse) => (
@@ -58,7 +61,7 @@ export function MyWarehousesScreen() {
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-muted-foreground">No warehouses assigned</p>
+                <p className="text-sm text-muted-foreground">{t('auth.warehouses.noWarehouses')}</p>
               )}
             </div>
           </CardContent>
@@ -69,7 +72,7 @@ export function MyWarehousesScreen() {
             <div className="flex items-start gap-2">
               <Info className="h-4 w-4 shrink-0 text-blue-600" />
               <p className="text-xs text-blue-900">
-                Contact your admin to get access to more warehouses.
+                {t('auth.warehouses.contactAdmin')}
               </p>
             </div>
           </CardContent>
