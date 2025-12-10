@@ -428,5 +428,32 @@
     "change": "Ndryshim",
     "stock": "Stoku",
     "details": "Detajet"
+  },
+  "notifications": {
+    "title": "Njoftimet",
+    "subtitle": "Shikoni dhe menaxhoni njoftimet tuaja",
+    "markAllRead": "Shëno të Gjitha si të Lexuara",
+    "today": "SOT",
+    "yesterday": "DJË",
+    "earlier": "MË HERËT",
+    "justNow": "Tani",
+    "hoursAgo": " orë më parë",
+    "daysAgo": " ditë më parë",
+    "noNotifications": "Nuk ka njoftime",
+    "loadMore": "Shfaq Më Shumë",
+    "allMarkedRead": "Të gjitha u shënuan si të lexuara",
+    "allMarkedReadDesc": "Të gjitha njoftimet u shënuan si të lexuara",
+    "settings": "Cilësimet e Njoftimeve",
+    "pushNotifications": "Njoftimet Push",
+    "lowStockAlerts": "Alarmet e Stokut të Ulët",
+    "lowStockAlertsDesc": "Merrni njoftime kur produktet janë në stok të ulët",
+    "outOfStockAlerts": "Alarmet e Stokut të Mbaruar",
+    "outOfStockAlertsDesc": "Merrni njoftime kur produktet janë jashtë stokut",
+    "transferUpdates": "Përditësimet e Transfertave",
+    "transferUpdatesDesc": "Merrni njoftime për ndryshimet e statusit të transfertave",
+    "countReminders": "Kujtesat e Numërimit",
+    "countRemindersDesc": "Merrni kujtesa për numërimet e stokut në pritje",
+    "settingsUpdated": "Cilësimet u Përditësuan",
+    "settingsUpdatedDesc": "Cilësimet tuaja të njoftimeve u përditësuan"
   }
 }

@@ -428,5 +428,32 @@
     "change": "Change",
     "stock": "Stock",
     "details": "Details"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "subtitle": "View and manage your notifications",
+    "markAllRead": "Mark All Read",
+    "today": "TODAY",
+    "yesterday": "YESTERDAY",
+    "earlier": "EARLIER",
+    "justNow": "Just now",
+    "hoursAgo": "h ago",
+    "daysAgo": "d ago",
+    "noNotifications": "No notifications",
+    "loadMore": "Load More",
+    "allMarkedRead": "All marked as read",
+    "allMarkedReadDesc": "All notifications have been marked as read",
+    "settings": "Notification Settings",
+    "pushNotifications": "Push Notifications",
+    "lowStockAlerts": "Low Stock Alerts",
+    "lowStockAlertsDesc": "Get notified when products are running low",
+    "outOfStockAlerts": "Out of Stock Alerts",
+    "outOfStockAlertsDesc": "Get notified when products are out of stock",
+    "transferUpdates": "Transfer Updates",
+    "transferUpdatesDesc": "Get notified about transfer status changes",
+    "countReminders": "Count Reminders",
+    "countRemindersDesc": "Get reminded about pending stock counts",
+    "settingsUpdated": "Settings Updated",
+    "settingsUpdatedDesc": "Your notification settings have been updated"
   }
 }

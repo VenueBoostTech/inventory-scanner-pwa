@@ -21,6 +21,8 @@ import { RecentLoginsScreen } from '@/features/auth/RecentLoginsScreen';
 import { MyPermissionsScreen } from '@/features/auth/MyPermissionsScreen';
 import { MyWarehousesScreen } from '@/features/auth/MyWarehousesScreen';
 import { DashboardScreen } from '@/features/dashboard/DashboardScreen';
+import { NotificationsScreen } from '@/features/notifications/NotificationsScreen';
+import { NotificationSettingsScreen } from '@/features/notifications/NotificationSettingsScreen';
 import { authStore } from '@/stores/authStore';
 
 const queryClient = new QueryClient({
@@ -66,6 +68,8 @@ function App() {
             <Route path="operations/counts/:id/counting" element={<CountingScreen />} />
             <Route path="operations/counts/:id" element={<CountDetailsScreen />} />
             <Route path="operations/warehouses" element={<WarehousesScreen />} />
+            <Route path="notifications" element={<NotificationsScreen />} />
+            <Route path="notifications/settings" element={<NotificationSettingsScreen />} />
             <Route path="account" element={<ProfileScreen />} />
             <Route path="account/recent-logins" element={<RecentLoginsScreen />} />
             <Route path="account/permissions" element={<MyPermissionsScreen />} />

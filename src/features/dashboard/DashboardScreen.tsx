@@ -345,7 +345,7 @@ export function DashboardScreen() {
               <Button
                 variant="outline"
                 className="h-20 flex-col gap-2 border-border bg-white hover:bg-[#164945]/5"
-                onClick={() => navigate('/products')}
+                onClick={() => navigate('/operations/adjustments')}
               >
                 <Package className="h-6 w-6 text-[#164945]" />
                 <span className="text-xs font-semibold text-foreground">ADJUST</span>
@@ -353,7 +353,7 @@ export function DashboardScreen() {
               <Button
                 variant="outline"
                 className="h-20 flex-col gap-2 border-border bg-white hover:bg-[#164945]/5"
-                onClick={() => navigate('/operations')}
+                onClick={() => navigate('/operations/counts')}
               >
                 <ClipboardList className="h-6 w-6 text-[#164945]" />
                 <span className="text-xs font-semibold text-foreground">{t('dashboard.count')}</span>
@@ -449,7 +449,7 @@ export function DashboardScreen() {
             <div className="flex-shrink-0">
               <button
                 type="button"
-                onClick={() => navigate('/operations')}
+                onClick={() => navigate('/operations/activities')}
                 className="mt-2 flex items-center gap-1 text-sm font-medium text-[#164945] hover:underline cursor-pointer"
               >
                 {t('common.seeAll')}

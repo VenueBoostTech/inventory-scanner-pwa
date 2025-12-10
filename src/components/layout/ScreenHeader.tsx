@@ -58,6 +58,7 @@ export function ScreenHeader({ title, action, showBack }: ScreenHeaderProps) {
           </button>
           <button
             type="button"
+            onClick={() => navigate('/notifications')}
             className="rounded-full p-2 hover:bg-[#043f3b]/5"
             aria-label="Notifications"
           >
