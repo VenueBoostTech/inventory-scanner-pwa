@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
 import { authStore } from '@/stores/authStore';
+import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -40,6 +41,7 @@ const Logo = () => (
 );
 
 export function LoginScreen() {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -96,10 +98,10 @@ export function LoginScreen() {
           <CardHeader className="px-0 pb-4 text-center">
             <Logo />
             <CardTitle className="text-2xl font-semibold text-foreground">
-              Welcome to Inventory Scanner
+              {t('auth.login.title')}
             </CardTitle>
             <CardDescription className="text-sm text-muted-foreground">
-              Sign in to continue
+              {t('auth.login.subtitle')}
             </CardDescription>
           </CardHeader>
           <CardContent className="px-0">
@@ -110,7 +112,7 @@ export function LoginScreen() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>{t('auth.login.email')}</FormLabel>
                       <FormControl>
                         <Input type="email" placeholder="you@company.com" {...field} />
                       </FormControl>
@@ -123,7 +125,7 @@ export function LoginScreen() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel>{t('auth.login.password')}</FormLabel>
                       <FormControl>
                         <Input type="password" placeholder="••••••••" {...field} />
                       </FormControl>
@@ -135,7 +137,7 @@ export function LoginScreen() {
                   type="submit"
                   className="w-full border-none bg-[#164945] text-white hover:bg-[#123b37]"
                 >
-                  Continue
+                  {t('auth.login.continue')}
                 </Button>
               </form>
             </Form>

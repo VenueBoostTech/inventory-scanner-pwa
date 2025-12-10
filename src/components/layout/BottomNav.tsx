@@ -1,16 +1,19 @@
 import { NavLink } from 'react-router-dom';
 import { Activity, Gauge, Package, Scan, User } from 'lucide-react';
+import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
-const navItems = [
-  { to: '/dashboard', icon: Gauge, label: 'Dashboard' },
-  { to: '/products', icon: Package, label: 'Products' },
-  { to: '/scan', icon: Scan, label: 'Scan' },
-  { to: '/operations', icon: Activity, label: 'Operations' },
-  { to: '/account', icon: User, label: 'Account' },
-];
-
 export function BottomNav() {
+  const { t } = useI18n();
+  
+  const navItems = [
+    { to: '/dashboard', icon: Gauge, label: t('dashboard.title') },
+    { to: '/products', icon: Package, label: t('products.title') },
+    { to: '/scan', icon: Scan, label: t('scan.title') },
+    { to: '/operations', icon: Activity, label: t('operations.title') },
+    { to: '/account', icon: User, label: t('auth.profile.title') },
+  ];
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 border-t bg-white pb-safe-bottom">
       <div className="flex h-16 items-center justify-around">
