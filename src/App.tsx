@@ -7,6 +7,7 @@ import { ScanScreen } from '@/features/scanning/ScanScreen';
 import { ProductsScreen } from '@/features/products/ProductsScreen';
 import { ActivitiesScreen } from '@/features/activities/ActivitiesScreen';
 import { ProfileScreen } from '@/features/auth/ProfileScreen';
+import { DashboardScreen } from '@/features/dashboard/DashboardScreen';
 import { authStore } from '@/stores/authStore';
 
 const queryClient = new QueryClient({
@@ -37,11 +38,12 @@ function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<Navigate to="/scan" replace />} />
+            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route path="dashboard" element={<DashboardScreen />} />
             <Route path="scan" element={<ScanScreen />} />
             <Route path="products" element={<ProductsScreen />} />
             <Route path="activities" element={<ActivitiesScreen />} />
-            <Route path="profile" element={<ProfileScreen />} />
+            <Route path="account" element={<ProfileScreen />} />
           </Route>
         </Routes>
       </BrowserRouter>

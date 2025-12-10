@@ -14,7 +14,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScreenHeader } from '@/components/layout/ScreenHeader';
 
 const schema = z.object({
   email: z.string().email(),
@@ -22,6 +21,23 @@ const schema = z.object({
 });
 
 type FormValues = z.infer<typeof schema>;
+
+const Logo = () => (
+  <div className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-[#164945]/10">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 64 64"
+      className="h-7 w-7 text-[#164945]"
+      role="img"
+      aria-label="Inventory Scanner logo"
+    >
+      <path
+        fill="currentColor"
+        d="M12 10h40a2 2 0 0 1 2 2v40a2 2 0 0 1-2 2H12a2 2 0 0 1-2-2V12a2 2 0 0 1 2-2Zm4 8v28h32V18H16Zm6 4h20v4H22v-4Zm0 10h20v4H22v-4Z"
+      />
+    </svg>
+  </div>
+);
 
 export function LoginScreen() {
   const navigate = useNavigate();
@@ -74,15 +90,19 @@ export function LoginScreen() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <ScreenHeader title="Login" />
-      <div className="px-4 py-6">
-        <Card className="mx-auto w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Welcome to Inventory Scanner</CardTitle>
-            <CardDescription>Sign in to continue</CardDescription>
+    <div className="flex min-h-screen items-center justify-center bg-background px-8">
+      <div className="w-full max-w-md">
+        <Card className="border-0 bg-transparent shadow-none">
+          <CardHeader className="px-0 pb-4 text-center">
+            <Logo />
+            <CardTitle className="text-2xl font-semibold text-foreground">
+              Welcome to Inventory Scanner
+            </CardTitle>
+            <CardDescription className="text-sm text-muted-foreground">
+              Sign in to continue
+            </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-0">
             <Form {...form}>
               <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
                 <FormField
@@ -111,7 +131,10 @@ export function LoginScreen() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full">
+                <Button
+                  type="submit"
+                  className="w-full border-none bg-[#164945] text-white hover:bg-[#123b37]"
+                >
                   Continue
                 </Button>
               </form>
