@@ -13,6 +13,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   Sheet,
   SheetContent,
   SheetDescription,
@@ -132,6 +140,11 @@ const mockCountItems = [
   },
 ];
 
+const mockWarehouses = [
+  { id: 'wh_001', name: 'Main Warehouse' },
+  { id: 'wh_002', name: 'Secondary Warehouse' },
+];
+
 export function CountsScreen() {
   const { t } = useI18n();
   const navigate = useNavigate();
@@ -141,6 +154,10 @@ export function CountsScreen() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [warehouseFilter, setWarehouseFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('recent');
+  const [startModalOpen, setStartModalOpen] = useState(false);
+  const [startWarehouse, setStartWarehouse] = useState('');
+  const [countScope, setCountScope] = useState<'full' | 'category' | 'location' | 'specific'>('full');
+  const [startNotes, setStartNotes] = useState('');
 
   type SortOption = 'recent' | 'status' | 'warehouse';
 
@@ -172,23 +189,43 @@ export function CountsScreen() {
   };
 
   const handleStart = () => {
+    setStartModalOpen(true);
+  };
+
+  const handleStartCount = () => {
+    if (!startWarehouse) {
+      toast({
+        title: t('common.error'),
+        description: t('operations.selectWarehouse'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // TODO: Create count via API
+    const newCountId = 'cnt_new';
     toast({
-      title: t('operations.startCount'),
-      description: t('common.loading'),
+      title: t('operations.countStarted'),
+      description: t('operations.countStartedDesc'),
     });
-    // TODO: Navigate to start count screen
+    setStartModalOpen(false);
+    setStartWarehouse('');
+    setCountScope('full');
+    setStartNotes('');
+    // Navigate to counting screen
+    navigate(`/operations/counts/${newCountId}/counting`);
   };
 
   const handleContinue = (count: any) => {
-    toast({
-      title: t('operations.continueCounting'),
-      description: t('common.loading'),
-    });
-    // TODO: Navigate to counting screen
+    navigate(`/operations/counts/${count.id}/counting`);
   };
 
   const handleViewDetails = (count: any) => {
-    navigate(`/operations/counts/${count.id}`);
+    if (count.status === 'in_progress') {
+      navigate(`/operations/counts/${count.id}/counting`);
+    } else {
+      navigate(`/operations/counts/${count.id}`);
+    }
   };
 
   const handleViewReport = (count: any) => {
@@ -438,6 +475,136 @@ export function CountsScreen() {
           </div>
         </div>
       </div>
+
+      {/* Start Count Modal */}
+      <Dialog open={startModalOpen} onOpenChange={setStartModalOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <DialogHeader>
+            <DialogTitle>{t('operations.startNewCount')}</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Warehouse */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                {t('operations.warehouse')} <span className="text-red-500">*</span>
+              </label>
+              <Select value={startWarehouse} onValueChange={setStartWarehouse}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('operations.selectWarehouse')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {mockWarehouses.map((wh) => (
+                    <SelectItem key={wh.id} value={wh.id}>
+                      {wh.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Count Scope */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">{t('operations.countScope')}</label>
+              <div className="space-y-2">
+                <label className="flex items-start gap-2 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                  <input
+                    type="radio"
+                    name="scope"
+                    value="full"
+                    checked={countScope === 'full'}
+                    onChange={(e) => setCountScope(e.target.value as any)}
+                    className="h-4 w-4 mt-0.5"
+                  />
+                  <div className="flex-1">
+                    <span className="text-sm font-medium">{t('operations.fullInventory')}</span>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {t('operations.countAllProducts')} (150 {t('operations.items')})
+                    </p>
+                  </div>
+                </label>
+                <label className="flex items-start gap-2 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                  <input
+                    type="radio"
+                    name="scope"
+                    value="category"
+                    checked={countScope === 'category'}
+                    onChange={(e) => setCountScope(e.target.value as any)}
+                    className="h-4 w-4 mt-0.5"
+                  />
+                  <div className="flex-1">
+                    <span className="text-sm font-medium">{t('operations.byCategory')}</span>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {t('operations.selectSpecificCategories')}
+                    </p>
+                  </div>
+                </label>
+                <label className="flex items-start gap-2 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                  <input
+                    type="radio"
+                    name="scope"
+                    value="location"
+                    checked={countScope === 'location'}
+                    onChange={(e) => setCountScope(e.target.value as any)}
+                    className="h-4 w-4 mt-0.5"
+                  />
+                  <div className="flex-1">
+                    <span className="text-sm font-medium">{t('operations.byLocation')}</span>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {t('operations.countProductsInArea')}
+                    </p>
+                  </div>
+                </label>
+                <label className="flex items-start gap-2 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                  <input
+                    type="radio"
+                    name="scope"
+                    value="specific"
+                    checked={countScope === 'specific'}
+                    onChange={(e) => setCountScope(e.target.value as any)}
+                    className="h-4 w-4 mt-0.5"
+                  />
+                  <div className="flex-1">
+                    <span className="text-sm font-medium">{t('operations.specificProducts')}</span>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {t('operations.selectIndividualProducts')}
+                    </p>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                {t('operations.notes')} ({t('operations.optional')})
+              </label>
+              <textarea
+                className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                placeholder={t('operations.countNotesPlaceholder')}
+                value={startNotes}
+                onChange={(e) => setStartNotes(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setStartModalOpen(false)}
+              className="w-full sm:w-auto"
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button
+              onClick={handleStartCount}
+              className="w-full sm:w-auto border-none bg-[#164945] text-white hover:bg-[#123b37]"
+            >
+              {t('operations.startCount')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
