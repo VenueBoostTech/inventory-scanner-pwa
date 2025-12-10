@@ -6,8 +6,8 @@ import { AppShell } from '@/components/layout/AppShell';
 import { LoginScreen } from '@/features/auth/LoginScreen';
 import { ScanScreen } from '@/features/scanning/ScanScreen';
 import { ProductsScreen } from '@/features/products/ProductsScreen';
+import { OperationsScreen } from '@/features/activities/OperationsScreen';
 import { ActivitiesScreen } from '@/features/activities/ActivitiesScreen';
-import { ActivitiesDetailScreen } from '@/features/activities/ActivitiesDetailScreen';
 import { TransfersScreen } from '@/features/transfers/TransfersScreen';
 import { AdjustmentsScreen } from '@/features/adjustments/AdjustmentsScreen';
 import { AdjustmentDetailsScreen } from '@/features/adjustments/AdjustmentDetailsScreen';
@@ -56,8 +56,8 @@ function App() {
             <Route path="dashboard" element={<DashboardScreen />} />
             <Route path="scan" element={<ScanScreen />} />
             <Route path="products" element={<ProductsScreen />} />
-            <Route path="operations" element={<ActivitiesScreen />} />
-            <Route path="operations/activities" element={<ActivitiesDetailScreen />} />
+            <Route path="operations" element={<OperationsScreen />} />
+            <Route path="operations/activities" element={<ActivitiesScreen />} />
             <Route path="operations/transfers" element={<TransfersScreen />} />
             <Route path="operations/adjustments" element={<AdjustmentsScreen />} />
             <Route path="operations/adjustments/:id" element={<AdjustmentDetailsScreen />} />
