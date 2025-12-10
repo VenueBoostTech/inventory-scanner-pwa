@@ -17,7 +17,8 @@
     "loading": "Duke ngarkuar...",
     "noData": "Nuk ka të dhëna",
     "error": "Gabim",
-    "actions": "Veprimet"
+    "actions": "Veprimet",
+    "other": "Tjetër"
   },
   "auth": {
     "login": {
@@ -330,6 +331,22 @@
     "mobileApp": "Aplikacioni Mobil",
     "adminPanel": "Paneli i Administratorit",
     "expiredItems": "Artikuj të skaduar",
-    "inventoryCorrection": "Korrigjim inventari"
+    "inventoryCorrection": "Korrigjim inventari",
+    "searchProductPlaceholder": "Kërkoni sipas emrit, SKU-së ose kodit...",
+    "currentStock": "Stoku Aktual",
+    "lowThreshold": "Pragu i Ulët",
+    "addStock": "Shto stok",
+    "removeStock": "Hiq stok",
+    "setToValue": "Vendos në vlerë",
+    "selectWarehouse": "Zgjidh magazinë",
+    "preview": "Parapamje",
+    "selectReason": "Zgjidh arsyen",
+    "returnCustomer": "Kthim nga klienti",
+    "foundDuringCount": "Gjetur gjatë numërimit",
+    "theftLoss": "Vjedhje/Humbje",
+    "notesPlaceholder": "PO #12345 - Marrë nga Furnizuesi ABC",
+    "fillRequiredFields": "Ju lutemi plotësoni të gjitha fushat e kërkuara",
+    "adjustmentCreated": "Rregullimi u Krijua",
+    "adjustmentCreatedDesc": "Rregullimi i stokut është krijuar me sukses"
   }
 }

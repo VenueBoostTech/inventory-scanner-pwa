@@ -17,7 +17,8 @@
     "loading": "Loading...",
     "noData": "No data available",
     "error": "Error",
-    "actions": "Actions"
+    "actions": "Actions",
+    "other": "Other"
   },
   "auth": {
     "login": {
@@ -330,6 +331,22 @@
     "mobileApp": "Mobile App",
     "adminPanel": "Admin Panel",
     "expiredItems": "Expired items",
-    "inventoryCorrection": "Inventory correction"
+    "inventoryCorrection": "Inventory correction",
+    "searchProductPlaceholder": "Search by name, SKU, or barcode...",
+    "currentStock": "Current Stock",
+    "lowThreshold": "Low Threshold",
+    "addStock": "Add stock",
+    "removeStock": "Remove stock",
+    "setToValue": "Set to value",
+    "selectWarehouse": "Select warehouse",
+    "preview": "Preview",
+    "selectReason": "Select reason",
+    "returnCustomer": "Return from customer",
+    "foundDuringCount": "Found during count",
+    "theftLoss": "Theft/Loss",
+    "notesPlaceholder": "PO #12345 - Received from Supplier ABC",
+    "fillRequiredFields": "Please fill all required fields",
+    "adjustmentCreated": "Adjustment Created",
+    "adjustmentCreatedDesc": "Stock adjustment has been created successfully"
   }
 }
