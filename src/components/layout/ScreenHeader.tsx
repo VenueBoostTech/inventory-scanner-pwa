@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Scan, Bell } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
@@ -26,6 +27,8 @@ const LogoMark = ({ className }: { className?: string }) => (
 );
 
 export function ScreenHeader({ title, action }: ScreenHeaderProps) {
+  const navigate = useNavigate();
+
   return (
     <header className="sticky top-0 z-10 border-b bg-white px-4 pt-safe-top">
       <div className="flex h-16 items-center justify-between gap-3">
@@ -35,6 +38,7 @@ export function ScreenHeader({ title, action }: ScreenHeaderProps) {
         <div className="flex items-center gap-3 text-[#043f3b]">
           <button
             type="button"
+            onClick={() => navigate('/scan')}
             className="rounded-full p-2 hover:bg-[#043f3b]/5"
             aria-label="Scan"
           >
@@ -47,11 +51,18 @@ export function ScreenHeader({ title, action }: ScreenHeaderProps) {
           >
             <Bell className="h-5 w-5" />
           </button>
-          <Avatar className="h-9 w-9 border border-[#043f3b]/20">
-            <AvatarFallback className="bg-[#043f3b]/10 text-[#043f3b] font-semibold">
-              U
-            </AvatarFallback>
-          </Avatar>
+          <button
+            type="button"
+            onClick={() => navigate('/account')}
+            className="rounded-full hover:bg-[#043f3b]/5"
+            aria-label="Account"
+          >
+            <Avatar className="h-9 w-9 border border-[#043f3b]/20">
+              <AvatarFallback className="bg-[#043f3b]/10 text-[#043f3b] font-semibold">
+                U
+              </AvatarFallback>
+            </Avatar>
+          </button>
         </div>
       </div>
       {action ? <div className="mt-3">{action}</div> : null}

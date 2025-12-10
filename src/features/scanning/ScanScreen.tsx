@@ -16,10 +16,19 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { format, formatDistanceToNow } from 'date-fns';
-import { AlertCircle, CheckCircle2, Plus, Search, XCircle, ArrowRight } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Plus, Search, XCircle, ArrowRight, Info, Lightbulb } from 'lucide-react';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 
 export function ScanScreen() {
   const [manualCode, setManualCode] = useState('');
+  const [infoOpen, setInfoOpen] = useState(false);
   const [lastScan, setLastScan] = useState<{
     code: string;
     productName: string;
@@ -249,6 +258,105 @@ export function ScanScreen() {
               </Table>
             )}
           </CardContent>
+        </Card>
+
+        {/* Info Section */}
+        <Card className="border border-border bg-white shadow-none">
+          <CardHeader className="flex flex-col sm:flex-row items-start justify-between gap-3 px-3 pt-3 pb-2">
+            <div className="flex items-start gap-3 flex-1 min-w-0 w-full sm:w-auto">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#164945]/10">
+                <Info className="h-5 w-5 text-[#164945]" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <CardTitle className="text-md font-semibold text-foreground">Need help with scanning?</CardTitle>
+                <CardDescription className="text-sm text-muted-foreground">
+                  Learn how scanning works and what to do if a barcode isn't found.
+                </CardDescription>
+              </div>
+            </div>
+            <div className="flex-shrink-0 w-full sm:w-auto flex justify-end sm:justify-start">
+              <Sheet open={infoOpen} onOpenChange={setInfoOpen}>
+                <SheetTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex items-center gap-1 text-sm font-medium text-[#164945] hover:underline cursor-pointer"
+                  >
+                    Learn more
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[75%] sm:w-[400px]">
+                    <SheetHeader className="text-left space-y-1">
+                      <SheetTitle className="text-left">Scanning Guide</SheetTitle>
+                      <SheetDescription className="text-left">
+                        Learn how scanning works and troubleshoot common issues
+                      </SheetDescription>
+                    </SheetHeader>
+                    <div className="mt-6 space-y-6">
+                      {/* How Scanning Works */}
+                      <div className="space-y-3">
+                        <h3 className="text-sm font-semibold text-foreground">How scanning works</h3>
+                        <div className="space-y-2 text-sm text-muted-foreground">
+                          <p>
+                            • Point your camera at a barcode and hold steady until it's detected
+                          </p>
+                          <p>• The system will automatically look up the product in the database</p>
+                          <p>• If found, you'll see product details and stock information</p>
+                          <p>• You can also enter barcodes manually if the camera isn't available</p>
+                        </div>
+                      </div>
+
+                      {/* Troubleshooting */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <AlertCircle className="h-4 w-4 text-amber-600" />
+                          <h3 className="text-sm font-semibold text-foreground">
+                            Why wasn't it found?
+                          </h3>
+                        </div>
+                        <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50/50 p-3">
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium text-foreground">
+                              1. Product doesn't exist yet
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              → Create a new product in the system first
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium text-foreground">
+                              2. Product exists but barcode wasn't saved
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              → Search for the product by name, then link the barcode to it
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Tip */}
+                      <div className="space-y-2 rounded-lg border border-emerald-200 bg-emerald-50/50 p-3">
+                        <div className="flex items-center gap-2">
+                          <Lightbulb className="h-4 w-4 text-emerald-600" />
+                          <p className="text-sm font-semibold text-foreground">Tip</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          After linking a barcode to a product, future scans will find it automatically!
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-6">
+                      <Button
+                        onClick={() => setInfoOpen(false)}
+                        className="w-full border-none bg-[#164945] text-white hover:bg-[#123b37]"
+                      >
+                        Got it
+                      </Button>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+            </div>
+          </CardHeader>
         </Card>
       </div>
     </div>
