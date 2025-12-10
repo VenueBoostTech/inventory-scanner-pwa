@@ -7,6 +7,13 @@ import { LoginScreen } from '@/features/auth/LoginScreen';
 import { ScanScreen } from '@/features/scanning/ScanScreen';
 import { ProductsScreen } from '@/features/products/ProductsScreen';
 import { ActivitiesScreen } from '@/features/activities/ActivitiesScreen';
+import { ActivitiesDetailScreen } from '@/features/activities/ActivitiesDetailScreen';
+import { TransfersScreen } from '@/features/transfers/TransfersScreen';
+import { AdjustmentsScreen } from '@/features/adjustments/AdjustmentsScreen';
+import { CountsScreen } from '@/features/counts/CountsScreen';
+import { CountDetailsScreen } from '@/features/counts/CountDetailsScreen';
+import { CountReportScreen } from '@/features/counts/CountReportScreen';
+import { WarehousesScreen } from '@/features/warehouses/WarehousesScreen';
 import { ProfileScreen } from '@/features/auth/ProfileScreen';
 import { RecentLoginsScreen } from '@/features/auth/RecentLoginsScreen';
 import { MyPermissionsScreen } from '@/features/auth/MyPermissionsScreen';
@@ -48,6 +55,13 @@ function App() {
             <Route path="scan" element={<ScanScreen />} />
             <Route path="products" element={<ProductsScreen />} />
             <Route path="operations" element={<ActivitiesScreen />} />
+            <Route path="operations/activities" element={<ActivitiesDetailScreen />} />
+            <Route path="operations/transfers" element={<TransfersScreen />} />
+            <Route path="operations/adjustments" element={<AdjustmentsScreen />} />
+            <Route path="operations/counts" element={<CountsScreen />} />
+            <Route path="operations/counts/:id" element={<CountDetailsScreen />} />
+            <Route path="operations/counts/:id/report" element={<CountReportScreen />} />
+            <Route path="operations/warehouses" element={<WarehousesScreen />} />
             <Route path="account" element={<ProfileScreen />} />
             <Route path="account/recent-logins" element={<RecentLoginsScreen />} />
             <Route path="account/permissions" element={<MyPermissionsScreen />} />
