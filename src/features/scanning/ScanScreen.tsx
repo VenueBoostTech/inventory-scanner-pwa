@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { format, formatDistanceToNow } from 'date-fns';
-import { AlertCircle, CheckCircle2, Plus, Search, XCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Plus, Search, XCircle, ArrowRight } from 'lucide-react';
 
 export function ScanScreen() {
   const [manualCode, setManualCode] = useState('');
@@ -178,22 +178,24 @@ export function ScanScreen() {
         </Card>
 
         <Card className="border border-border bg-white shadow-none">
-          <CardHeader className="flex items-start justify-between gap-3 px-3 pt-3 pb-2">
-            <div className="min-w-0 flex-1 space-y-1">
+          <CardHeader className="flex flex-row items-start justify-between gap-3 px-3 pt-3 pb-2">
+            <div className="flex-1 min-w-0">
               <CardTitle className="text-md font-semibold text-foreground">Recent scans</CardTitle>
               <CardDescription className="text-sm text-muted-foreground">
                 Latest lookups and results.
               </CardDescription>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="shrink-0 whitespace-nowrap text-[#164945] hover:bg-[#164945]/10"
-            >
-              See all
-            </Button>
+            <div className="flex-shrink-0">
+              <button
+                type="button"
+                className="mt-2 flex items-center gap-1 text-sm font-medium text-[#164945] hover:underline cursor-pointer"
+              >
+                See all
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
           </CardHeader>
-          <CardContent className="px-3 pb-3">
+          <CardContent className="px-3 mt-2 pb-3">
             {recentScans.length === 0 ? (
               <div className="rounded-md border border-dashed border-muted-foreground/30 px-3 py-4 text-center text-sm text-muted-foreground">
                 No scans yet. Start scanning or add a barcode manually.
@@ -202,10 +204,10 @@ export function ScanScreen() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[40%]">Product</TableHead>
-                    <TableHead className="w-[20%]">Barcode</TableHead>
-                    <TableHead className="w-[20%]">Status</TableHead>
-                    <TableHead className="w-[20%] text-right">Time</TableHead>
+                    <TableHead className="min-w-[200px]">Product</TableHead>
+                    <TableHead className="min-w-[120px]">Barcode</TableHead>
+                    <TableHead className="min-w-[180px]">Status</TableHead>
+                    <TableHead className="min-w-[100px] text-right">Time</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -214,7 +216,7 @@ export function ScanScreen() {
                     const action = formatAction(scan.action);
                     return (
                       <TableRow key={scan.id}>
-                        <TableCell className="align-middle">
+                        <TableCell className="align-middle min-w-[200px]">
                           <div className="flex flex-col">
                             <span className="text-sm font-semibold text-foreground">
                               {scan.product?.title ?? 'Unknown product'}
@@ -222,8 +224,8 @@ export function ScanScreen() {
                             <span className="text-xs text-muted-foreground">{scan.product?.sku}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{scan.barcode}</TableCell>
-                        <TableCell>
+                        <TableCell className="text-sm text-muted-foreground min-w-[120px]">{scan.barcode}</TableCell>
+                        <TableCell className="min-w-[180px]">
                           <div className="flex items-center gap-2 text-sm">
                             <span className="flex items-center gap-1 text-muted-foreground">
                               {action.icon}
@@ -237,7 +239,7 @@ export function ScanScreen() {
                             </Badge>
                           </div>
                         </TableCell>
-                        <TableCell className="text-right text-sm text-muted-foreground">
+                        <TableCell className="text-right text-sm text-muted-foreground min-w-[100px]">
                           {formatTimeAgo(scan.scannedAt)}
                         </TableCell>
                       </TableRow>
