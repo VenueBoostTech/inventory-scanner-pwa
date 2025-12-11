@@ -5,7 +5,7 @@ import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
-import { format, isToday, isYesterday, differenceInDays } from 'date-fns';
+import { isToday, isYesterday, differenceInDays } from 'date-fns';
 import {
   AlertCircle,
   AlertTriangle,

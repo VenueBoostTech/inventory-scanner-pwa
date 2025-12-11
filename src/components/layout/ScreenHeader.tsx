@@ -27,7 +27,7 @@ const LogoMark = ({ className }: { className?: string }) => (
   </div>
 );
 
-export function ScreenHeader({ title, action, showBack }: ScreenHeaderProps) {
+export function ScreenHeader({ title: _title, action, showBack }: ScreenHeaderProps) {
   const navigate = useNavigate();
 
   return (

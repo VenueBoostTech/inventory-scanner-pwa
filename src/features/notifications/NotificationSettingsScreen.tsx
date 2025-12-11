@@ -3,7 +3,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
 
 export function NotificationSettingsScreen() {
   const { t } = useI18n();

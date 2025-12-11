@@ -78,7 +78,7 @@ function getDateRange(filter: DateFilter): DateRange {
   }
 }
 
-function formatDateRange(filter: DateFilter): string {
+function _formatDateRange(filter: DateFilter): string {
   const range = getDateRange(filter);
   if (filter === 'today') {
     return format(range.dateFrom, 'MMM d, yyyy');
