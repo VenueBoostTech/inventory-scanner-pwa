@@ -33,6 +33,8 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 
+type DateFilter = 'today' | 'yesterday' | 'this_week' | 'last_7_days' | 'this_month';
+
 // Mock data
 const mockStats = {
   scans: 25,
