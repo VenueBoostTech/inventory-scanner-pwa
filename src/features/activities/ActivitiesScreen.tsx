@@ -876,15 +876,15 @@ export function ActivitiesScreen() {
                         </div>
                       )}
                       {selectedActivity.reference && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-muted-foreground">{t('operations.reference')}</span>
-                          <div className="flex items-center gap-1">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">{t('operations.reference')}</span>
                             <span className="font-medium">{selectedActivity.reference.code}</span>
-                            <Button variant="outline" size="sm" className="gap-1 h-6 px-2 text-xs">
-                              {t('common.view')}
-                              <ArrowRight className="h-3 w-3" />
-                            </Button>
                           </div>
+                          <Button variant="outline" size="sm" className="w-full gap-1 h-6 px-2 text-xs">
+                            {t('common.view')}
+                            <ArrowRight className="h-3 w-3" />
+                          </Button>
                         </div>
                       )}
                     </div>

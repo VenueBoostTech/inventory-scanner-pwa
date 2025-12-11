@@ -428,18 +428,16 @@ export function CountingScreen() {
         {/* Pending Items */}
         <Card className="border border-border bg-white shadow-none">
           <CardContent className="px-3 py-3">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-foreground">
-                  {t('operations.pendingItems')} ({mockCount.totalItems - mockCount.itemsCounted})
-                </h3>
-                <Button variant="outline" size="sm" className="text-xs">
-                  {t('operations.showAllProducts')}
-                </Button>
-              </div>
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-foreground">
+                {t('operations.pendingItems')} ({mockCount.totalItems - mockCount.itemsCounted})
+              </h3>
               <p className="text-xs text-muted-foreground">
                 {t('operations.next')}: Olive Oil (OIL-001), Vinegar (VIN-001), Salt (SAL-001)...
               </p>
+              <Button variant="outline" size="sm" className="w-full text-xs">
+                {t('operations.showAllProducts')}
+              </Button>
             </div>
           </CardContent>
         </Card>
