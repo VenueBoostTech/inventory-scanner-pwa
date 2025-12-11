@@ -406,20 +406,23 @@ export function TransfersScreen() {
                         <>
                           <Button
                             variant="outline"
+                            size="sm"
                             onClick={() => handleViewDetails(transfer)}
-                            className="flex-1 h-10"
+                            className="flex-1 py-2.5"
                           >
                             {t('operations.viewDetails')}
                           </Button>
                           <Button
-                            className="flex-1 h-10 border-none bg-[#164945] text-white hover:bg-[#123b37]"
+                            size="sm"
+                            className="flex-1 py-2.5 border-none bg-[#164945] text-white hover:bg-[#123b37]"
                             onClick={() => handleComplete(transfer)}
                           >
                             {t('operations.complete')}
                           </Button>
                           <Button
                             variant="outline"
-                            className="flex-1 h-11 text-red-600 border-red-200 hover:bg-red-50"
+                            size="sm"
+                            className="flex-1 py-2.5 text-red-600 border-red-200 hover:bg-red-50"
                             onClick={() => handleCancel(transfer)}
                           >
                             {t('operations.cancel')}
@@ -430,13 +433,15 @@ export function TransfersScreen() {
                         <>
                           <Button
                             variant="outline"
+                            size="sm"
                             onClick={() => handleViewDetails(transfer)}
-                            className="flex-1 h-10"
+                            className="flex-1 py-2.5"
                           >
                             {t('operations.viewDetails')}
                           </Button>
                           <Button
-                            className="flex-1 h-10 border-none bg-[#164945] text-white hover:bg-[#123b37]"
+                            size="sm"
+                            className="flex-1 py-2.5 border-none bg-[#164945] text-white hover:bg-[#123b37]"
                             onClick={() => handleComplete(transfer)}
                           >
                             {t('operations.complete')}
@@ -446,8 +451,9 @@ export function TransfersScreen() {
                       {transfer.status === 'completed' && (
                         <Button
                           variant="outline"
+                          size="sm"
                           onClick={() => handleViewDetails(transfer)}
-                          className="w-full h-10"
+                          className="w-full py-2.5"
                         >
                           {t('operations.viewDetails')}
                         </Button>
@@ -455,8 +461,9 @@ export function TransfersScreen() {
                       {transfer.status === 'cancelled' && (
                         <Button
                           variant="outline"
+                          size="sm"
                           onClick={() => handleViewDetails(transfer)}
-                          className="w-full h-10"
+                          className="w-full py-2.5"
                         >
                           {t('operations.viewDetails')}
                         </Button>
