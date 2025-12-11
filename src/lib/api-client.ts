@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosError } from 'axios';
+import axios, { type AxiosError } from 'axios';
 import { authStore } from '@/stores/authStore';
 
 const OMNI_GATEWAY_URL = import.meta.env.VITE_OMNI_GATEWAY_URL || 'https://apigtw.omnistackhub.xyz/';
@@ -11,7 +11,7 @@ const TOKEN_REFRESH_THRESHOLD = 5 * 60 * 1000;
 /**
  * Creates an API client instance with authentication headers
  */
-function createApiClient(): AxiosInstance {
+function createApiClient() {
   const client = axios.create({
     baseURL: API_BASE_URL,
     headers: {

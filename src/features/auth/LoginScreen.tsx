@@ -82,9 +82,6 @@ export function LoginScreen() {
     password: z
       .string()
       .min(1, { message: t('auth.validation.password_required') }),
-    clientIdentifier: z
-      .string()
-      .min(1, { message: t('auth.validation.client_required') }),
   });
 
   type FormValues = z.infer<typeof schema>;
@@ -94,7 +91,6 @@ export function LoginScreen() {
     defaultValues: {
       email: '',
       password: '',
-      clientIdentifier: '',
     },
   });
 
@@ -152,7 +148,6 @@ export function LoginScreen() {
       }>('/auth/login', {
         email: values.email,
         password: values.password,
-        clientIdentifier: values.clientIdentifier,
         deviceInfo,
       });
 
@@ -247,24 +242,6 @@ export function LoginScreen() {
           <CardContent className="px-0">
             <Form {...form}>
               <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
-                <FormField
-                  control={form.control}
-                  name="clientIdentifier"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('auth.login.client_label')}</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="text"
-                          placeholder={t('auth.login.client_placeholder')}
-                          {...field}
-                          disabled={isLoading}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
                 <FormField
                   control={form.control}
                   name="email"

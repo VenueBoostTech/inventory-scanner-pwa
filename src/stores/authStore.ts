@@ -168,6 +168,10 @@ export interface InventoryAccessFeatures {
 export interface InventoryAccess {
   enabled: boolean;
   mobileApp: boolean;
+  webApp?: boolean;
+  webAppUrl?: string;
+  customAppName: string | null;
+  customVersion: string | null;
   expiresAt: string | null;
   features: InventoryAccessFeatures;
 }
