@@ -27,6 +27,7 @@ export function ProfileScreen() {
   const inventoryAccess = authStore((state) => state.inventoryAccess);
   const logout = authStore((state) => state.logout);
   const [name, setName] = useState(profile?.name || '');
+  const [phone] = useState(profile?.phone || '—');
   const [isEditing, setIsEditing] = useState(false);
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
 

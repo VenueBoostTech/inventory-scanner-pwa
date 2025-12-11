@@ -95,7 +95,6 @@ const mockCountItems = [
 
 export function CountDetailsScreen() {
   const { t } = useI18n();
-  const _navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
 
