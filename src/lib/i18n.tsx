@@ -76,24 +76,31 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     const keys = key.split('.');
     let value: any = translations[language];
 
+    // Try current language first
     for (const k of keys) {
       if (value && typeof value === 'object' && k in value) {
         value = value[k];
       } else {
-        // Fallback to English if key not found
+        // Fallback to English if key not found in current language
         value = translations.en;
         for (const fallbackKey of keys) {
           if (value && typeof value === 'object' && fallbackKey in value) {
             value = value[fallbackKey];
           } else {
-            return key; // Return key if translation not found
+            // If still not found, return the full key
+            return key;
           }
         }
         break;
       }
     }
 
-    return typeof value === 'string' ? value : key;
+    // Return the value if it's a string, otherwise return the key
+    if (typeof value === 'string') {
+      return value;
+    }
+    // If value is not a string, return the full key (not just the last part)
+    return key;
   };
 
   return (
