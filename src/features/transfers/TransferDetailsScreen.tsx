@@ -203,7 +203,9 @@ export function TransferDetailsScreen() {
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">{t('operations.created')}:</span>
                 <span className="text-sm font-medium">
-                  {format(transfer.createdAt, 'MMM d, yyyy, h:mm a')}
+                  {transfer.createdAt
+                    ? format(new Date(transfer.createdAt), 'MMM d, yyyy, h:mm a')
+                    : '—'}
                 </span>
               </div>
               {transfer.createdBy && (
@@ -216,7 +218,7 @@ export function TransferDetailsScreen() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">{t('operations.started')}:</span>
                   <span className="text-sm font-medium">
-                    {format(transfer.startedAt, 'MMM d, yyyy, h:mm a')}
+                    {format(new Date(transfer.startedAt), 'MMM d, yyyy, h:mm a')}
                   </span>
                 </div>
               )}
@@ -224,7 +226,7 @@ export function TransferDetailsScreen() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">{t('operations.completed')}:</span>
                   <span className="text-sm font-medium">
-                    {format(transfer.completedAt, 'MMM d, yyyy, h:mm a')}
+                    {format(new Date(transfer.completedAt), 'MMM d, yyyy, h:mm a')}
                   </span>
                 </div>
               )}
@@ -281,21 +283,24 @@ export function TransferDetailsScreen() {
             <>
               <Button
                 variant="outline"
+                size="sm"
                 onClick={handleMarkInTransit}
-                className="flex-1 h-10"
+                className="flex-1 py-2.5"
               >
                 {t('transfers.markInTransit')}
               </Button>
               <Button
+                size="sm"
                 onClick={handleComplete}
-                className="flex-1 h-10 border-none bg-[#164945] text-white hover:bg-[#123b37]"
+                className="flex-1 py-2.5 border-none bg-[#164945] text-white hover:bg-[#123b37]"
               >
                 {t('transfers.completeTransfer')}
               </Button>
               <Button
                 variant="outline"
+                size="sm"
                 onClick={handleCancel}
-                className="flex-1 h-10 text-red-600 border-red-200 hover:bg-red-50"
+                className="flex-1 py-2.5 text-red-600 border-red-200 hover:bg-red-50"
               >
                 {t('transfers.cancelTransfer')}
               </Button>
@@ -303,8 +308,9 @@ export function TransferDetailsScreen() {
           )}
           {transfer.status === 'in_transit' && (
             <Button
+              size="sm"
               onClick={handleComplete}
-              className="w-full h-10 border-none bg-[#164945] text-white hover:bg-[#123b37]"
+              className="w-full py-2.5 border-none bg-[#164945] text-white hover:bg-[#123b37]"
             >
               {t('transfers.completeTransfer')}
             </Button>
@@ -374,14 +380,16 @@ export function TransferDetailsScreen() {
           <DialogFooter className="gap-2 sm:gap-0">
             <Button
               variant="outline"
+              size="sm"
               onClick={() => setCompleteModalOpen(false)}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto py-2.5"
             >
               {t('common.cancel')}
             </Button>
             <Button
+              size="sm"
               onClick={handleCompleteTransfer}
-              className="w-full sm:w-auto border-none bg-[#164945] text-white hover:bg-[#123b37]"
+              className="w-full sm:w-auto py-2.5 border-none bg-[#164945] text-white hover:bg-[#123b37]"
             >
               {t('operations.complete')}
             </Button>
