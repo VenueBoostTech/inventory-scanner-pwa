@@ -266,7 +266,7 @@ export function TransfersScreen() {
     setTransferItems(transferItems.filter((_, i) => i !== index));
   };
 
-  const handleCreateTransfer = () => {
+  const _handleCreateTransfer = () => {
     // TODO: Create transfer via API
     toast({
       title: t('transfers.transferCreated'),
@@ -303,13 +303,7 @@ export function TransfersScreen() {
     });
   };
 
-  const _handleMarkInTransit = (_transfer: any) => {
-    // TODO: Mark in transit via API
-    toast({
-      title: t('transfers.transferMarkedInTransit'),
-      description: t('transfers.transferMarkedInTransitDesc'),
-    });
-  };
+  // handleMarkInTransit removed - unused
 
   const totalQuantity = useMemo(() => {
     return transferItems.reduce((sum, item) => sum + item.quantity, 0);

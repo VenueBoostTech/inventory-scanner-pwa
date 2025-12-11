@@ -78,16 +78,7 @@ function getDateRange(filter: DateFilter): DateRange {
   }
 }
 
-function _formatDateRange(filter: DateFilter): string {
-  const range = getDateRange(filter);
-  if (filter === 'today') {
-    return format(range.dateFrom, 'MMM d, yyyy');
-  }
-  if (filter === 'yesterday') {
-    return format(range.dateFrom, 'MMM d, yyyy');
-  }
-  return `${format(range.dateFrom, 'MMM d')} - ${format(range.dateTo, 'MMM d, yyyy')}`;
-}
+// formatDateRange removed - unused
 
 // Mock data
 const mockStats = {

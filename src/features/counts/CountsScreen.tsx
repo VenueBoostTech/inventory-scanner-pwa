@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -96,46 +97,7 @@ const mockCounts = [
   },
 ];
 
-const _mockCountItems = [
-  {
-    productId: 'prod_001',
-    productName: 'Coffee Beans',
-    sku: 'COF-001',
-    systemQuantity: 150,
-    countedQuantity: 148,
-    discrepancy: -2,
-    status: 'discrepancy',
-    notes: '',
-  },
-  {
-    productId: 'prod_002',
-    productName: 'Tea Bags',
-    sku: 'TEA-001',
-    systemQuantity: 80,
-    countedQuantity: 80,
-    discrepancy: 0,
-    status: 'match',
-  },
-  {
-    productId: 'prod_003',
-    productName: 'Sugar',
-    sku: 'SUG-001',
-    systemQuantity: 100,
-    countedQuantity: 105,
-    discrepancy: 5,
-    status: 'discrepancy',
-    notes: '',
-  },
-  {
-    productId: 'prod_004',
-    productName: 'Milk',
-    sku: 'MLK-001',
-    systemQuantity: 50,
-    countedQuantity: 50,
-    discrepancy: 0,
-    status: 'match',
-  },
-];
+// Mock count items removed - unused
 
 const mockWarehouses = [
   { id: 'wh_001', name: 'Main Warehouse' },
@@ -213,9 +175,7 @@ export function CountsScreen() {
     navigate(`/operations/counts/${newCountId}/counting`);
   };
 
-  const _handleContinue = (count: any) => {
-    navigate(`/operations/counts/${count.id}/counting`);
-  };
+  // handleContinue removed - unused
 
   const handleViewDetails = (count: any) => {
     if (count.status === 'in_progress') {
