@@ -147,7 +147,7 @@ export function LoginScreen() {
           expiresAt: string | null;
           features: any; // Will be typed properly in authStore
         };
-        success?: boolean;
+        success?: boolean; // Optional, may be present in response
         message: string;
       }>('/auth/login', {
         email: values.email,
