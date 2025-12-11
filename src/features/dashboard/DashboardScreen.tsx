@@ -40,7 +40,7 @@ interface DateRange {
   dateTo: Date;
 }
 
-function getDateRange(filter: DateFilter): DateRange {
+function _getDateRange(filter: DateFilter): DateRange {
   const now = new Date();
   
   switch (filter) {
