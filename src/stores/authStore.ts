@@ -21,12 +21,16 @@ export interface Features {
   editProducts: boolean;
   barcodeScanning: boolean;
   multiLanguage: boolean;
+  offlineMode: boolean;
+  printLabels: boolean;
+  batchScanning: boolean;
 }
 
 export interface Profile {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   role: string;
   clientId: string;
   clientName: string;
@@ -35,36 +39,61 @@ export interface Profile {
   preferences: {
     language: string;
     timezone: string;
+    notificationsEnabled?: boolean;
   };
 }
 
 interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
+  tokenExpiresAt: number | null;
   profile: Profile | null;
   isAuthenticated: boolean;
-  setTokens: (access: string, refresh: string) => void;
+  setTokens: (access: string, refresh: string, expiresAt?: number) => void;
   setProfile: (profile: Profile) => void;
   logout: () => void;
+  getClientIdentifier: () => string | null;
 }
 
 export const authStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       accessToken: null,
       refreshToken: null,
+      tokenExpiresAt: null,
       profile: null,
       isAuthenticated: false,
-      setTokens: (access, refresh) =>
-        set({ accessToken: access, refreshToken: refresh, isAuthenticated: true }),
-      setProfile: (profile) => set({ profile }),
-      logout: () =>
+      setTokens: (access, refresh, expiresAt) => {
+        const expiresAtTimestamp = expiresAt || (Date.now() + 3600 * 1000); // Default 1 hour
+        set({
+          accessToken: access,
+          refreshToken: refresh,
+          tokenExpiresAt: expiresAtTimestamp,
+          isAuthenticated: true,
+        });
+      },
+      setProfile: (profile) => {
+        set({ profile });
+        // Sync language preference with i18n
+        if (profile.preferences?.language) {
+          localStorage.setItem('app-language', profile.preferences.language);
+        }
+      },
+      logout: () => {
         set({
           accessToken: null,
           refreshToken: null,
+          tokenExpiresAt: null,
           profile: null,
           isAuthenticated: false,
-        }),
+        });
+        // Clear language preference
+        localStorage.removeItem('app-language');
+      },
+      getClientIdentifier: () => {
+        const profile = get().profile;
+        return profile?.clientId || null;
+      },
     }),
     {
       name: 'auth-storage',
@@ -72,6 +101,7 @@ export const authStore = create<AuthState>()(
       partialize: (state) => ({
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
+        tokenExpiresAt: state.tokenExpiresAt,
         profile: state.profile,
         isAuthenticated: state.isAuthenticated,
       }),

@@ -26,11 +26,41 @@
   },
   "auth": {
     "login": {
-      "title": "Welcome to Inventory Scanner",
-      "subtitle": "Sign in to continue",
-      "email": "Email",
-      "password": "Password",
-      "continue": "Continue"
+      "title": "Sign In",
+      "subtitle": "Sign in to your inventory account",
+      "email_label": "Email",
+      "email_placeholder": "Enter your email",
+      "password_label": "Password",
+      "password_placeholder": "Enter your password",
+      "client_label": "Company Code",
+      "client_placeholder": "Enter company code",
+      "button_login": "Sign In",
+      "button_loading": "Signing in...",
+      "forgot_password": "Forgot password?",
+      "success": "Login Successful",
+      "successDesc": "Welcome back!"
+    },
+    "logout": {
+      "title": "Logout",
+      "confirm_message": "Are you sure you want to logout?",
+      "button_confirm": "Yes, Logout",
+      "button_cancel": "Cancel"
+    },
+    "errors": {
+      "invalid_credentials": "Invalid email or password",
+      "account_not_setup": "Account not properly set up. Please contact admin.",
+      "invitation_pending": "Please accept your invitation first",
+      "no_mobile_access": "You don't have mobile inventory access",
+      "app_not_enabled": "Inventory app is not enabled for your company",
+      "subscription_expired": "Your subscription has expired",
+      "network_error": "Network error. Please check your connection.",
+      "session_expired": "Session expired. Please login again."
+    },
+    "validation": {
+      "email_required": "Email is required",
+      "email_invalid": "Please enter a valid email",
+      "password_required": "Password is required",
+      "client_required": "Company code is required"
     },
     "profile": {
       "title": "Profile",
