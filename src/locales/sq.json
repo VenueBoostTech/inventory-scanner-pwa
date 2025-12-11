@@ -26,11 +26,41 @@
   },
   "auth": {
     "login": {
-      "title": "Mirë se vini në Inventory Scanner",
-      "subtitle": "Hyni për të vazhduar",
-      "email": "Email",
-      "password": "Fjalëkalimi",
-      "continue": "Vazhdo"
+      "title": "Hyr",
+      "subtitle": "Hyni në llogarinë tuaj të inventarit",
+      "email_label": "Email",
+      "email_placeholder": "Shkruani email-in tuaj",
+      "password_label": "Fjalëkalimi",
+      "password_placeholder": "Shkruani fjalëkalimin tuaj",
+      "client_label": "Kodi i Kompanisë",
+      "client_placeholder": "Shkruani kodin e kompanisë",
+      "button_login": "Hyr",
+      "button_loading": "Duke hyrë...",
+      "forgot_password": "Keni harruar fjalëkalimin?",
+      "success": "Hyrja u Krye me Sukses",
+      "successDesc": "Mirë se u kthyet!"
+    },
+    "logout": {
+      "title": "Dil",
+      "confirm_message": "Jeni të sigurt që dëshironi të dilni?",
+      "button_confirm": "Po, Dil",
+      "button_cancel": "Anulo"
+    },
+    "errors": {
+      "invalid_credentials": "Email ose fjalëkalim i pavlefshëm",
+      "account_not_setup": "Llogaria nuk është vendosur siç duhet. Kontaktoni administratorin.",
+      "invitation_pending": "Ju lutem pranoni ftesën tuaj së pari",
+      "no_mobile_access": "Nuk keni akses për inventarin mobil",
+      "app_not_enabled": "Aplikacioni i inventarit nuk është aktivizuar për kompaninë tuaj",
+      "subscription_expired": "Abonimi juaj ka skaduar",
+      "network_error": "Gabim rrjeti. Kontrolloni lidhjen tuaj.",
+      "session_expired": "Sesioni ka skaduar. Hyni përsëri."
+    },
+    "validation": {
+      "email_required": "Email-i është i detyrueshëm",
+      "email_invalid": "Ju lutem shkruani një email të vlefshëm",
+      "password_required": "Fjalëkalimi është i detyrueshëm",
+      "client_required": "Kodi i kompanisë është i detyrueshëm"
     },
     "profile": {
       "title": "Profili",

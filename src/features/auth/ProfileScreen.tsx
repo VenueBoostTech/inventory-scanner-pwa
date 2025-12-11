@@ -24,6 +24,7 @@ export function ProfileScreen() {
   const { toast } = useToast();
   const { t, language, setLanguage } = useI18n();
   const profile = authStore((state) => state.profile);
+  const inventoryAccess = authStore((state) => state.inventoryAccess);
   const logout = authStore((state) => state.logout);
   const [name, setName] = useState(profile?.name || '');
   const [phone, setPhone] = useState('+355 69 123 4567'); // Mock phone
@@ -246,12 +247,23 @@ export function ProfileScreen() {
                 </div>
                 <span className="text-sm text-muted-foreground">{profile?.clientName || '—'}</span>
               </div>
+              {inventoryAccess?.customAppName && (
+                <div className="flex items-center justify-between gap-3 border-b border-border py-3">
+                  <div className="flex items-center gap-3">
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                    <div className="text-sm font-medium text-foreground">{t('auth.profile.appName')}</div>
+                  </div>
+                  <span className="text-sm text-muted-foreground">{inventoryAccess.customAppName}</span>
+                </div>
+              )}
               <div className="flex items-center justify-between gap-3 py-3">
                 <div className="flex items-center gap-3">
                   <Info className="h-4 w-4 text-muted-foreground" />
                   <div className="text-sm font-medium text-foreground">{t('auth.profile.appVersion')}</div>
                 </div>
-                <span className="text-sm text-muted-foreground">1.0.0</span>
+                <span className="text-sm text-muted-foreground">
+                  {inventoryAccess?.customVersion || '1.0.0'}
+                </span>
               </div>
             </CardContent>
           </Card>

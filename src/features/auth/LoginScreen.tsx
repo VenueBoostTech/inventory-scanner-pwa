@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
 import { authStore } from '@/stores/authStore';
 import { useI18n } from '@/lib/i18n';
+import { useToast } from '@/hooks/use-toast';
+import { apiClient } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -16,12 +19,36 @@ import {
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-const schema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-});
+// Get device info helper
+function getDeviceInfo() {
+  const userAgent = navigator.userAgent;
+  let platform = 'web';
+  let deviceModel = 'Unknown';
 
-type FormValues = z.infer<typeof schema>;
+  if (/iPhone|iPad|iPod/.test(userAgent)) {
+    platform = 'ios';
+    const match = userAgent.match(/iPhone|iPad|iPod/);
+    deviceModel = match ? match[0] : 'iOS Device';
+  } else if (/Android/.test(userAgent)) {
+    platform = 'android';
+    const match = userAgent.match(/Android\s([\d.]+)/);
+    deviceModel = match ? `Android ${match[1]}` : 'Android Device';
+  }
+
+  return {
+    platform,
+    deviceModel,
+    appVersion: '1.0.0',
+    deviceId: localStorage.getItem('device-id') || `device-${Date.now()}`,
+  };
+}
+
+// Initialize device ID if not exists
+if (!localStorage.getItem('device-id')) {
+  localStorage.setItem('device-id', `device-${Date.now()}`);
+}
+
+// FormValues type will be defined inside component
 
 const Logo = () => (
   <div className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-[#164945]/10">
@@ -43,6 +70,22 @@ const Logo = () => (
 export function LoginScreen() {
   const { t } = useI18n();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Create schema with localized messages
+  const schema = z.object({
+    email: z
+      .string()
+      .min(1, { message: t('auth.validation.email_required') })
+      .email({ message: t('auth.validation.email_invalid') }),
+    password: z
+      .string()
+      .min(1, { message: t('auth.validation.password_required') }),
+  });
+
+  type FormValues = z.infer<typeof schema>;
+
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -51,44 +94,136 @@ export function LoginScreen() {
     },
   });
 
-  const onSubmit = (values: FormValues) => {
-    // Placeholder login - replace with API call.
-    authStore
-      .getState()
-      .setTokens('demo-access-token', 'demo-refresh-token');
-    authStore.getState().setProfile({
-      id: 'demo',
-      name: 'Demo User',
-      email: values.email,
-      role: 'manager',
-      clientId: 'client-1',
-      clientName: 'Inventory Inc.',
-      permissions: {
-        canScan: true,
-        canAdjustStock: true,
-        canPerformStockCount: true,
-        canInitiateTransfer: true,
-        canCompleteTransfer: true,
-        canAddProducts: true,
-        canEditProducts: true,
-        canViewAllWarehouses: true,
-        warehouseIds: [],
-      },
-      features: {
-        stockAdjustments: true,
-        stockCounts: true,
-        stockTransfers: true,
-        addProducts: true,
-        editProducts: true,
-        barcodeScanning: true,
-        multiLanguage: false,
-      },
-      preferences: {
-        language: 'en',
-        timezone: 'UTC',
-      },
-    });
-    navigate('/scan', { replace: true });
+  const onSubmit = async (values: FormValues) => {
+    setIsLoading(true);
+    try {
+      const deviceInfo = getDeviceInfo();
+
+      const response = await apiClient.post<{
+        tokens: {
+          accessToken: string;
+          refreshToken: string;
+          expiresIn: number;
+          tokenType: string;
+        };
+        profile: {
+          id: string;
+          name: string;
+          email: string;
+          phone?: string;
+          role: string;
+          clientId: string;
+          clientName: string;
+          permissions: {
+            canScan: boolean;
+            canAdjustStock: boolean;
+            canAddProducts: boolean;
+            canEditProducts: boolean;
+            canViewAllWarehouses: boolean;
+            canPerformStockCount: boolean;
+            canInitiateTransfer: boolean;
+            canCompleteTransfer: boolean;
+            warehouseIds: string[];
+          };
+          preferences: {
+            language: string;
+            timezone: string;
+            notificationsEnabled?: boolean;
+          };
+        };
+        client: {
+          id: string;
+          name: string;
+          code: string;
+          publicIdentifier: string;
+        };
+        inventoryAccess: {
+          enabled: boolean;
+          mobileApp: boolean;
+          expiresAt: string | null;
+          features: any; // Will be typed properly in authStore
+        };
+        success?: boolean; // Optional, may be present in response
+        message: string;
+      }>('/auth/login', {
+        email: values.email,
+        password: values.password,
+        deviceInfo,
+      });
+
+      const { tokens, profile, client, inventoryAccess } = response.data;
+
+      // Calculate expiration timestamp
+      const expiresAt = Date.now() + (tokens.expiresIn * 1000);
+
+      // Store tokens, profile, client, and inventoryAccess
+      authStore.getState().setTokens(tokens.accessToken, tokens.refreshToken, expiresAt);
+      authStore.getState().setAuthData(profile, client, inventoryAccess);
+
+      // Show success message
+      toast({
+        title: t('auth.login.success'),
+        description: response.data.message || t('auth.login.successDesc'),
+      });
+
+      // Navigate to dashboard
+      navigate('/dashboard', { replace: true });
+    } catch (error: any) {
+      console.error('Login error:', error);
+      
+      // Handle API errors
+      let errorMessage = t('auth.errors.network_error');
+      
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        const errorKey = errorData.errorKey;
+        
+        // Map error keys to localization keys
+        if (errorKey) {
+          // Error keys from API are like "auth.invalid_credentials"
+          // Map to "auth.errors.invalid_credentials"
+          const errorKeyParts = errorKey.split('.');
+          if (errorKeyParts.length >= 2) {
+            const mappedKey = `auth.errors.${errorKeyParts.slice(1).join('_')}`;
+            const translated = t(mappedKey);
+            
+            // If translation exists and is different from key, use it
+            if (translated !== mappedKey) {
+              errorMessage = translated;
+            } else if (errorData.message) {
+              errorMessage = errorData.message;
+            }
+          } else if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+      } else if (error.message) {
+        // Network or other errors
+        errorMessage = error.message;
+      }
+
+      toast({
+        title: t('common.error'),
+        description: errorMessage,
+        variant: 'destructive',
+      });
+
+      // Set form errors if validation errors
+      if (error.response?.status === 400) {
+        const errors = error.response.data?.errors || {};
+        Object.keys(errors).forEach((field) => {
+          const fieldName = field as keyof FormValues;
+          form.setError(fieldName, {
+            type: 'server',
+            message: errors[field],
+          });
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -112,9 +247,14 @@ export function LoginScreen() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('auth.login.email')}</FormLabel>
+                      <FormLabel>{t('auth.login.email_label')}</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="you@company.com" {...field} />
+                        <Input
+                          type="email"
+                          placeholder={t('auth.login.email_placeholder')}
+                          {...field}
+                          disabled={isLoading}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -125,9 +265,14 @@ export function LoginScreen() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('auth.login.password')}</FormLabel>
+                      <FormLabel>{t('auth.login.password_label')}</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} />
+                        <Input
+                          type="password"
+                          placeholder={t('auth.login.password_placeholder')}
+                          {...field}
+                          disabled={isLoading}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -136,9 +281,18 @@ export function LoginScreen() {
                 <Button
                   type="submit"
                   className="w-full border-none bg-[#164945] text-white hover:bg-[#123b37]"
+                  disabled={isLoading}
                 >
-                  {t('auth.login.continue')}
+                  {isLoading ? t('auth.login.button_loading') : t('auth.login.button_login')}
                 </Button>
+                <div className="text-center">
+                  <button
+                    type="button"
+                    className="text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    {t('auth.login.forgot_password')}
+                  </button>
+                </div>
               </form>
             </Form>
           </CardContent>
