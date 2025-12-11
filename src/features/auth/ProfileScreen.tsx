@@ -27,7 +27,6 @@ export function ProfileScreen() {
   const inventoryAccess = authStore((state) => state.inventoryAccess);
   const logout = authStore((state) => state.logout);
   const [name, setName] = useState(profile?.name || '');
-  const [phone, setPhone] = useState('+355 69 123 4567'); // Mock phone
   const [isEditing, setIsEditing] = useState(false);
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
 

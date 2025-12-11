@@ -23,7 +23,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
-import { Truck, Plus, CheckCircle2, XCircle, AlertCircle, Search, Camera, Trash2, ArrowRight, Warehouse } from 'lucide-react';
+import { Truck, Plus, CheckCircle2, XCircle, AlertCircle, Search, Camera, Trash2, ArrowRight } from 'lucide-react';
 import { format, isToday } from 'date-fns';
 
 // Mock data
@@ -120,7 +120,7 @@ export function TransfersScreen() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [itemQuantity, setItemQuantity] = useState('');
   const [transferNotes, setTransferNotes] = useState('');
-  const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
+  const [_confirmationModalOpen, setConfirmationModalOpen] = useState(false);
   const [selectedTransfer, setSelectedTransfer] = useState<any>(null);
   const [completeModalOpen, setCompleteModalOpen] = useState(false);
 
@@ -246,7 +246,7 @@ export function TransfersScreen() {
     if (quantity > selectedProduct.availableStock) {
       toast({
         title: t('common.error'),
-        description: t('transfers.notEnoughStock', { available: selectedProduct.availableStock }),
+        description: t('transfers.notEnoughStock').replace('{available}', String(selectedProduct.availableStock)),
         variant: 'destructive',
       });
       return;
@@ -295,7 +295,7 @@ export function TransfersScreen() {
     setSelectedTransfer(null);
   };
 
-  const handleCancel = (transfer: any) => {
+  const handleCancel = (_transfer: any) => {
     // TODO: Cancel transfer via API
     toast({
       title: t('transfers.transferCancelled'),
@@ -303,7 +303,7 @@ export function TransfersScreen() {
     });
   };
 
-  const handleMarkInTransit = (transfer: any) => {
+  const _handleMarkInTransit = (_transfer: any) => {
     // TODO: Mark in transit via API
     toast({
       title: t('transfers.transferMarkedInTransit'),

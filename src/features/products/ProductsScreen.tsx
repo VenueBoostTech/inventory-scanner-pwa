@@ -206,7 +206,7 @@ export function ProductsScreen() {
     return filtered;
   }, [search, quickFilter, sortBy, stockStatusFilter, categoryFilter, barcodeStatusFilter]);
 
-  const getStockStatusBadge = (status: string, quantity: number) => {
+  const getStockStatusBadge = (status: string, _quantity: number) => {
     if (status === 'in_stock') {
       return (
         <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">
@@ -374,8 +374,8 @@ export function ProductsScreen() {
                     <SelectContent>
                       <SelectItem value="all">{t('products.allCategories')}</SelectItem>
                       {categories.map((cat) => (
-                        <SelectItem key={cat} value={cat}>
-                          {cat}
+                        <SelectItem key={cat || 'unknown'} value={cat || 'unknown'}>
+                          {cat || '—'}
                         </SelectItem>
                       ))}
                     </SelectContent>

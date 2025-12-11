@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -15,7 +14,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -40,7 +38,6 @@ import {
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
 import {
-  ClipboardList,
   Plus,
   CheckCircle2,
   XCircle,
@@ -99,7 +96,7 @@ const mockCounts = [
   },
 ];
 
-const mockCountItems = [
+const _mockCountItems = [
   {
     productId: 'prod_001',
     productName: 'Coffee Beans',
@@ -216,7 +213,7 @@ export function CountsScreen() {
     navigate(`/operations/counts/${newCountId}/counting`);
   };
 
-  const handleContinue = (count: any) => {
+  const _handleContinue = (count: any) => {
     navigate(`/operations/counts/${count.id}/counting`);
   };
 
@@ -426,7 +423,9 @@ export function CountsScreen() {
                           ? format(count.completedAt, 'MMM d')
                           : count.status === 'cancelled' && count.cancelledAt
                           ? format(count.cancelledAt, 'MMM d')
-                          : format(count.startedAt, 'MMM d')}
+                          : count.startedAt
+                          ? format(count.startedAt, 'MMM d')
+                          : '—'}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">

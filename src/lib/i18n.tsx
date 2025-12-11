@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import enTranslations from '@/locales/en.json';
 import sqTranslations from '@/locales/sq.json';
 

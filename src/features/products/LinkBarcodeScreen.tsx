@@ -7,15 +7,13 @@ import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { useScanner } from '@/hooks/useScanner';
-import { Package, CheckCircle2, AlertCircle, Camera, Zap } from 'lucide-react';
+import { Package, CheckCircle2, AlertCircle, Zap } from 'lucide-react';
 
 // Mock data
 const mockProducts: Record<string, any> = {
