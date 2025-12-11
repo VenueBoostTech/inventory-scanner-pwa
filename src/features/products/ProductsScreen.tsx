@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
@@ -139,6 +140,7 @@ const mockProducts: ProductWithWarehouse[] = [
 
 export function ProductsScreen() {
   const { t } = useI18n();
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
   const [sortBy, setSortBy] = useState<SortOption>('stock_low_high');
@@ -442,7 +444,11 @@ export function ProductsScreen() {
             </Card>
           ) : (
             filteredAndSortedProducts.map((product) => (
-              <Card key={product.id} className="border border-border bg-white shadow-none">
+              <Card
+                key={product.id}
+                className="border border-border bg-white shadow-none cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={() => navigate(`/products/${product.id}`)}
+              >
                 <CardContent className="px-3 py-3">
                   <div className="flex gap-3">
                     {/* Product Image */}

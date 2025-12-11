@@ -6,6 +6,9 @@ import { AppShell } from '@/components/layout/AppShell';
 import { LoginScreen } from '@/features/auth/LoginScreen';
 import { ScanScreen } from '@/features/scanning/ScanScreen';
 import { ProductsScreen } from '@/features/products/ProductsScreen';
+import { ProductDetailsScreen } from '@/features/products/ProductDetailsScreen';
+import { EditProductScreen } from '@/features/products/EditProductScreen';
+import { LinkBarcodeScreen } from '@/features/products/LinkBarcodeScreen';
 import { OperationsScreen } from '@/features/activities/OperationsScreen';
 import { ActivitiesScreen } from '@/features/activities/ActivitiesScreen';
 import { TransfersScreen } from '@/features/transfers/TransfersScreen';
@@ -59,6 +62,9 @@ function App() {
             <Route path="dashboard" element={<DashboardScreen />} />
             <Route path="scan" element={<ScanScreen />} />
             <Route path="products" element={<ProductsScreen />} />
+            <Route path="products/:id" element={<ProductDetailsScreen />} />
+            <Route path="products/:id/edit" element={<EditProductScreen />} />
+            <Route path="products/:id/link-barcode" element={<LinkBarcodeScreen />} />
             <Route path="operations" element={<OperationsScreen />} />
             <Route path="operations/activities" element={<ActivitiesScreen />} />
             <Route path="operations/transfers" element={<TransfersScreen />} />
