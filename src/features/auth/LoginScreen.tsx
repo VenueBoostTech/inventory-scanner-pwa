@@ -118,14 +118,36 @@ export function LoginScreen() {
           role: string;
           clientId: string;
           clientName: string;
-          permissions: any;
-          features: any;
+          permissions: {
+            canScan: boolean;
+            canAdjustStock: boolean;
+            canAddProducts: boolean;
+            canEditProducts: boolean;
+            canViewAllWarehouses: boolean;
+            canPerformStockCount: boolean;
+            canInitiateTransfer: boolean;
+            canCompleteTransfer: boolean;
+            warehouseIds: string[];
+          };
           preferences: {
             language: string;
             timezone: string;
             notificationsEnabled?: boolean;
           };
         };
+        client: {
+          id: string;
+          name: string;
+          code: string;
+          publicIdentifier: string;
+        };
+        inventoryAccess: {
+          enabled: boolean;
+          mobileApp: boolean;
+          expiresAt: string | null;
+          features: any; // Will be typed properly in authStore
+        };
+        success?: boolean;
         message: string;
       }>('/auth/login', {
         email: values.email,
@@ -134,14 +156,14 @@ export function LoginScreen() {
         deviceInfo,
       });
 
-      const { tokens, profile } = response.data;
+      const { tokens, profile, client, inventoryAccess } = response.data;
 
       // Calculate expiration timestamp
       const expiresAt = Date.now() + (tokens.expiresIn * 1000);
 
-      // Store tokens and profile
+      // Store tokens, profile, client, and inventoryAccess
       authStore.getState().setTokens(tokens.accessToken, tokens.refreshToken, expiresAt);
-      authStore.getState().setProfile(profile);
+      authStore.getState().setAuthData(profile, client, inventoryAccess);
 
       // Show success message
       toast({
