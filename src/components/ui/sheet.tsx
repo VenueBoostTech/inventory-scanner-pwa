@@ -63,7 +63,7 @@ const SheetContent = React.forwardRef<
       ref={ref}
       className={cn(
         sheetVariants({ side }),
-        (side === "left" || side === "right") && "pt-safe-top",
+        (side === "left" || side === "right") && "pt-[max(1.5rem,calc(1.5rem+env(safe-area-inset-top)))]",
         className
       )}
       {...props}
@@ -71,7 +71,7 @@ const SheetContent = React.forwardRef<
       <SheetPrimitive.Close 
         className={cn(
           "absolute right-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary",
-          (side === "left" || side === "right") ? "top-[calc(1rem+env(safe-area-inset-top))]" : "top-4"
+          (side === "left" || side === "right") ? "top-[max(1rem,calc(1rem+env(safe-area-inset-top)))]" : "top-4"
         )}
       >
         <X className="h-4 w-4" />
