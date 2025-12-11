@@ -30,6 +30,7 @@ import {
 export function ScanScreen() {
   const { t } = useI18n();
   const [manualCode, setManualCode] = useState('');
+  const [skuCode, setSkuCode] = useState('');
   const [infoOpen, setInfoOpen] = useState(false);
   const [lastScan, setLastScan] = useState<{
     code: string;
@@ -101,6 +102,14 @@ export function ScanScreen() {
     setManualCode('');
   };
 
+  const handleSkuSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!skuCode) return;
+    // TODO: Implement SKU search API call
+    toast({ title: 'SKU Search', description: `Searching for SKU: ${skuCode}` });
+    setSkuCode('');
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <ScreenHeader title={t('scan.title')} />
@@ -165,15 +174,15 @@ export function ScanScreen() {
 
         <Card className="border border-border bg-white shadow-none">
           <CardHeader className="px-3 pt-3 pb-2">
-            <CardTitle className="text-md font-semibold text-foreground">Manual entry</CardTitle>
+            <CardTitle className="text-md font-semibold text-foreground">{t('scan.manualEntry')}</CardTitle>
             <CardDescription className="text-sm text-muted-foreground">
-              Enter or paste the product barcode if the camera isn’t available.
+             {t('scan.enterBarcode')}
             </CardDescription>
           </CardHeader>
           <CardContent className="px-3 pb-3">
             <form className="flex gap-2" onSubmit={handleManualSubmit}>
               <Input
-                placeholder="Enter barcode"
+                placeholder={t('scan.enterBarcodePlaceholder')}
                 value={manualCode}
                 onChange={(e) => setManualCode(e.target.value)}
               />
@@ -182,7 +191,32 @@ export function ScanScreen() {
                 disabled={!manualCode || isPending}
                 className="h-11 border-none bg-[#164945] text-white hover:bg-[#123b37]"
               >
-                Submit
+                {t('common.submit')}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-border bg-white shadow-none">
+          <CardHeader className="px-3 pt-3 pb-2">
+            <CardTitle className="text-md font-semibold text-foreground">{t('scan.searchBySku')}</CardTitle>
+            <CardDescription className="text-sm text-muted-foreground">
+              {t('scan.searchBySkuSubtitle')}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="px-3 pb-3">
+            <form className="flex gap-2" onSubmit={handleSkuSubmit}>
+              <Input
+                placeholder={t('scan.enterSkuPlaceholder')}
+                value={skuCode}
+                onChange={(e) => setSkuCode(e.target.value)}
+              />
+              <Button
+                type="submit"
+                disabled={!skuCode || isPending}
+                className="h-11 border-none bg-[#164945] text-white hover:bg-[#123b37]"
+              >
+                {t('common.search')}
               </Button>
             </form>
           </CardContent>
