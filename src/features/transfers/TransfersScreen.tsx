@@ -266,15 +266,7 @@ export function TransfersScreen() {
     setTransferItems(transferItems.filter((_, i) => i !== index));
   };
 
-  const _handleCreateTransfer = () => {
-    // TODO: Create transfer via API
-    toast({
-      title: t('transfers.transferCreated'),
-      description: t('transfers.transferCreatedDesc'),
-    });
-    handleCloseCreate();
-    setConfirmationModalOpen(true);
-  };
+  // handleCreateTransfer removed - unused
 
   const handleViewDetails = (transfer: any) => {
     navigate(`/operations/transfers/${transfer.id}`);

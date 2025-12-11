@@ -31,54 +31,9 @@ import {
   Plus,
   ArrowRight,
 } from 'lucide-react';
-import { format, startOfDay, endOfDay, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
+import { format } from 'date-fns';
 
 type DateFilter = 'today' | 'yesterday' | 'this_week' | 'last_7_days' | 'this_month';
-
-interface DateRange {
-  dateFrom: Date;
-  dateTo: Date;
-}
-
-function getDateRange(filter: DateFilter): DateRange {
-  const now = new Date();
-  
-  switch (filter) {
-    case 'today':
-      return {
-        dateFrom: startOfDay(now),
-        dateTo: endOfDay(now),
-      };
-    case 'yesterday':
-      const yesterday = subDays(now, 1);
-      return {
-        dateFrom: startOfDay(yesterday),
-        dateTo: endOfDay(yesterday),
-      };
-    case 'this_week':
-      return {
-        dateFrom: startOfWeek(now, { weekStartsOn: 1 }),
-        dateTo: endOfWeek(now, { weekStartsOn: 1 }),
-      };
-    case 'last_7_days':
-      return {
-        dateFrom: startOfDay(subDays(now, 7)),
-        dateTo: endOfDay(now),
-      };
-    case 'this_month':
-      return {
-        dateFrom: startOfMonth(now),
-        dateTo: endOfMonth(now),
-      };
-    default:
-      return {
-        dateFrom: startOfDay(now),
-        dateTo: endOfDay(now),
-      };
-  }
-}
-
-// formatDateRange removed - unused
 
 // Mock data
 const mockStats = {
