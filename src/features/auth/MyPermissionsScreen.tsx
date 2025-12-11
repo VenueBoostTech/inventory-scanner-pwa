@@ -62,7 +62,7 @@ export function MyPermissionsScreen() {
     { key: 'canEditProducts', label: t('auth.permissions.editProducts'), value: permissions?.canEditProducts ?? false },
   ];
 
-  // Client-level features (dynamic)
+  // Platform-level features (dynamic)
   const featureItems = useMemo(() => {
     if (!inventoryAccess?.features) return [];
     return flattenFeatures(inventoryAccess.features);
@@ -96,11 +96,11 @@ export function MyPermissionsScreen() {
           </CardContent>
         </Card>
 
-        {/* Client Features (Dynamic) */}
+        {/* Platform Features (Dynamic) */}
         {featureItems.length > 0 && (
           <Card className="border border-border bg-white shadow-none">
             <CardContent className="px-3 py-4">
-              <h3 className="mb-4 text-sm font-semibold text-foreground">Client Features</h3>
+              <h3 className="mb-4 text-sm font-semibold text-foreground">Platform Features</h3>
               <div className="space-y-3">
                 {featureItems.map((item) => (
                   <div key={item.key} className="flex items-center gap-3">
