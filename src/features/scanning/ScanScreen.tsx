@@ -111,7 +111,7 @@ export function ScanScreen() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-[max(5rem,calc(5rem+env(safe-area-inset-bottom)))]">
+    <div className="min-h-screen bg-background pb-[max(4rem,calc(4rem+env(safe-area-inset-bottom)))]">
       <ScreenHeader title={t('scan.title')} />
       <div className="space-y-4 px-4 py-4">
         <div className="space-y-3 rounded-lg border border-border bg-white p-3">
