@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
+import { useProduct } from '@/hooks/api/useProducts';
 import {
   Package,
   Edit,
@@ -32,112 +34,6 @@ import { format } from 'date-fns';
 import { ProductGallery } from './ProductGallery';
 import { AdjustStockModal } from './AdjustStockModal';
 
-// Mock data - in real app, fetch from API
-const mockProducts: Record<string, any> = {
-  prod_001: {
-    id: 'prod_001',
-    title: 'Single Handle Guide Pot 18cm',
-    titleAl: 'Tenxhere me dorezë 18cm',
-    sku: '108100031',
-    barcode: '6041234567890',
-    hasBarcode: true,
-    articleNo: 'HM-POT-18',
-    stockQuantity: 60,
-    lowQuantity: 10,
-    enableStock: true,
-    enableLowStockAlert: true,
-    stockStatus: 'in_stock',
-    unitMeasure: 'pcs',
-    category: {
-      id: 'cat_001',
-      name: 'Kitchenware',
-      nameAl: 'Enë kuzhine',
-    },
-    brand: null,
-    imagePath: 'https://cdn.example.com/products/pot.jpg',
-    imageThumbnailPath: 'https://cdn.example.com/products/pot_thumb.jpg',
-    description: 'High-quality stainless steel pot with single handle, 18cm diameter.',
-    descriptionAl: 'Tenxhere inoksi me cilësi të lartë me dorezë të vetme, 18cm diametër.',
-    shortDescription: '18cm stainless steel pot',
-    shortDescriptionAl: 'Tenxhere inoksi 18cm',
-    pricing: {
-      price: 15.99,
-      priceAl: 1800,
-      priceEur: 15.99,
-    },
-    saleInfo: {
-      isOnSale: true,
-      discountType: 'percentage',
-      discountValue: 19,
-      discountAmount: 3.0,
-      discountPercent: 19,
-      salePrice: 12.99,
-      salePriceAl: 1500,
-      salePriceEur: 12.99,
-      dateSaleStart: '2025-12-01T00:00:00Z',
-      dateSaleEnd: '2025-12-31T23:59:59Z',
-    },
-    productType: 'single',
-    tags: ['kitchenware', 'steel'],
-    weight: 500,
-    dimensions: {
-      length: 20,
-      width: 18,
-      height: 10,
-    },
-    gallery: [
-      {
-        id: 'gal_001',
-        imagePath: 'https://cdn.example.com/products/pot_1.jpg',
-        imageThumbnailPath: 'https://cdn.example.com/products/pot_1_thumb.jpg',
-        sortOrder: 1,
-      },
-    ],
-    stats: {
-      totalActivities: 25,
-      breakdown: {
-        adjustments: 5,
-        scans: 15,
-        transfers: 3,
-        counts: 2,
-      },
-      firstActivityAt: '2025-01-15T10:30:00Z',
-      lastActivityAt: '2025-12-09T08:00:00Z',
-      recentActivities: [
-        {
-          id: 'act_001',
-          type: 'STOCK_ADJUSTMENT',
-          source: 'MOBILE_SCANNING',
-          quantityChange: -5,
-          previousQuantity: 155,
-          newQuantity: 150,
-          notes: 'Damaged items removed',
-          createdAt: '2025-12-09T08:00:00Z',
-          createdBy: { id: 'staff_001', name: 'John Doe' },
-        },
-        {
-          id: 'act_002',
-          type: 'SCAN',
-          source: 'MOBILE_SCANNING',
-          createdAt: '2025-12-08T14:30:00Z',
-          createdBy: { id: 'staff_002', name: 'Sarah M.' },
-        },
-        {
-          id: 'act_003',
-          type: 'TRANSFER',
-          source: 'MOBILE_SCANNING',
-          quantityChange: -10,
-          createdAt: '2025-12-07T11:00:00Z',
-          createdBy: { id: 'staff_003', name: 'Mike T.' },
-          toWarehouse: { name: 'Secondary Warehouse' },
-        },
-      ],
-    },
-    createdAt: '2025-01-15T10:30:00Z',
-    updatedAt: '2025-12-09T08:00:00Z',
-  },
-};
-
 export function ProductDetailsScreen() {
   const { t, language } = useI18n();
   const { id } = useParams<{ id: string }>();
@@ -150,7 +46,20 @@ export function ProductDetailsScreen() {
     window.scrollTo(0, 0);
   }, []);
 
-  const product = id ? mockProducts[id] : null;
+  const { data: product, isLoading } = useProduct(id || '');
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <ScreenHeader title={t('products.title')} showBack />
+        <div className="space-y-4 px-4 py-4">
+          <Skeleton className="h-64 w-full rounded-lg" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -271,7 +180,7 @@ export function ProductDetailsScreen() {
               <p className="text-sm text-muted-foreground">{product.title}</p>
             )}
             <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-              <span>{t('products.category')}: {product.category.name}</span>
+              {product.category && <span>{t('products.category')}: {product.category.name}</span>}
               {product.brand && (
                 <>
                   <span>•</span>
@@ -301,8 +210,8 @@ export function ProductDetailsScreen() {
                   <Copy className="h-4 w-4 mr-2" />
                   {t('products.copySku')}
                 </DropdownMenuItem>
-                {product.hasBarcode && (
-                  <DropdownMenuItem onClick={() => handleCopy(product.barcode, t('products.barcode'))}>
+                {product.hasBarcode && product.barcode && (
+                  <DropdownMenuItem onClick={() => handleCopy(product.barcode!, t('products.barcode'))}>
                     <Copy className="h-4 w-4 mr-2" />
                     {t('products.copyBarcode')}
                   </DropdownMenuItem>
@@ -390,7 +299,7 @@ export function ProductDetailsScreen() {
                     variant="outline"
                     size="sm"
                     className="h-8 w-8 p-0"
-                    onClick={() => handleCopy(product.barcode, t('products.barcode'))}
+                    onClick={() => product.barcode && handleCopy(product.barcode, t('products.barcode'))}
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
@@ -445,7 +354,7 @@ export function ProductDetailsScreen() {
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">{t('products.price')}</p>
               <p className="text-lg font-semibold">
-                €{product.pricing.price.toFixed(2)} / {product.pricing.priceAl.toLocaleString()} L
+                €{product.pricing?.priceEur?.toFixed(2) || product.pricing?.price?.toFixed(2) || '0.00'} / {product.pricing?.priceAl?.toLocaleString() || '0'} L
               </p>
             </div>
           </CardContent>
@@ -467,17 +376,23 @@ export function ProductDetailsScreen() {
                 </Badge>
                 <div className="space-y-1 text-sm">
                   <p className="text-muted-foreground">
-                    {t('products.type')}: {product.saleInfo.discountPercent}% {t('products.off')} ({t('products.percentage')})
+                    {t('products.type')}: {product.saleInfo.discountType === 'percentage' 
+                      ? `${product.saleInfo.discountPercent || product.saleInfo.discountValue}% ${t('products.off')} (${t('products.percentage')})`
+                      : `€${product.saleInfo.discountAmount?.toFixed(2) || '0.00'} ${t('products.off')} (${t('products.fixed')})`}
                   </p>
                   <p className="text-muted-foreground">
-                    {t('products.salePrice')}: €{product.saleInfo.salePrice.toFixed(2)} / {product.saleInfo.salePriceAl.toLocaleString()} L
+                    {t('products.salePrice')}: €{product.saleInfo.salePriceEur?.toFixed(2) || product.saleInfo.salePrice?.toFixed(2) || '0.00'} / {product.saleInfo.salePriceAl?.toLocaleString() || '0'} L
                   </p>
-                  <p className="text-muted-foreground">
-                    {t('products.youSave')}: €{product.saleInfo.discountAmount.toFixed(2)}
-                  </p>
-                  <p className="text-muted-foreground">
-                    {t('products.valid')}: {format(new Date(product.saleInfo.dateSaleStart), 'MMM d')} - {format(new Date(product.saleInfo.dateSaleEnd), 'MMM d, yyyy')}
-                  </p>
+                  {product.saleInfo.discountAmount && (
+                    <p className="text-muted-foreground">
+                      {t('products.youSave')}: €{product.saleInfo.discountAmount.toFixed(2)}
+                    </p>
+                  )}
+                  {product.saleInfo.dateSaleStart && product.saleInfo.dateSaleEnd && (
+                    <p className="text-muted-foreground">
+                      {t('products.valid')}: {format(new Date(product.saleInfo.dateSaleStart), 'MMM d')} - {format(new Date(product.saleInfo.dateSaleEnd), 'MMM d, yyyy')}
+                    </p>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -490,25 +405,29 @@ export function ProductDetailsScreen() {
             <h3 className="text-sm font-semibold mb-3">{t('products.activityStats')}</h3>
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                {t('products.totalActivities')}: {product.stats.totalActivities}
+                {t('products.totalActivities')}: {product.stats?.totalActivities || 0}
               </p>
               <div className="grid grid-cols-3 gap-2">
                 <div className="text-center p-2 bg-muted/50 rounded-md">
-                  <p className="text-lg font-semibold">{product.stats.breakdown.adjustments}</p>
+                  <p className="text-lg font-semibold">{product.stats?.breakdown?.adjustments || 0}</p>
                   <p className="text-xs text-muted-foreground">{t('products.adjusts')}</p>
                 </div>
                 <div className="text-center p-2 bg-muted/50 rounded-md">
-                  <p className="text-lg font-semibold">{product.stats.breakdown.scans}</p>
+                  <p className="text-lg font-semibold">{product.stats?.breakdown?.scans || 0}</p>
                   <p className="text-xs text-muted-foreground">{t('products.scans')}</p>
                 </div>
                 <div className="text-center p-2 bg-muted/50 rounded-md">
-                  <p className="text-lg font-semibold">{product.stats.breakdown.transfers}</p>
+                  <p className="text-lg font-semibold">{product.stats?.breakdown?.transfers || 0}</p>
                   <p className="text-xs text-muted-foreground">{t('products.transfer')}</p>
                 </div>
               </div>
               <div className="space-y-1 text-xs text-muted-foreground">
-                <p>{t('products.first')}: {format(new Date(product.stats.firstActivityAt), 'MMM d, yyyy')}</p>
-                <p>{t('products.last')}: {format(new Date(product.stats.lastActivityAt), 'MMM d, yyyy')}</p>
+                {product.stats?.firstActivityAt && (
+                  <p>{t('products.first')}: {format(new Date(product.stats.firstActivityAt), 'MMM d, yyyy')}</p>
+                )}
+                {product.stats?.lastActivityAt && (
+                  <p>{t('products.last')}: {format(new Date(product.stats.lastActivityAt), 'MMM d, yyyy')}</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -530,7 +449,7 @@ export function ProductDetailsScreen() {
               </Button>
             </div>
             <div className="space-y-3">
-              {product.stats.recentActivities?.map((activity: any) => (
+              {product.stats?.recentActivities?.map((activity: any) => (
                 <div key={activity.id} className="space-y-1">
                   <div className="flex items-center gap-2">
                     {getActivityIcon(activity.type)}

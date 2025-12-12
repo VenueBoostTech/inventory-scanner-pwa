@@ -18,6 +18,7 @@ import { authStore } from '@/stores/authStore';
 import { useI18n } from '@/lib/i18n';
 import { ChevronRight, Lock, LogOut, Phone, Mail, Globe, Clock, Shield, Building2, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useUpdateProfile, useChangePassword, useLogout } from '@/hooks/api/useAuth';
 
 export function ProfileScreen() {
   const navigate = useNavigate();
@@ -31,45 +32,68 @@ export function ProfileScreen() {
   const [isEditing, setIsEditing] = useState(false);
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login', { replace: true });
-    toast({
-      title: 'Logged out',
-      description: 'You have been successfully logged out',
-    });
+  const { mutateAsync: updateProfile, isPending: isUpdatingProfile } = useUpdateProfile();
+  const { mutateAsync: logoutApi } = useLogout();
+
+  const handleLogout = async () => {
+    try {
+      await logoutApi();
+      logout();
+      navigate('/login', { replace: true });
+      toast({
+        title: t('auth.profile.loggedOut'),
+        description: t('auth.profile.loggedOutDesc'),
+      });
+    } catch (error) {
+      // Even if API call fails, logout locally
+      logout();
+      navigate('/login', { replace: true });
+    }
   };
 
-  const handleSaveProfile = () => {
-    if (profile) {
-      authStore.getState().setProfile({
-        ...profile,
-        name,
+  const handleSaveProfile = async () => {
+    if (!name.trim()) {
+      toast({
+        title: t('common.error'),
+        description: t('auth.profile.nameRequired'),
+        variant: 'destructive',
       });
+      return;
+    }
+
+    try {
+      await updateProfile({ name: name.trim() });
       setIsEditing(false);
       toast({
-        title: 'Profile updated',
-        description: 'Your profile has been updated successfully',
+        title: t('auth.profile.profileUpdated'),
+        description: t('auth.profile.profileUpdatedDesc'),
+      });
+    } catch (error: any) {
+      toast({
+        title: t('common.error'),
+        description: error?.response?.data?.message || t('auth.profile.updateError'),
+        variant: 'destructive',
       });
     }
   };
 
-  const handleLanguageChange = (lang: 'en' | 'sq') => {
+  const handleLanguageChange = async (lang: 'en' | 'sq') => {
     setLanguage(lang);
-    if (profile) {
-      authStore.getState().setProfile({
-        ...profile,
-        preferences: {
-          ...profile.preferences,
-          language: lang === 'sq' ? 'al' : 'en', // Map sq to al for profile
-        },
+    try {
+      // API expects 'al' for Albanian, not 'sq'
+      await updateProfile({ language: lang === 'sq' ? 'al' : 'en' });
+      setIsLanguageOpen(false);
+      toast({
+        title: t('auth.profile.languageUpdated'),
+        description: t('auth.profile.languageUpdatedDesc'),
+      });
+    } catch (error: any) {
+      toast({
+        title: t('common.error'),
+        description: error?.response?.data?.message || t('auth.profile.updateError'),
+        variant: 'destructive',
       });
     }
-    setIsLanguageOpen(false);
-    toast({
-      title: t('auth.profile.languageUpdated'),
-      description: t('auth.profile.languageUpdatedDesc'),
-    });
   };
 
   const getInitials = (name: string) => {
@@ -307,9 +331,10 @@ export function ProfileScreen() {
             </Button>
             <Button
               onClick={handleSaveProfile}
+              disabled={isUpdatingProfile}
               className="border-none bg-[#164945] text-white hover:bg-[#123b37]"
             >
-              {t('common.save')}
+              {isUpdatingProfile ? t('common.loading') : t('common.save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -361,33 +386,46 @@ function ChangePasswordDialog() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const { toast } = useToast();
+  const { mutateAsync: changePassword, isPending } = useChangePassword();
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     if (newPassword !== confirmPassword) {
       toast({
-        title: 'Error',
-        description: 'New passwords do not match',
+        title: t('common.error'),
+        description: t('auth.profile.passwordsDoNotMatch'),
         variant: 'destructive',
       });
       return;
     }
     if (newPassword.length < 6) {
       toast({
-        title: 'Error',
-        description: 'Password must be at least 6 characters',
+        title: t('common.error'),
+        description: t('auth.profile.passwordMinLength'),
         variant: 'destructive',
       });
       return;
     }
-    // TODO: API call
-    toast({
-      title: 'Password changed',
-      description: 'Your password has been updated successfully',
-    });
-    setOpen(false);
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
+
+    try {
+      await changePassword({
+        currentPassword,
+        newPassword,
+      });
+      toast({
+        title: t('auth.profile.passwordChanged'),
+        description: t('auth.profile.passwordChangedDesc'),
+      });
+      setOpen(false);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error: any) {
+      toast({
+        title: t('common.error'),
+        description: error?.response?.data?.message || t('auth.profile.passwordChangeError'),
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -447,9 +485,10 @@ function ChangePasswordDialog() {
           </Button>
           <Button
             onClick={handleChangePassword}
+            disabled={isPending}
             className="border-none bg-[#164945] text-white hover:bg-[#123b37]"
           >
-            {t('auth.profile.changePasswordButton')}
+            {isPending ? t('common.loading') : t('auth.profile.changePasswordButton')}
           </Button>
         </DialogFooter>
       </DialogContent>

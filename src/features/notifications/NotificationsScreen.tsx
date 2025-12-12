@@ -1,10 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
+import { useNotifications, useMarkNotificationAsRead, useMarkAllNotificationsAsRead } from '@/hooks/api/useNotifications';
 import { isToday, isYesterday, differenceInDays } from 'date-fns';
 import {
   AlertCircle,
@@ -15,81 +17,6 @@ import {
   CheckCircle2,
   Settings,
 } from 'lucide-react';
-
-// Mock data
-const mockNotifications = [
-  {
-    id: 'notif_001',
-    type: 'low_stock',
-    title: 'Low Stock Alert',
-    message: 'Coffee Beans is running low (5 left)',
-    isRead: false,
-    data: {
-      productId: 'prod_001',
-      productName: 'Coffee Beans',
-      currentStock: 5,
-      threshold: 10,
-    },
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-  },
-  {
-    id: 'notif_002',
-    type: 'transfer',
-    title: 'Transfer Completed',
-    message: 'Transfer #TRF-005 to Secondary done',
-    isRead: false,
-    data: {
-      transferId: 'trf_005',
-    },
-    createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000),
-  },
-  {
-    id: 'notif_003',
-    type: 'approval',
-    title: 'Count Approved',
-    message: 'Stock Count #CNT-003 was approved',
-    isRead: false,
-    data: {
-      countId: 'cnt_003',
-    },
-    createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000),
-  },
-  {
-    id: 'notif_004',
-    type: 'out_of_stock',
-    title: 'Out of Stock',
-    message: 'Milk is now out of stock',
-    isRead: true,
-    data: {
-      productId: 'prod_004',
-      productName: 'Milk',
-    },
-    createdAt: new Date(Date.now() - 25 * 60 * 60 * 1000),
-  },
-  {
-    id: 'notif_005',
-    type: 'adjustment',
-    title: 'Adjustment Needed',
-    message: 'Discrepancy found in Tea Bags',
-    isRead: true,
-    data: {
-      productId: 'prod_002',
-      productName: 'Tea Bags',
-    },
-    createdAt: new Date(Date.now() - 26 * 60 * 60 * 1000),
-  },
-  {
-    id: 'notif_006',
-    type: 'transfer',
-    title: 'Transfer Pending',
-    message: 'Transfer #TRF-004 waiting approval',
-    isRead: true,
-    data: {
-      transferId: 'trf_004',
-    },
-    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-  },
-];
 
 const getNotificationIcon = (type: string) => {
   switch (type) {
@@ -138,9 +65,10 @@ const groupNotificationsByDate = (notifications: any[]) => {
   };
 
   notifications.forEach((notif) => {
-    if (isToday(notif.createdAt)) {
+    const createdAt = typeof notif.createdAt === 'string' ? new Date(notif.createdAt) : notif.createdAt;
+    if (isToday(createdAt)) {
       groups.today.push(notif);
-    } else if (isYesterday(notif.createdAt)) {
+    } else if (isYesterday(createdAt)) {
       groups.yesterday.push(notif);
     } else {
       groups.earlier.push(notif);
@@ -154,7 +82,13 @@ export function NotificationsScreen() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [notifications, setNotifications] = useState(mockNotifications);
+  
+  // API hooks
+  const { data: notificationsData, isLoading } = useNotifications({ limit: 100 });
+  const { mutateAsync: markAsRead } = useMarkNotificationAsRead();
+  const { mutateAsync: markAllAsRead, isPending: isMarkingAll } = useMarkAllNotificationsAsRead();
+
+  const notifications = notificationsData || [];
 
   const groupedNotifications = useMemo(() => {
     return groupNotificationsByDate(notifications);
@@ -164,10 +98,11 @@ export function NotificationsScreen() {
     return notifications.filter((n) => !n.isRead).length;
   }, [notifications]);
 
-  const formatTimeAgo = (date: Date) => {
+  const formatTimeAgo = (date: Date | string) => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
     const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    const diffInDays = differenceInDays(now, date);
+    const diffInHours = Math.floor((now.getTime() - dateObj.getTime()) / (1000 * 60 * 60));
+    const diffInDays = differenceInDays(now, dateObj);
 
     if (diffInHours < 1) {
       return t('notifications.justNow');
@@ -180,24 +115,38 @@ export function NotificationsScreen() {
     }
   };
 
-  const handleMarkAsRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-    );
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      await markAsRead(id);
+    } catch (error: any) {
+      toast({
+        title: t('common.error'),
+        description: error?.response?.data?.message || t('common.somethingWentWrong'),
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleMarkAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-    toast({
-      title: t('notifications.allMarkedRead'),
-      description: t('notifications.allMarkedReadDesc'),
-    });
+  const handleMarkAllAsRead = async () => {
+    try {
+      await markAllAsRead();
+      toast({
+        title: t('notifications.allMarkedRead'),
+        description: t('notifications.allMarkedReadDesc'),
+      });
+    } catch (error: any) {
+      toast({
+        title: t('common.error'),
+        description: error?.response?.data?.message || t('common.somethingWentWrong'),
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleNotificationTap = (notification: any) => {
+  const handleNotificationTap = async (notification: any) => {
     // Mark as read
     if (!notification.isRead) {
-      handleMarkAsRead(notification.id);
+      await handleMarkAsRead(notification.id);
     }
 
     // Navigate based on type
@@ -303,13 +252,24 @@ export function NotificationsScreen() {
               variant="outline"
               size="sm"
               onClick={handleMarkAllAsRead}
+              disabled={isMarkingAll}
               className="w-full text-xs"
             >
-              {t('notifications.markAllRead')}
+              {isMarkingAll ? t('common.loading') : t('notifications.markAllRead')}
             </Button>
           </div>
         )}
-        {notifications.length === 0 ? (
+        {isLoading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Card key={i} className="border border-border bg-white shadow-none">
+                <CardContent className="px-3 py-3">
+                  <Skeleton className="h-16 w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : notifications.length === 0 ? (
           <Card className="border border-border bg-white shadow-none">
             <CardContent className="px-3 py-8 text-center">
               <p className="text-sm text-muted-foreground">{t('notifications.noNotifications')}</p>

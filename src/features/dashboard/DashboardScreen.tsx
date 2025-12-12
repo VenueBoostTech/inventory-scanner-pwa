@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -32,97 +33,13 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { format } from 'date-fns';
-
-type DateFilter = 'today' | 'yesterday' | 'this_week' | 'last_7_days' | 'this_month';
-
-// Mock data
-const mockStats = {
-  scans: 25,
-  adjustments: 8,
-  stockCounts: 2,
-  transfers: 1,
-};
-
-const mockAlerts = {
-  outOfStock: 12,
-  lowStock: 45,
-};
-
-const mockRecentScans = [
-  {
-    id: '1',
-    productName: 'Premium Coffee Beans',
-    barcode: '8901234567890',
-    status: 'found',
-    time: new Date(Date.now() - 30 * 60 * 1000), // 30 mins ago
-  },
-  {
-    id: '2',
-    productName: 'Organic Tea',
-    barcode: '8901234567891',
-    status: 'found',
-    time: new Date(Date.now() - 45 * 60 * 1000), // 45 mins ago
-  },
-  {
-    id: '3',
-    productName: 'Unknown',
-    barcode: '8901234567892',
-    status: 'not_found',
-    time: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-  },
-  {
-    id: '4',
-    productName: 'Bottled Water',
-    barcode: '8901234567893',
-    status: 'found',
-    time: new Date(Date.now() - 3 * 60 * 60 * 1000), // 3 hours ago
-  },
-  {
-    id: '5',
-    productName: 'New Product',
-    barcode: '8901234567894',
-    status: 'created',
-    time: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
-  },
-];
-
-const mockRecentActivities = [
-  {
-    id: '1',
-    type: 'adjustment',
-    action: 'increase',
-    productName: 'Coffee Beans',
-    quantity: 50,
-    time: new Date(Date.now() - 28 * 60 * 1000), // 28 mins ago
-  },
-  {
-    id: '2',
-    type: 'adjustment',
-    action: 'decrease',
-    productName: 'Tea',
-    quantity: 10,
-    time: new Date(Date.now() - 40 * 60 * 1000), // 40 mins ago
-  },
-  {
-    id: '3',
-    type: 'count',
-    action: 'completed',
-    productName: 'Stock Count',
-    time: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-  },
-  {
-    id: '4',
-    type: 'transfer',
-    action: 'completed',
-    productName: 'Transfer',
-    time: new Date(Date.now() - 3.5 * 60 * 60 * 1000), // 3.5 hours ago
-  },
-];
+import { useDashboard, type DateFilter } from '@/hooks/api/useDashboard';
 
 export function DashboardScreen() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const [dateFilter, setDateFilter] = useState<DateFilter>('today');
+  const { data: dashboardData, isLoading } = useDashboard(dateFilter);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -167,10 +84,10 @@ export function DashboardScreen() {
     return null;
   };
 
-  const formatActivityText = (activity: typeof mockRecentActivities[0]) => {
+  const formatActivityText = (activity: { type: string; action: string; productName: string; quantity?: number }) => {
     if (activity.type === 'adjustment') {
       const sign = activity.action === 'increase' ? '+' : '-';
-      return `${activity.productName} ${sign}${activity.quantity}`;
+      return `${activity.productName} ${sign}${Math.abs(activity.quantity || 0)}`;
     }
     if (activity.type === 'count') {
       return `${activity.productName} completed`;
@@ -215,57 +132,97 @@ export function DashboardScreen() {
         <div className="grid grid-cols-2 gap-3">
           <Card className="border border-border bg-white shadow-none">
             <CardContent className="px-3 py-4">
-              <div className="flex items-center gap-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
-                  <Search className="h-5 w-5 text-emerald-600" />
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-10 w-10 rounded-lg" />
+                  <div className="flex-1 space-y-1">
+                    <Skeleton className="h-7 w-12" />
+                    <Skeleton className="h-3 w-16" />
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-2xl font-bold text-foreground">{mockStats.scans}</p>
-                  <p className="text-xs text-muted-foreground">{t('dashboard.scans')}</p>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
+                    <Search className="h-5 w-5 text-emerald-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-2xl font-bold text-foreground">{dashboardData?.stats.scans ?? 0}</p>
+                    <p className="text-xs text-muted-foreground">{t('dashboard.scans')}</p>
+                  </div>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 
           <Card className="border border-border bg-white shadow-none">
             <CardContent className="px-3 py-4">
-              <div className="flex items-center gap-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
-                  <Package className="h-5 w-5 text-blue-600" />
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-10 w-10 rounded-lg" />
+                  <div className="flex-1 space-y-1">
+                    <Skeleton className="h-7 w-12" />
+                    <Skeleton className="h-3 w-16" />
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-2xl font-bold text-foreground">{mockStats.adjustments}</p>
-                  <p className="text-xs text-muted-foreground">{t('dashboard.adjustments')}</p>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
+                    <Package className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-2xl font-bold text-foreground">{dashboardData?.stats.adjustments ?? 0}</p>
+                    <p className="text-xs text-muted-foreground">{t('dashboard.adjustments')}</p>
+                  </div>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 
           <Card className="border border-border bg-white shadow-none">
             <CardContent className="px-3 py-4">
-              <div className="flex items-center gap-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-50">
-                  <ClipboardList className="h-5 w-5 text-purple-600" />
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-10 w-10 rounded-lg" />
+                  <div className="flex-1 space-y-1">
+                    <Skeleton className="h-7 w-12" />
+                    <Skeleton className="h-3 w-16" />
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-2xl font-bold text-foreground">{mockStats.stockCounts}</p>
-                  <p className="text-xs text-muted-foreground">{t('dashboard.stockCounts')}</p>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-50">
+                    <ClipboardList className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-2xl font-bold text-foreground">{dashboardData?.stats.stockCounts ?? 0}</p>
+                    <p className="text-xs text-muted-foreground">{t('dashboard.stockCounts')}</p>
+                  </div>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 
           <Card className="border border-border bg-white shadow-none">
             <CardContent className="px-3 py-4">
-              <div className="flex items-center gap-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-50">
-                  <Truck className="h-5 w-5 text-orange-600" />
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-10 w-10 rounded-lg" />
+                  <div className="flex-1 space-y-1">
+                    <Skeleton className="h-7 w-12" />
+                    <Skeleton className="h-3 w-16" />
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-2xl font-bold text-foreground">{mockStats.transfers}</p>
-                  <p className="text-xs text-muted-foreground">{t('dashboard.transfers')}</p>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-50">
+                    <Truck className="h-5 w-5 text-orange-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-2xl font-bold text-foreground">{dashboardData?.stats.transfers ?? 0}</p>
+                    <p className="text-xs text-muted-foreground">{t('dashboard.transfers')}</p>
+                  </div>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -309,27 +266,41 @@ export function DashboardScreen() {
         </Card>
 
         {/* Alerts/Attention */}
-        <Card className="border border-amber-200 bg-amber-50/50 shadow-none">
-          <CardContent className="px-3 py-3">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-amber-600" />
-              <span className="text-sm font-semibold text-amber-900">{t('dashboard.attention')}</span>
-            </div>
-            <div className="mt-2 flex items-center gap-4 text-sm">
-              <div className="flex items-center gap-1.5">
-                <div className="h-3 w-3 rounded-full bg-red-500" />
-                <span className="font-semibold text-foreground">{mockAlerts.outOfStock}</span>
-                <span className="text-muted-foreground">{t('dashboard.outOfStock')}</span>
-              </div>
-              <span className="text-muted-foreground">•</span>
-              <div className="flex items-center gap-1.5">
-                <div className="h-3 w-3 rounded-full bg-yellow-500" />
-                <span className="font-semibold text-foreground">{mockAlerts.lowStock}</span>
-                <span className="text-muted-foreground">{t('dashboard.lowStock')}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {(isLoading || dashboardData?.alerts) && (
+          <Card className="border border-amber-200 bg-amber-50/50 shadow-none">
+            <CardContent className="px-3 py-3">
+              {isLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-5 w-32" />
+                  <div className="flex items-center gap-4">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-amber-600" />
+                    <span className="text-sm font-semibold text-amber-900">{t('dashboard.attention')}</span>
+                  </div>
+                  <div className="mt-2 flex items-center gap-4 text-sm">
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-3 w-3 rounded-full bg-red-500" />
+                      <span className="font-semibold text-foreground">{dashboardData?.alerts.outOfStock ?? 0}</span>
+                      <span className="text-muted-foreground">{t('dashboard.outOfStock')}</span>
+                    </div>
+                    <span className="text-muted-foreground">•</span>
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-3 w-3 rounded-full bg-yellow-500" />
+                      <span className="font-semibold text-foreground">{dashboardData?.alerts.lowStock ?? 0}</span>
+                      <span className="text-muted-foreground">{t('dashboard.lowStock')}</span>
+                    </div>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Recent Scans */}
         <Card className="border border-border bg-white shadow-none">
@@ -354,30 +325,51 @@ export function DashboardScreen() {
             </div>
           </CardHeader>
           <CardContent className="px-3 mt-2 pb-3">
-            <div className="space-y-3">
-              {mockRecentScans.map((scan) => (
-                <div
-                  key={scan.id}
-                  className="flex items-center justify-between gap-3 rounded-lg border border-border bg-white p-3"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-foreground">{scan.productName}</p>
-                    <p className="text-xs text-muted-foreground">{scan.barcode}</p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <div className="flex items-center gap-1.5">
-                      {getStatusIcon(scan.status)}
-                      <span className="text-xs font-medium text-foreground">
-                        {getStatusLabel(scan.status)}
-                      </span>
+            {isLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-white p-3">
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-24" />
                     </div>
-                    <span className="text-xs text-muted-foreground">
-                      {format(scan.time, 'HH:mm')}
-                    </span>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <Skeleton className="h-4 w-16" />
+                      <Skeleton className="h-3 w-12" />
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {dashboardData?.recentScans && dashboardData.recentScans.length > 0 ? (
+                  dashboardData.recentScans.map((scan) => (
+                    <div
+                      key={scan.id}
+                      className="flex items-center justify-between gap-3 rounded-lg border border-border bg-white p-3"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-foreground">{scan.productName}</p>
+                        <p className="text-xs text-muted-foreground">{scan.sku}</p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <div className="flex items-center gap-1.5">
+                          {getStatusIcon(scan.status)}
+                          <span className="text-xs font-medium text-foreground">
+                            {getStatusLabel(scan.status)}
+                          </span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {scan.time.formattedTime}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">{t('common.noData')}</p>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -404,24 +396,42 @@ export function DashboardScreen() {
             </div>
           </CardHeader>
           <CardContent className="px-3 mt-2 pb-3">
-            <div className="space-y-3">
-              {mockRecentActivities.map((activity) => (
-                <div
-                  key={activity.id}
-                  className="flex items-center justify-between gap-3 rounded-lg border border-border bg-white p-3"
-                >
-                  <div className="flex min-w-0 flex-1 items-center gap-2">
-                    {getActivityIcon(activity.type, activity.action)}
-                    <p className="text-sm font-semibold text-foreground">
-                      {formatActivityText(activity)}
-                    </p>
+            {isLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-white p-3">
+                    <div className="flex min-w-0 flex-1 items-center gap-2">
+                      <Skeleton className="h-4 w-4" />
+                      <Skeleton className="h-4 w-32" />
+                    </div>
+                    <Skeleton className="h-3 w-12" />
                   </div>
-                  <span className="shrink-0 text-xs text-muted-foreground">
-                    {format(activity.time, 'HH:mm')}
-                  </span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {dashboardData?.recentActivities && dashboardData.recentActivities.length > 0 ? (
+                  dashboardData.recentActivities.map((activity) => (
+                    <div
+                      key={activity.id}
+                      className="flex items-center justify-between gap-3 rounded-lg border border-border bg-white p-3"
+                    >
+                      <div className="flex min-w-0 flex-1 items-center gap-2">
+                        {getActivityIcon(activity.type, activity.action)}
+                        <p className="text-sm font-semibold text-foreground">
+                          {formatActivityText(activity)}
+                        </p>
+                      </div>
+                      <span className="shrink-0 text-xs text-muted-foreground">
+                        {activity.created_at.formattedTime}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">{t('common.noData')}</p>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

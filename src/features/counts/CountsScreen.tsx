@@ -38,6 +38,9 @@ import {
 } from '@/components/ui/table';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
+import { useStockCounts, useCreateStockCount } from '@/hooks/api/useStockCounts';
+import { useWarehouses } from '@/hooks/api/useWarehouses';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Plus,
   CheckCircle2,
@@ -48,61 +51,6 @@ import {
   FileText,
 } from 'lucide-react';
 import { format } from 'date-fns';
-
-// Mock data
-const mockCounts = [
-  {
-    id: 'cnt_001',
-    code: 'CNT-001',
-    status: 'in_progress',
-    warehouse: { id: 'wh_001', name: 'Main' },
-    totalItems: 150,
-    itemsCounted: 45,
-    progress: 30,
-    discrepancies: 3,
-    startedAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
-    createdBy: { id: 'staff_001', name: 'John D.' },
-  },
-  {
-    id: 'cnt_002',
-    code: 'CNT-002',
-    status: 'completed',
-    warehouse: { id: 'wh_002', name: 'Secondary' },
-    totalItems: 80,
-    itemsCounted: 80,
-    discrepancies: 5,
-    totalSurplus: 15,
-    totalShortage: -8,
-    completedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    completedBy: { id: 'staff_002', name: 'Sarah M.' },
-  },
-  {
-    id: 'cnt_003',
-    code: 'CNT-003',
-    status: 'completed',
-    warehouse: { id: 'wh_001', name: 'Main' },
-    totalItems: 120,
-    itemsCounted: 120,
-    discrepancies: 0,
-    completedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
-  },
-  {
-    id: 'cnt_004',
-    code: 'CNT-004',
-    status: 'cancelled',
-    warehouse: { id: 'wh_001', name: 'Main' },
-    totalItems: 150,
-    itemsCounted: 10,
-    cancelledAt: new Date(Date.now() - 11 * 24 * 60 * 60 * 1000),
-  },
-];
-
-// Mock count items removed - unused
-
-const mockWarehouses = [
-  { id: 'wh_001', name: 'Main Warehouse' },
-  { id: 'wh_002', name: 'Secondary Warehouse' },
-];
 
 export function CountsScreen() {
   const { t } = useI18n();
@@ -117,6 +65,17 @@ export function CountsScreen() {
   const [startWarehouse, setStartWarehouse] = useState('');
   const [countScope, setCountScope] = useState<'full' | 'category' | 'location' | 'specific'>('full');
   const [startNotes, setStartNotes] = useState('');
+
+  // API hooks
+  const { data: countsData, isLoading: countsLoading } = useStockCounts({
+    status: statusFilter !== 'all' ? statusFilter : undefined,
+    warehouseId: warehouseFilter !== 'all' ? warehouseFilter : undefined,
+    limit: 100,
+  });
+  const { data: warehouses = [] } = useWarehouses({ limit: 100 });
+  const { mutateAsync: createStockCount } = useCreateStockCount();
+
+  const counts = countsData?.data || [];
 
   type SortOption = 'recent' | 'status' | 'warehouse';
 
@@ -151,7 +110,7 @@ export function CountsScreen() {
     setStartModalOpen(true);
   };
 
-  const handleStartCount = () => {
+  const handleStartCount = async () => {
     if (!startWarehouse) {
       toast({
         title: t('common.error'),
@@ -161,18 +120,27 @@ export function CountsScreen() {
       return;
     }
 
-    // TODO: Create count via API
-    const newCountId = 'cnt_new';
-    toast({
-      title: t('operations.countStarted'),
-      description: t('operations.countStartedDesc'),
-    });
-    setStartModalOpen(false);
-    setStartWarehouse('');
-    setCountScope('full');
-    setStartNotes('');
-    // Navigate to counting screen
-    navigate(`/operations/counts/${newCountId}/counting`);
+    try {
+      const result = await createStockCount({
+        warehouseId: startWarehouse,
+        notes: startNotes || undefined,
+      });
+      toast({
+        title: t('operations.countStarted'),
+        description: t('operations.countStartedDesc'),
+      });
+      setStartModalOpen(false);
+      setStartWarehouse('');
+      setCountScope('full');
+      setStartNotes('');
+      navigate(`/operations/counts/${result.stockCount.id}/counting`);
+    } catch (error: any) {
+      toast({
+        title: t('common.error'),
+        description: error?.response?.data?.message || t('operations.countStartedDesc'),
+        variant: 'destructive',
+      });
+    }
   };
 
   // handleContinue removed - unused
@@ -331,84 +299,105 @@ export function CountsScreen() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {mockCounts
+                  {countsLoading ? (
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                      </TableRow>
+                    ))
+                  ) : counts.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-8">
+                        {t('operations.noCounts')}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    counts
                     .filter((count) => {
-                      // Status filter
-                      if (statusFilter !== 'all' && count.status !== statusFilter) {
-                        return false;
-                      }
-                      // Warehouse filter
-                      if (warehouseFilter !== 'all') {
-                        const warehouseNameLower = count.warehouse.name.toLowerCase();
-                        if (warehouseFilter === 'main' && !warehouseNameLower.includes('main')) {
-                          return false;
-                        }
-                        if (warehouseFilter === 'secondary' && !warehouseNameLower.includes('secondary')) {
-                          return false;
-                        }
-                      }
-                      // Search filter
+                      // Search filter (client-side since API may not support it)
                       if (search) {
                         const searchLower = search.toLowerCase();
                         return (
-                          count.code.toLowerCase().includes(searchLower) ||
+                          count.referenceNumber.toLowerCase().includes(searchLower) ||
                           count.warehouse.name.toLowerCase().includes(searchLower)
                         );
                       }
                       return true;
                     })
-                    .map((count) => (
-                    <TableRow key={count.id}>
-                      <TableCell className="font-medium">{count.code}</TableCell>
-                      <TableCell>{count.warehouse.name}</TableCell>
-                      <TableCell>{getStatusBadge(count.status)}</TableCell>
-                      <TableCell>
-                        {count.status === 'cancelled' ? (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        ) : (
-                          `${count.itemsCounted}/${count.totalItems}`
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {count.status === 'completed' || count.status === 'in_progress' ? (
-                          <span className="text-xs text-muted-foreground">
-                            {count.discrepancies || 0} {t('operations.items')}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {count.status === 'completed' && count.completedAt
-                          ? format(count.completedAt, 'MMM d')
-                          : count.status === 'cancelled' && count.cancelledAt
-                          ? format(count.cancelledAt, 'MMM d')
-                          : count.startedAt
-                          ? format(count.startedAt, 'MMM d')
-                          : '—'}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => handleViewDetails(count)}
-                            className="p-1 hover:bg-muted rounded"
-                            title={t('operations.viewDetails')}
-                          >
-                            <Eye className="h-4 w-4 text-muted-foreground" />
-                          </button>
-                          {count.status === 'completed' && (
-                            <button
-                              onClick={() => handleViewReport(count)}
-                              className="p-1 hover:bg-muted rounded"
-                              title={t('operations.viewReport')}
-                            >
-                              <FileText className="h-4 w-4 text-muted-foreground" />
-                            </button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                    .sort((a, b) => {
+                      if (sortBy === 'recent') {
+                        const aDate = a.startedAt || a.completedAt || new Date(0);
+                        const bDate = b.startedAt || b.completedAt || new Date(0);
+                        return new Date(bDate).getTime() - new Date(aDate).getTime();
+                      } else if (sortBy === 'status') {
+                        return a.status.localeCompare(b.status);
+                      } else if (sortBy === 'warehouse') {
+                        return a.warehouse.name.localeCompare(b.warehouse.name);
+                      }
+                      return 0;
+                    })
+                    .map((count) => {
+                      const progress = count.totalItemsCounted ? Math.round((count.totalItemsCounted / (count.totalItemsCounted + (count.itemsWithVariance || 0))) * 100) : 0;
+                      return (
+                        <TableRow key={count.id}>
+                          <TableCell className="font-medium">{count.referenceNumber}</TableCell>
+                          <TableCell>{count.warehouse.name}</TableCell>
+                          <TableCell>{getStatusBadge(count.status)}</TableCell>
+                          <TableCell>
+                            {count.status === 'cancelled' ? (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            ) : count.totalItemsCounted ? (
+                              `${count.totalItemsCounted} ${t('operations.items')} (${progress}%)`
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {count.status === 'completed' || count.status === 'in_progress' ? (
+                              <span className="text-xs text-muted-foreground">
+                                {count.itemsWithVariance || 0} {t('operations.items')}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {count.status === 'completed' && count.completedAt
+                              ? format(new Date(count.completedAt), 'MMM d')
+                              : count.startedAt
+                              ? format(new Date(count.startedAt), 'MMM d')
+                              : '—'}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => handleViewDetails(count)}
+                                className="p-1 hover:bg-muted rounded"
+                                title={t('operations.viewDetails')}
+                              >
+                                <Eye className="h-4 w-4 text-muted-foreground" />
+                              </button>
+                              {count.status === 'completed' && (
+                                <button
+                                  onClick={() => handleViewReport(count)}
+                                  className="p-1 hover:bg-muted rounded"
+                                  title={t('operations.viewReport')}
+                                >
+                                  <FileText className="h-4 w-4 text-muted-foreground" />
+                                </button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -453,7 +442,7 @@ export function CountsScreen() {
                   <SelectValue placeholder={t('operations.selectWarehouse')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {mockWarehouses.map((wh) => (
+                  {warehouses.map((wh) => (
                     <SelectItem key={wh.id} value={wh.id}>
                       {wh.name}
                     </SelectItem>

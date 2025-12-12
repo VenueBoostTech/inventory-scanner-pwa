@@ -13,43 +13,19 @@ import {
 } from '@/components/ui/select';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
+import { useProduct, useUpdateProduct } from '@/hooks/api/useProducts';
+import { useCategories, useBrands } from '@/hooks/api/useProductMeta';
 import { Package } from 'lucide-react';
-
-// Mock data
-const mockProducts: Record<string, any> = {
-  prod_001: {
-    id: 'prod_001',
-    title: 'Single Handle Guide Pot 18cm',
-    titleAl: 'Tenxhere me dorezë 18cm',
-    shortDescription: '18cm stainless steel pot',
-    shortDescriptionAl: 'Tenxhere inoksi 18cm',
-    description: 'High-quality stainless steel pot with single handle, 18cm diameter.',
-    descriptionAl: 'Tenxhere inoksi me cilësi të lartë me dorezë të vetme, 18cm diametër.',
-    category: { id: 'cat_001', name: 'Kitchenware' },
-    brand: null,
-    price: 15.99,
-    priceAl: 1800,
-    priceEur: 15.99,
-    unitMeasure: 'pcs',
-    lowQuantity: 10,
-    imagePath: 'https://cdn.example.com/products/pot.jpg',
-  },
-};
-
-const mockCategories = [
-  { id: 'cat_001', name: 'Kitchenware' },
-  { id: 'cat_002', name: 'Electronics' },
-];
-
-const mockBrands: any[] = []; // Empty - brands are optional
 
 export function EditProductScreen() {
   const { t } = useI18n();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  const product = id ? mockProducts[id] : null;
+  const { data: product } = useProduct(id || '');
+  const { data: categories = [] } = useCategories();
+  const { data: brands = [] } = useBrands();
+  const { mutateAsync: updateProduct, isPending } = useUpdateProduct();
 
   const [title, setTitle] = useState('');
   const [titleAl, setTitleAl] = useState('');
@@ -76,9 +52,9 @@ export function EditProductScreen() {
       setDescriptionAl(product.descriptionAl || '');
       setCategoryId(product.category?.id || '');
       setBrandId(product.brand?.id || '');
-      setPrice(product.price?.toString() || '');
-      setPriceAl(product.priceAl?.toString() || '');
-      setPriceEur(product.priceEur?.toString() || '');
+      setPrice(product.pricing?.price?.toString() || '');
+      setPriceAl(product.pricing?.priceAl?.toString() || '');
+      setPriceEur(product.pricing?.priceEur?.toString() || '');
       setUnitMeasure(product.unitMeasure || '');
       setLowQuantity(product.lowQuantity?.toString() || '');
     }
@@ -95,7 +71,7 @@ export function EditProductScreen() {
     );
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!title || title.length < 2) {
       toast({
         title: t('common.error'),
@@ -105,12 +81,38 @@ export function EditProductScreen() {
       return;
     }
 
-    // TODO: Call API to update product
-    toast({
-      title: t('products.productUpdated'),
-      description: t('products.productUpdatedDesc'),
-    });
-    navigate(`/products/${product.id}`);
+    if (!id) return;
+
+    try {
+      await updateProduct({
+        productId: id,
+        title: title.trim(),
+        titleAl: titleAl.trim() || undefined,
+        shortDescription: shortDescription.trim() || undefined,
+        shortDescriptionAl: shortDescriptionAl.trim() || undefined,
+        description: description.trim() || undefined,
+        descriptionAl: descriptionAl.trim() || undefined,
+        categoryId: categoryId || undefined,
+        brandId: brandId || undefined,
+        price: price ? parseFloat(price) : undefined,
+        priceAl: priceAl ? parseFloat(priceAl) : undefined,
+        priceEur: priceEur ? parseFloat(priceEur) : undefined,
+        unitMeasure: unitMeasure || undefined,
+        lowQuantity: lowQuantity ? parseInt(lowQuantity) : undefined,
+      });
+
+      toast({
+        title: t('products.productUpdated'),
+        description: t('products.productUpdatedDesc'),
+      });
+      navigate(`/products/${id}`);
+    } catch (error: any) {
+      toast({
+        title: t('common.error'),
+        description: error?.response?.data?.message || t('products.updateError'),
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -122,9 +124,10 @@ export function EditProductScreen() {
           <Button
             size="sm"
             onClick={handleSave}
+            disabled={isPending}
             className="border-none bg-[#164945] text-white hover:bg-[#123b37]"
           >
-            {t('common.save')}
+            {isPending ? t('common.loading') : t('common.save')}
           </Button>
         }
       />
@@ -233,7 +236,7 @@ export function EditProductScreen() {
                     <SelectValue placeholder={t('products.selectCategory')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockCategories.map((cat) => (
+                    {categories.map((cat) => (
                       <SelectItem key={cat.id} value={cat.id}>
                         {cat.name}
                       </SelectItem>
@@ -242,7 +245,7 @@ export function EditProductScreen() {
                 </Select>
               </div>
 
-              {mockBrands.length > 0 && (
+              {brands.length > 0 && (
                 <div className="space-y-2">
                   <label className="text-sm font-medium">
                     {t('products.brand')} ({t('products.optional')})
@@ -253,7 +256,7 @@ export function EditProductScreen() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="">{t('products.none')}</SelectItem>
-                      {mockBrands.map((brand) => (
+                      {brands.map((brand) => (
                         <SelectItem key={brand.id} value={brand.id}>
                           {brand.name}
                         </SelectItem>

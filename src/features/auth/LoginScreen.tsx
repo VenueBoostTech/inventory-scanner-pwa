@@ -21,33 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 // Get device info helper
-function getDeviceInfo() {
-  const userAgent = navigator.userAgent;
-  let platform = 'web';
-  let deviceModel = 'Unknown';
-
-  if (/iPhone|iPad|iPod/.test(userAgent)) {
-    platform = 'ios';
-    const match = userAgent.match(/iPhone|iPad|iPod/);
-    deviceModel = match ? match[0] : 'iOS Device';
-  } else if (/Android/.test(userAgent)) {
-    platform = 'android';
-    const match = userAgent.match(/Android\s([\d.]+)/);
-    deviceModel = match ? `Android ${match[1]}` : 'Android Device';
-  }
-
-  return {
-    platform,
-    deviceModel,
-    appVersion: '1.0.0',
-    deviceId: localStorage.getItem('device-id') || `device-${Date.now()}`,
-  };
-}
-
-// Initialize device ID if not exists
-if (!localStorage.getItem('device-id')) {
-  localStorage.setItem('device-id', `device-${Date.now()}`);
-}
+import { getDeviceInfo } from '@/lib/device';
 
 // FormValues type will be defined inside component
 

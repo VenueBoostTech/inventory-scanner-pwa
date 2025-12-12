@@ -1,7 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useI18n } from '@/lib/i18n';
+import { useOperationsOverview } from '@/hooks/api/useActivities';
 import {
   Package,
   Truck,
@@ -10,13 +12,6 @@ import {
   Activity,
   ArrowRight,
 } from 'lucide-react';
-
-// Mock data
-const mockSummary = {
-  pendingTransfers: 12,
-  activeCounts: 3,
-  todaysAdjustments: 5,
-};
 
 const operationCards = [
   {
@@ -54,6 +49,7 @@ const operationCards = [
 export function OperationsScreen() {
   const { t } = useI18n();
   const navigate = useNavigate();
+  const { data: overview, isLoading } = useOperationsOverview();
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -65,30 +61,52 @@ export function OperationsScreen() {
             {t('operations.overview')}
           </h2>
           <div className="grid grid-cols-3 gap-3">
-            <Card className="border border-border bg-white shadow-none">
-              <CardContent className="px-2 py-3">
-                <div className="text-center">
-                  <div className="text-xl font-bold text-foreground">{mockSummary.pendingTransfers}</div>
-                  <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{t('operations.pendingTransfers')}</div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="border border-border bg-white shadow-none">
-              <CardContent className="px-2 py-3">
-                <div className="text-center">
-                  <div className="text-xl font-bold text-foreground">{mockSummary.activeCounts}</div>
-                  <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{t('operations.activeCounts')}</div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="border border-border bg-white shadow-none">
-              <CardContent className="px-2 py-3">
-                <div className="text-center">
-                  <div className="text-xl font-bold text-foreground">{mockSummary.todaysAdjustments}</div>
-                  <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{t('operations.todaysAdjustments')}</div>
-                </div>
-              </CardContent>
-            </Card>
+            {isLoading ? (
+              <>
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+              </>
+            ) : (
+              <>
+                <Card className="border border-border bg-white shadow-none">
+                  <CardContent className="px-2 py-3">
+                    <div className="text-center">
+                      <div className="text-xl font-bold text-foreground">
+                        {overview?.summary.transfers.pending || 0}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground mt-1 leading-tight">
+                        {t('operations.pendingTransfers')}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="border border-border bg-white shadow-none">
+                  <CardContent className="px-2 py-3">
+                    <div className="text-center">
+                      <div className="text-xl font-bold text-foreground">
+                        {overview?.summary.stockCounts.active || 0}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground mt-1 leading-tight">
+                        {t('operations.activeCounts')}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="border border-border bg-white shadow-none">
+                  <CardContent className="px-2 py-3">
+                    <div className="text-center">
+                      <div className="text-xl font-bold text-foreground">
+                        {overview?.summary.adjustments.today || 0}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground mt-1 leading-tight">
+                        {t('operations.todaysAdjustments')}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
           </div>
         </div>
 

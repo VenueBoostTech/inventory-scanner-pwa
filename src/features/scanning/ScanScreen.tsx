@@ -1,11 +1,14 @@
 import { useState, type ReactElement } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { authStore } from '@/stores/authStore';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { useI18n } from '@/lib/i18n';
 import { useScanner } from '@/hooks/useScanner';
 import { useScanBarcode } from '@/hooks/api/useProducts';
+import { useScanHistory } from '@/hooks/api/useScanHistory';
 import { useToast } from '@/hooks/use-toast';
 import {
   Table,
@@ -32,7 +35,7 @@ export function ScanScreen() {
   const [manualCode, setManualCode] = useState('');
   const [skuCode, setSkuCode] = useState('');
   const [infoOpen, setInfoOpen] = useState(false);
-  const [lastScan, setLastScan] = useState<{
+  const [lastScan] = useState<{
     code: string;
     productName: string;
     time: Date;
@@ -40,18 +43,16 @@ export function ScanScreen() {
   const { toast } = useToast();
   const { mutateAsync, isPending } = useScanBarcode();
   const { isScanning, error, startScanning, stopScanning } = useScanner();
+  const profile = authStore((state) => state.profile);
+  const warehouseId = profile?.permissions?.warehouseIds?.[0];
 
-  const recentScans = [
-    {
-      id: 'scan_001',
-      barcode: '8901234567890',
-      action: 'lookup',
-      result: 'found',
-      product: { title: 'Premium Coffee Beans', sku: 'COF-001' },
-      warehouse: { name: 'Main Warehouse', code: 'WH-001' },
-      scannedAt: '2025-12-09T14:30:00Z',
-    },
-  ];
+  // API hooks
+  const { data: scanHistoryData } = useScanHistory({
+    limit: 10,
+    warehouseId,
+  });
+
+  const recentScans = scanHistoryData?.data || [];
 
   const formatResult = (result: string) => {
     const map: Record<string, { label: string; className: string; icon: ReactElement }> = {
@@ -78,28 +79,37 @@ export function ScanScreen() {
     return formatDistanceToNow(target, { addSuffix: true });
   };
 
+  const navigate = useNavigate();
+
   const handleDecoded = async (code: string) => {
-    const result = await mutateAsync(code);
-    setLastScan({
-      code,
-      productName: (result as { title?: string } | null)?.title ?? 'Unknown product',
-      time: new Date(),
-    });
-    toast({ title: 'Scan captured', description: code });
-    await stopScanning();
+    try {
+      const result = await mutateAsync({ barcode: code, warehouseId });
+      await stopScanning();
+      navigate('/scan/result', { state: { scanResult: result, barcode: code } });
+    } catch (error) {
+      await stopScanning();
+      toast({
+        title: t('common.error'),
+        description: t('scan.scanError'),
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleManualSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!manualCode) return;
-    const result = await mutateAsync(manualCode);
-    setLastScan({
-      code: manualCode,
-      productName: (result as { title?: string } | null)?.title ?? 'Unknown product',
-      time: new Date(),
-    });
-    toast({ title: 'Submitted', description: manualCode });
-    setManualCode('');
+    try {
+      const result = await mutateAsync({ barcode: manualCode, warehouseId });
+      navigate('/scan/result', { state: { scanResult: result, barcode: manualCode } });
+      setManualCode('');
+    } catch (error) {
+      toast({
+        title: t('common.error'),
+        description: t('scan.scanError'),
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleSkuSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
