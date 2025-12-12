@@ -336,8 +336,25 @@ export function TransfersScreen() {
         <div className="space-y-3">
           {filteredTransfers.length === 0 ? (
             <Card className="border border-border bg-white shadow-none">
-              <CardContent className="px-3 py-8 text-center">
-                <p className="text-sm text-muted-foreground">{t('transfers.noTransfers')}</p>
+              <CardContent className="px-3 py-12">
+                <div className="flex flex-col items-center justify-center gap-4">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                    <Truck className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <div className="text-center space-y-1">
+                    <p className="text-sm font-medium text-foreground">{t('transfers.noTransfers')}</p>
+                    <p className="text-xs text-muted-foreground max-w-xs">
+                      {t('transfers.noTransfersDesc')}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => setCreateModalOpen(true)}
+                    className="mt-2 border-none bg-[#164945] text-white hover:bg-[#123b37]"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    {t('transfers.createTransfer')}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ) : (

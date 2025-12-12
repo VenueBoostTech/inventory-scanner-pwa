@@ -703,7 +703,8 @@
     "settingsUpdatedDesc": "Cilësimet tuaja të njoftimeve u përditësuan"
   },
   "transfers": {
-    "noTransfers": "Nuk u gjetën transferta.",
+    "noTransfers": "Nuk u gjetën transferta",
+    "noTransfersDesc": "Krijoni transferimin tuaj të parë të stokut për të lëvizur artikujt midis depove.",
     "selectBothWarehouses": "Ju lutemi zgjidhni të dy magazinat",
     "cannotTransferSameWarehouse": "Nuk mund të transferoni në të njëjtën magazinë",
     "addAtLeastOneProduct": "Shtoni të paktën një produkt",

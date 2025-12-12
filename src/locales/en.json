@@ -704,7 +704,8 @@
     "settingsUpdatedDesc": "Your notification settings have been updated"
   },
   "transfers": {
-    "noTransfers": "No transfers found.",
+    "noTransfers": "No transfers found",
+    "noTransfersDesc": "Create your first stock transfer to move items between warehouses.",
     "selectBothWarehouses": "Please select both warehouses",
     "cannotTransferSameWarehouse": "Cannot transfer to same warehouse",
     "addAtLeastOneProduct": "Add at least one product",
