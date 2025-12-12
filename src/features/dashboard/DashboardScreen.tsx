@@ -359,10 +359,10 @@ export function DashboardScreen() {
                           </p>
                         </div>
                       </div>
-                      <div className="flex shrink-0 items-center gap-2">
+                      <div className="flex shrink-0 flex-col items-end gap-1">
                         <div className="flex items-center gap-1.5">
                           {getStatusIcon(scan.status)}
-                          <span className="hidden sm:inline text-xs font-medium text-foreground">
+                          <span className="text-xs font-medium text-foreground">
                             {getStatusLabel(scan.status)}
                           </span>
                         </div>
