@@ -369,6 +369,7 @@
     "titleRequired": "Titulli është i detyrueshëm (minimumi 2 karaktere)",
     "productUpdated": "Produkti u Përditësua",
     "productUpdatedDesc": "Produkti është përditësuar me sukses",
+    "updateError": "Dështoi përditësimi i produktit",
     "product": "Produkti",
     "current": "Aktual",
     "noBarcodeLinked": "Nuk ka kod të lidhur",

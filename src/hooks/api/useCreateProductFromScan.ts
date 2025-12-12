@@ -8,7 +8,9 @@ export interface CreateProductFromScanRequest {
   titleAl?: string;
   categoryId: string;
   price: number;
-  priceLek?: number;
+  priceAl?: number;
+  priceEur?: number;
+  unitMeasure?: string;
   initialQuantity: number;
   warehouseId: string;
 }

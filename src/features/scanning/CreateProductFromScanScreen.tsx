@@ -15,7 +15,7 @@ import {
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { useCreateProductFromScan } from '@/hooks/api/useCreateProductFromScan';
-import { useProducts } from '@/hooks/api/useProducts';
+import { useCategories } from '@/hooks/api/useProductMeta';
 import { authStore } from '@/stores/authStore';
 import { getDeviceInfo } from '@/lib/device';
 import { Package, Lock } from 'lucide-react';
@@ -30,7 +30,7 @@ export function CreateProductFromScanScreen() {
   const location = useLocation();
   const { toast } = useToast();
   const { mutateAsync: createProduct, isPending } = useCreateProductFromScan();
-  const { data: products } = useProducts();
+  const { data: categories = [] } = useCategories();
   
   const [title, setTitle] = useState('');
   const [titleAl, setTitleAl] = useState('');
@@ -57,17 +57,6 @@ export function CreateProductFromScanScreen() {
       </div>
     );
   }
-
-  // Extract unique categories from products
-  const categories = products
-    ? Array.from(
-        new Map(
-          products
-            .filter((p) => p.category)
-            .map((p) => [p.category!.id, p.category!])
-        ).values()
-      )
-    : [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,7 +99,8 @@ export function CreateProductFromScanScreen() {
         titleAl: titleAl.trim() || undefined,
         categoryId,
         price,
-        priceLek: priceLekValue,
+        priceAl: priceLekValue,
+        priceEur: price,
         initialQuantity: quantity,
         warehouseId,
       });

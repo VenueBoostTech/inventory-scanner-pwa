@@ -1,29 +1,18 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useI18n } from '@/lib/i18n';
+import { useWarehouses } from '@/hooks/api/useWarehouses';
 import { Warehouse, Search } from 'lucide-react';
-
-// Mock data
-const mockWarehouses = [
-  {
-    id: 'wh_001',
-    name: 'Main Warehouse',
-    address: '123 Industrial Zone, Tirana',
-    stats: {
-      totalProducts: 1250,
-      totalStock: 45000,
-      lowStockProducts: 45,
-      outOfStockProducts: 12,
-      missingBarcode: 85,
-    },
-  },
-];
 
 export function WarehousesScreen() {
   const { t } = useI18n();
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const { data: warehouses = [], isLoading } = useWarehouses({ search, limit: 100 });
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -97,14 +86,16 @@ export function WarehousesScreen() {
                   </div>
 
                   {/* Additional Info */}
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">
-                      {t('operations.totalUnits')}: {warehouse.stats.totalStock.toLocaleString()} {t('operations.units')}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {t('operations.missingBarcode')}: {warehouse.stats.missingBarcode}
-                    </p>
-                  </div>
+                  {warehouse.stats && (
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">
+                        {t('operations.totalUnits')}: {warehouse.stats.totalStock.toLocaleString()} {t('operations.units')}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {t('operations.missingBarcode')}: {warehouse.stats.missingBarcode}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
