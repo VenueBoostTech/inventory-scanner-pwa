@@ -99,7 +99,13 @@
     "recentLogins": {
       "title": "Recent Logins",
       "subtitle": "View your recent login sessions and active devices",
-      "activeNow": "Active now"
+      "activeNow": "Active now",
+      "unknownDevice": "Unknown Device",
+      "appVersion": "App Version",
+      "errorLoading": "Failed to load login history",
+      "noHistory": "No login history available",
+      "noHistoryDesc": "Your login sessions will appear here once you start using the app",
+      "limitedHistory": "Only the most recent 20 login sessions are displayed. For a complete history, please contact your administrator."
     },
     "permissions": {
       "title": "My Permissions",

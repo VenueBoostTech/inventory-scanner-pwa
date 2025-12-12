@@ -96,10 +96,16 @@
       "languageUpdated": "Gjuha u përditësua",
       "languageUpdatedDesc": "Preferenca juaj e gjuhës u përditësua me sukses"
     },
-    "recentLogins": {
+      "recentLogins": {
       "title": "Hyrjet e Fundit",
       "subtitle": "Shikoni sesionet tuaja të hyrjes dhe pajisjet aktive",
-      "activeNow": "Aktiv tani"
+      "activeNow": "Aktiv tani",
+      "unknownDevice": "Pajisje e Panjohur",
+      "appVersion": "Versioni i Aplikacionit",
+      "errorLoading": "Dështoi ngarkimi i historisë së hyrjes",
+      "noHistory": "Nuk ka histori hyrjesh të disponueshme",
+      "noHistoryDesc": "Sesionet tuaja të hyrjes do të shfaqen këtu pasi të filloni të përdorni aplikacionin",
+      "limitedHistory": "Shfaqen vetëm 20 sesionet më të fundit të hyrjes. Për një histori të plotë, ju lutemi kontaktoni administratorin tuaj."
     },
     "permissions": {
       "title": "Lejet e Mia",
