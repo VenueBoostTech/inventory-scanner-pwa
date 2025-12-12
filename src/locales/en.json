@@ -22,7 +22,9 @@
     "view": "View",
     "copied": "Copied",
     "copiedToClipboard": "copied to clipboard",
-    "edit": "Edit"
+    "edit": "Edit",
+    "showMore": "Show More",
+    "showLess": "Show Less"
   },
   "auth": {
     "login": {
@@ -164,7 +166,8 @@
       "yesterday": "Yesterday",
       "thisWeek": "This Week",
       "last7Days": "Last 7 Days",
-      "thisMonth": "This Month"
+      "thisMonth": "This Month",
+      "lastMonth": "Last Month"
     }
   },
   "scan": {
@@ -552,6 +555,15 @@
     "lowThreshold": "Low Threshold",
     "addStock": "Add stock",
     "removeStock": "Remove stock",
+    "today": "Today",
+    "thisWeek": "This Week",
+    "total": "Total",
+    "active": "Active",
+    "mobileActivities": "Mobile Activities",
+    "ordersCreated": "Orders Created",
+    "ordersCancelled": "Orders Cancelled",
+    "ordersReturned": "Orders Returned",
+    "initialStock": "Initial Stock",
     "setToValue": "Set to value",
     "selectWarehouse": "Select warehouse",
     "preview": "Preview",
@@ -617,6 +629,9 @@
     "noWarehouses": "No warehouses found",
     "exporting": "Exporting",
     "exportingDesc": "Preparing export file...",
+    "exportSuccess": "Export Successful",
+    "exportSuccessDesc": "Activities exported successfully",
+    "exportError": "Failed to export activities",
     "filterActivities": "Filter activities by various criteria",
     "activityType": "Activity Type",
     "adjustment": "Adjustment",

@@ -243,9 +243,10 @@ export function ScanScreen() {
             <div className="flex-shrink-0">
               <button
                 type="button"
+                onClick={() => navigate('/scan/all')}
                 className="mt-2 flex items-center gap-1 text-sm font-medium text-[#164945] hover:underline cursor-pointer"
               >
-                See all
+                {t('common.seeAll')}
                 <ArrowRight className="h-4 w-4" />
               </button>
             </div>

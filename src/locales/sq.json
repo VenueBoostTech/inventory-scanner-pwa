@@ -22,7 +22,9 @@
     "view": "Shiko",
     "copied": "U kopjua",
     "copiedToClipboard": "u kopjua në clipboard",
-    "edit": "Redakto"
+    "edit": "Redakto",
+    "showMore": "Shfaq Më Shumë",
+    "showLess": "Shfaq Më Pak"
   },
   "auth": {
     "login": {
@@ -164,7 +166,8 @@
       "yesterday": "Dje",
       "thisWeek": "Kjo Javë",
       "last7Days": "7 Ditët e Fundit",
-      "thisMonth": "Ky Muaj"
+      "thisMonth": "Ky Muaj",
+      "lastMonth": "Muaji i Kaluar"
     }
   },
   "scan": {
@@ -552,6 +555,15 @@
     "lowThreshold": "Pragu i Ulët",
     "addStock": "Shto stok",
     "removeStock": "Hiq stok",
+    "today": "Sot",
+    "thisWeek": "Kjo Javë",
+    "total": "Total",
+    "active": "Aktiv",
+    "mobileActivities": "Aktivitetet Mobile",
+    "ordersCreated": "Porositë e Krijuara",
+    "ordersCancelled": "Porositë e Anuluara",
+    "ordersReturned": "Porositë e Kthyera",
+    "initialStock": "Stoku Fillestar",
     "setToValue": "Vendos në vlerë",
     "selectWarehouse": "Zgjidh magazinë",
     "preview": "Parapamje",
@@ -616,6 +628,9 @@
     "export": "Eksporto",
     "exporting": "Duke eksportuar",
     "exportingDesc": "Duke përgatitur skedarin e eksportit...",
+    "exportSuccess": "Eksportimi u Krye me Sukses",
+    "exportSuccessDesc": "Aktivitetet u eksportuan me sukses",
+    "exportError": "Dështoi eksportimi i aktiviteteve",
     "filterActivities": "Filtro aktivitetet sipas kritereve të ndryshme",
     "activityType": "Lloji i Aktivitetit",
     "adjustment": "Rregullim",

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 
-export type DateFilter = 'today' | 'yesterday' | 'this_week' | 'last_7_days' | 'this_month';
+export type DateFilter = 'today' | 'yesterday' | 'this_week' | 'last_7_days' | 'this_month' | 'last_month';
 
 export interface FormattedDateTime {
   date: string;
@@ -75,5 +75,10 @@ export function useDashboard(dateFilter: DateFilter = 'today') {
       });
       return data;
     },
+    staleTime: 0, // Always consider data stale so it refetches when filter changes
+    gcTime: 0, // Don't cache old queries - immediately garbage collect
+    refetchOnMount: 'always', // Always refetch when component mounts
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    enabled: true, // Always enable the query
   });
 }

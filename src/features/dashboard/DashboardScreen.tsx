@@ -34,12 +34,18 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useDashboard, type DateFilter } from '@/hooks/api/useDashboard';
+import { useEffect } from 'react';
 
 export function DashboardScreen() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const [dateFilter, setDateFilter] = useState<DateFilter>('today');
-  const { data: dashboardData, isLoading } = useDashboard(dateFilter);
+  const { data: dashboardData, isLoading, refetch } = useDashboard(dateFilter);
+
+  // Explicitly refetch when dateFilter changes
+  useEffect(() => {
+    void refetch();
+  }, [dateFilter, refetch]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -87,7 +93,13 @@ export function DashboardScreen() {
   const formatActivityText = (activity: { type: string; action: string; productName: string; quantity?: number }) => {
     if (activity.type === 'adjustment') {
       const sign = activity.action === 'increase' ? '+' : '-';
-      return `${activity.productName} ${sign}${Math.abs(activity.quantity || 0)}`;
+      const quantity = Math.abs(activity.quantity || 0);
+      return (
+        <>
+          {activity.productName}{' '}
+          <span className="font-bold">({sign}{quantity})</span>
+        </>
+      );
     }
     if (activity.type === 'count') {
       return `${activity.productName} completed`;
@@ -122,6 +134,7 @@ export function DashboardScreen() {
                   <SelectItem value="this_week">{t('dashboard.dateFilter.thisWeek')}</SelectItem>
                   <SelectItem value="last_7_days">{t('dashboard.dateFilter.last7Days')}</SelectItem>
                   <SelectItem value="this_month">{t('dashboard.dateFilter.thisMonth')}</SelectItem>
+                  <SelectItem value="last_month">{t('dashboard.dateFilter.lastMonth')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -316,7 +329,7 @@ export function DashboardScreen() {
             <div className="flex-shrink-0">
               <button
                 type="button"
-                onClick={() => navigate('/scan')}
+                onClick={() => navigate('/scan/all')}
                 className="mt-2 flex items-center gap-1 text-sm font-medium text-[#164945] hover:underline cursor-pointer"
               >
                 {t('common.seeAll')}
