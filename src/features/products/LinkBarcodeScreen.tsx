@@ -30,7 +30,7 @@ export function LinkBarcodeScreen() {
   const [errorMessage, setErrorMessage] = useState('');
   const [conflictingProduct, setConflictingProduct] = useState<any>(null);
 
-  const { data: product, isLoading } = useProduct(id || '');
+  const { data: product } = useProduct(id || '');
   const { mutateAsync: updateProduct, isPending: isUpdating } = useUpdateProduct();
 
   useEffect(() => {
@@ -77,7 +77,6 @@ export function LinkBarcodeScreen() {
     try {
       // Check if barcode is available by trying to scan it
       // If it returns a product, that product already has this barcode
-      const { useScanBarcode } = await import('@/hooks/api/useProducts');
       // For now, we'll try to update the product with the barcode
       // The backend should validate if barcode is already in use
       await updateProduct({
@@ -105,10 +104,6 @@ export function LinkBarcodeScreen() {
     }
   };
 
-  const handleLinkBarcode = async () => {
-    // Already handled in handleCheckBarcode
-    setSuccessModalOpen(true);
-  };
 
   const handleSuccessClose = () => {
     setSuccessModalOpen(false);

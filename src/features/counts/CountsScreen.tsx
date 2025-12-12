@@ -73,7 +73,7 @@ export function CountsScreen() {
     limit: 100,
   });
   const { data: warehouses = [] } = useWarehouses({ limit: 100 });
-  const { mutateAsync: createStockCount, isPending: isCreating } = useCreateStockCount();
+  const { mutateAsync: createStockCount } = useCreateStockCount();
 
   const counts = countsData?.data || [];
 

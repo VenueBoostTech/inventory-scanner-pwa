@@ -62,12 +62,12 @@ export function CountReportScreen() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <ScreenHeader title={`${t('operations.discrepancyReport')} - ${count.code}`} showBack />
+      <ScreenHeader title={`${t('operations.discrepancyReport')} - ${count.referenceNumber}`} showBack />
       <div className="space-y-4 px-4 py-4">
         {/* Title and Subtitle */}
         <div>
           <h1 className="text-xl font-semibold text-foreground">
-            {t('operations.discrepancyReport')} - {count.code}
+            {t('operations.discrepancyReport')} - {count.referenceNumber}
           </h1>
           <p className="text-sm text-muted-foreground">{t('operations.reportDescription')}</p>
         </div>

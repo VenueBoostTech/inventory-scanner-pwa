@@ -41,7 +41,6 @@ import { useMyAdjustments } from '@/hooks/api/useActivities';
 import { useProducts } from '@/hooks/api/useProducts';
 import { useWarehouses } from '@/hooks/api/useWarehouses';
 import { useStockAdjustment } from '@/hooks/api/useStockAdjustment';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Package, Plus, Search, Filter, TrendingUp, TrendingDown, Minus, Eye, AlertTriangle, Coffee } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -69,7 +68,7 @@ export function AdjustmentsScreen() {
   const [reference, setReference] = useState('');
 
   // API hooks
-  const { data: adjustmentsData, isLoading: adjustmentsLoading } = useMyAdjustments({
+  const { data: adjustmentsData } = useMyAdjustments({
     limit: 100,
   });
   const { data: products = [] } = useProducts({ limit: 1000 });
@@ -109,7 +108,7 @@ export function AdjustmentsScreen() {
 
     // Apply warehouse filter (client-side)
     if (warehouseFilter !== 'all') {
-      filtered = filtered.filter((adj) => {
+      filtered = filtered.filter(() => {
         // Activities may not have warehouse directly, need to check reference or other fields
         // For now, skip warehouse filtering if warehouse data not available
         return true;
@@ -137,17 +136,28 @@ export function AdjustmentsScreen() {
   }, [search, typeFilter, warehouseFilter, sortBy]);
 
   const getQuantityDisplay = (adjustment: any) => {
-    if (adjustment.adjustmentType === 'set') {
+    // Infer adjustment type from quantity and stock values
+    const isSet = adjustment.stockAfter === adjustment.quantity && adjustment.stockBefore !== adjustment.quantity;
+    if (isSet) {
       return `=${adjustment.quantity}`;
     }
     return adjustment.quantity > 0 ? `+${adjustment.quantity}` : `${adjustment.quantity}`;
   };
 
   const getQuantityColor = (adjustment: any) => {
-    if (adjustment.adjustmentType === 'set') {
+    // Infer adjustment type from quantity and stock values
+    const isSet = adjustment.stockAfter === adjustment.quantity && adjustment.stockBefore !== adjustment.quantity;
+    if (isSet) {
       return 'text-blue-600';
     }
     return adjustment.quantity > 0 ? 'text-emerald-600' : 'text-red-600';
+  };
+
+  const getAdjustmentType = (adjustment: any) => {
+    // Infer adjustment type from quantity and stock values
+    const isSet = adjustment.stockAfter === adjustment.quantity && adjustment.stockBefore !== adjustment.quantity;
+    if (isSet) return 'set';
+    return adjustment.quantity > 0 ? 'increase' : 'decrease';
   };
 
   const getTypeLabel = (type: string) => {
@@ -436,7 +446,7 @@ export function AdjustmentsScreen() {
                   ) : (
                     filteredAndSortedAdjustments.map((adjustment) => (
                       <TableRow key={adjustment.id}>
-                        <TableCell className="font-medium">{adjustment.code}</TableCell>
+                        <TableCell className="font-medium">{adjustment.id.slice(0, 8)}</TableCell>
                         <TableCell>
                           <div>
                             <div className="font-medium">{adjustment.product.title}</div>
@@ -444,7 +454,7 @@ export function AdjustmentsScreen() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm">{getTypeLabel(adjustment.adjustmentType)}</span>
+                          <span className="text-sm">{getTypeLabel(getAdjustmentType(adjustment))}</span>
                         </TableCell>
                         <TableCell>
                           <span className={`text-sm font-semibold ${getQuantityColor(adjustment)}`}>
@@ -455,18 +465,10 @@ export function AdjustmentsScreen() {
                           {adjustment.stockBefore} → {adjustment.stockAfter}
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">
-                          {adjustment.reason === 'Received shipment' 
-                            ? t('operations.receivedShipment') 
-                            : adjustment.reason === 'Damaged items' 
-                            ? t('operations.damagedItems')
-                            : adjustment.reason === 'Expired items'
-                            ? t('operations.expiredItems')
-                            : adjustment.reason === 'Inventory correction'
-                            ? t('operations.inventoryCorrection')
-                            : adjustment.reason}
+                          {adjustment.notes || '-'}
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">
-                          {format(adjustment.createdAt, 'MMM d')}
+                          {format(new Date(adjustment.createdAt), 'MMM d')}
                         </TableCell>
                         <TableCell className="text-right">
                           <button

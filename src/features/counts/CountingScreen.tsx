@@ -53,17 +53,16 @@ export function CountingScreen() {
   // API hooks
   const { data: count, isLoading: countLoading } = useStockCount(id || '');
   const { data: productsData } = useProducts({ 
-    warehouseId: count?.warehouse.id,
     limit: 1000,
   });
-  const { mutateAsync: updateStockCount, isPending: isUpdating } = useUpdateStockCount();
+  const { mutateAsync: updateStockCount } = useUpdateStockCount();
   const { mutateAsync: completeStockCount, isPending: isCompleting } = useCompleteStockCount();
 
-  const products = productsData?.data || [];
+  const products = (Array.isArray(productsData) ? productsData : []) as any[];
   const countedItems = count?.items || [];
-  const countedProductIds = new Set(countedItems.map(item => item.productId));
-  const uncountedProducts = products.filter(p => !countedProductIds.has(p.id));
-  const currentProduct = currentProductId ? products.find(p => p.id === currentProductId) : uncountedProducts[0] || null;
+  const countedProductIds = new Set(countedItems.map((item: any) => item.productId));
+  const uncountedProducts = products.filter((p: any) => !countedProductIds.has(p.id));
+  const currentProduct = currentProductId ? products.find((p: any) => p.id === currentProductId) : uncountedProducts[0] || null;
 
   // Initialize current product if not set
   useEffect(() => {
@@ -115,7 +114,7 @@ export function CountingScreen() {
       });
 
       // Move to next uncounted product
-      const currentIndex = uncountedProducts.findIndex((p) => p.id === currentProduct.id);
+      const currentIndex = uncountedProducts.findIndex((p: any) => p.id === currentProduct.id);
       if (currentIndex < uncountedProducts.length - 1) {
         setCurrentProductId(uncountedProducts[currentIndex + 1].id);
       } else if (uncountedProducts.length > 0) {
@@ -136,7 +135,7 @@ export function CountingScreen() {
 
   const handleSkip = () => {
     if (!currentProduct) return;
-    const currentIndex = uncountedProducts.findIndex((p) => p.id === currentProduct.id);
+    const currentIndex = uncountedProducts.findIndex((p: any) => p.id === currentProduct.id);
     if (currentIndex < uncountedProducts.length - 1) {
       setCurrentProductId(uncountedProducts[currentIndex + 1].id);
     } else if (uncountedProducts.length > 0) {
@@ -452,7 +451,7 @@ export function CountingScreen() {
                   {t('operations.pendingItems')} ({uncountedProducts.length})
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  {t('operations.next')}: {uncountedProducts.slice(0, 3).map(p => `${p.title} (${p.sku})`).join(', ')}
+                  {t('operations.next')}: {uncountedProducts.slice(0, 3).map((p: any) => `${p.title} (${p.sku})`).join(', ')}
                   {uncountedProducts.length > 3 ? '...' : ''}
                 </p>
                 <Button variant="outline" size="sm" className="w-full text-xs">

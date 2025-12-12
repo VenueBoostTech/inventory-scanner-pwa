@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Button } from '@/components/ui/button';
@@ -118,12 +118,12 @@ export function CountDetailsScreen() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <ScreenHeader title={`${t('operations.stockCounts')} #${count.code}`} showBack />
+      <ScreenHeader title={`${t('operations.stockCounts')} #${count.referenceNumber}`} showBack />
       <div className="space-y-4 px-4 py-4">
         {/* Title and Subtitle */}
         <div>
           <h1 className="text-xl font-semibold text-foreground">
-            {t('operations.stockCounts')} #{count.code}
+            {t('operations.stockCounts')} #{count.referenceNumber}
           </h1>
           <p className="text-sm text-muted-foreground">{t('operations.countDetails')}</p>
         </div>
@@ -159,19 +159,28 @@ export function CountDetailsScreen() {
         </Card>
 
         {/* Progress */}
-        {count.status === 'in_progress' && (
+        {count.status === 'in_progress' && count.items && (
           <Card className="border border-border bg-white shadow-none">
             <CardContent className="px-3 py-3">
               <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">
-                  {t('operations.progress')}: {count.itemsCounted}/{count.totalItems} {t('operations.items')} ({count.progress}%)
-                </p>
-                <div className="w-full bg-muted rounded-full h-2">
-                  <div
-                    className="bg-[#164945] h-2 rounded-full"
-                    style={{ width: `${count.progress}%` }}
-                  />
-                </div>
+                {(() => {
+                  const itemsCounted = count.items.length;
+                  const totalItems = count.totalItemsCounted ? count.totalItemsCounted + (count.itemsWithVariance || 0) : itemsCounted;
+                  const progress = totalItems > 0 ? Math.round((itemsCounted / totalItems) * 100) : 0;
+                  return (
+                    <>
+                      <p className="text-xs text-muted-foreground">
+                        {t('operations.progress')}: {itemsCounted}/{totalItems} {t('operations.items')} ({progress}%)
+                      </p>
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div
+                          className="bg-[#164945] h-2 rounded-full"
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             </CardContent>
           </Card>
@@ -279,11 +288,11 @@ export function CountDetailsScreen() {
         </Card>
 
         {/* Pending Items */}
-        {count.status === 'in_progress' && (
+        {count.status === 'in_progress' && count.items && (
           <Card className="border border-border bg-white shadow-none">
             <CardContent className="px-3 py-3">
               <h3 className="text-sm font-semibold mb-1">
-                {t('operations.pendingItems')} ({count.totalItems - count.itemsCounted})
+                {t('operations.pendingItems')} ({Math.max(0, (count.totalItemsCounted || 0) - count.items.length)})
               </h3>
               <p className="text-xs text-muted-foreground">
                 {t('operations.pendingItemsDesc')}

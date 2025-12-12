@@ -1,5 +1,4 @@
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Button } from '@/components/ui/button';
@@ -63,7 +62,6 @@ import { format } from 'date-fns';
 
 export function ActivitiesScreen() {
   const { t } = useI18n();
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [search, setSearch] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -127,7 +125,7 @@ export function ActivitiesScreen() {
 
   const { data: summaryData, isLoading: summaryLoading } = useActivitySummary();
   const { data: warehouses = [] } = useWarehouses({ limit: 100 });
-  const { data: activityDetails, isLoading: detailLoading } = useActivity(
+  const { data: activityDetails } = useActivity(
     displayActivity?.id || ''
   );
 
@@ -255,7 +253,7 @@ export function ActivitiesScreen() {
 
     // Warehouse filter (client-side, API doesn't support warehouse param)
     if (warehouseFilter !== 'all') {
-      filtered = filtered.filter((act) => {
+      filtered = filtered.filter(() => {
         // Activities don't have warehouse field directly, skip for now
         return true;
       });

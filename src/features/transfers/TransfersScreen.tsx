@@ -20,13 +20,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { useStockTransfers, useCreateTransfer, useCompleteTransfer, useCancelTransfer } from '@/hooks/api/useStockTransfers';
 import { useWarehouses } from '@/hooks/api/useWarehouses';
 import { useProducts } from '@/hooks/api/useProducts';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Truck, Plus, CheckCircle2, XCircle, AlertCircle, Search, Camera, Trash2, ArrowRight } from 'lucide-react';
 import { format, isToday } from 'date-fns';
 
@@ -52,15 +51,15 @@ export function TransfersScreen() {
   const [completeModalOpen, setCompleteModalOpen] = useState(false);
 
   // API hooks
-  const { data: transfersData, isLoading: transfersLoading } = useStockTransfers({
+  const { data: transfersData } = useStockTransfers({
     status: statusFilter !== 'all' ? statusFilter : undefined,
     limit: 100,
   });
   const { data: warehouses = [] } = useWarehouses({ limit: 100 });
   const { data: products = [] } = useProducts({ limit: 100 });
-  const { mutateAsync: createTransfer, isPending: isCreating } = useCreateTransfer();
-  const { mutateAsync: completeTransfer, isPending: isCompleting } = useCompleteTransfer();
-  const { mutateAsync: cancelTransfer, isPending: isCancelling } = useCancelTransfer();
+  const { mutateAsync: createTransfer } = useCreateTransfer();
+  const { mutateAsync: completeTransfer } = useCompleteTransfer();
+  const { mutateAsync: cancelTransfer } = useCancelTransfer();
 
   const transfers = transfersData?.data || [];
 
