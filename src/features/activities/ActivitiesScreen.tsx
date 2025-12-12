@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Button } from '@/components/ui/button';
 import {
@@ -55,11 +56,15 @@ import {
   ChevronDown,
   ChevronUp,
   X,
+  Info,
+  Lightbulb,
+  AlertCircle,
 } from 'lucide-react';
 
 export function ActivitiesScreen() {
   const { t } = useI18n();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [sourceFilter, setSourceFilter] = useState<string>('all');
@@ -70,6 +75,7 @@ export function ActivitiesScreen() {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [summaryExpanded, setSummaryExpanded] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
 
   // Calculate date range for API - memoized to prevent infinite loops
   const { dateFrom, dateTo } = useMemo(() => {
@@ -541,7 +547,6 @@ export function ActivitiesScreen() {
                       { value: 'COUNT', label: t('operations.count') },
                       { value: 'ORDER', label: t('operations.order') },
                       { value: 'RETURN', label: t('operations.return') },
-                      { value: 'SCAN', label: t('operations.scan') },
                     ].map((option) => (
                       <label key={option.value} className="flex items-center gap-2">
                         <input
@@ -969,6 +974,102 @@ export function ActivitiesScreen() {
             </div>
           </div>
         )}
+
+        {/* Info Section */}
+        <Card className="border border-border bg-white shadow-none">
+          <CardHeader className="flex flex-col sm:flex-row items-start justify-between gap-3 px-3 pt-3 pb-2">
+            <div className="flex items-start gap-3 flex-1 min-w-0 w-full sm:w-auto">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#164945]/10">
+                <Info className="h-5 w-5 text-[#164945]" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <CardTitle className="text-md font-semibold text-foreground">{t('operations.activitiesInfoTitle')}</CardTitle>
+                <CardDescription className="text-sm text-muted-foreground">
+                  {t('operations.activitiesInfoDesc')}
+                </CardDescription>
+              </div>
+            </div>
+            <div className="flex-shrink-0 w-full sm:w-auto flex justify-end sm:justify-start">
+              <Sheet open={infoOpen} onOpenChange={setInfoOpen}>
+                <SheetTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex items-center gap-1 text-sm font-medium text-[#164945] hover:underline cursor-pointer"
+                  >
+                    {t('common.learnMore')}
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[75%] sm:w-[400px]">
+                  <SheetHeader className="text-left space-y-1">
+                    <SheetTitle className="text-left">{t('operations.activitiesGuide')}</SheetTitle>
+                    <SheetDescription className="text-left">
+                      {t('operations.activitiesGuideDesc')}
+                    </SheetDescription>
+                  </SheetHeader>
+                  <div className="mt-6 space-y-6">
+                    {/* Mobile Activities */}
+                    <div className="space-y-3">
+                      <h3 className="text-sm font-semibold text-foreground">{t('operations.whatAreMobileActivities')}</h3>
+                      <div className="space-y-2 text-sm text-muted-foreground">
+                        <p>{t('operations.mobileActivitiesDesc1')}</p>
+                        <p>{t('operations.mobileActivitiesDesc2')}</p>
+                        <p>{t('operations.mobileActivitiesDesc3')}</p>
+                      </div>
+                    </div>
+
+                    {/* Scans vs Activities */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-amber-600" />
+                        <h3 className="text-sm font-semibold text-foreground">
+                          {t('operations.scansVsActivities')}
+                        </h3>
+                      </div>
+                      <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50/50 p-3">
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium text-foreground">
+                            {t('operations.scanLogOnly')}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {t('operations.scanLogOnlyDesc')}
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium text-foreground">
+                            {t('operations.whenActivitiesCreated')}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {t('operations.whenActivitiesCreatedDesc')}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Example */}
+                    <div className="space-y-2 rounded-lg border border-emerald-200 bg-emerald-50/50 p-3">
+                      <div className="flex items-center gap-2">
+                        <Lightbulb className="h-4 w-4 text-emerald-600" />
+                        <p className="text-sm font-semibold text-foreground">{t('operations.example')}</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {t('operations.exampleDesc')}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-6">
+                    <Button
+                      onClick={() => setInfoOpen(false)}
+                      className="w-full border-none bg-[#164945] text-white hover:bg-[#123b37]"
+                    >
+                      {t('common.gotIt')}
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+          </CardHeader>
+        </Card>
       </div>
 
       {/* Activity Detail Modal */}
@@ -1038,7 +1139,15 @@ export function ActivitiesScreen() {
                       </div>
                       {currentDisplayActivity.product.id && (
                         <div className="pt-2 border-t border-border">
-                          <Button variant="outline" size="sm" className="gap-1 text-xs w-full sm:w-auto">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="gap-1 text-xs w-full sm:w-auto"
+                            onClick={() => {
+                              navigate(`/products/${currentDisplayActivity.product.id}`);
+                              setDetailModalOpen(false);
+                            }}
+                          >
                             {t('common.view')}
                             <ArrowRight className="h-3 w-3" />
                           </Button>
@@ -1108,15 +1217,13 @@ export function ActivitiesScreen() {
                         </div>
                       )}
                       {currentDisplayActivity.reference && (
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-muted-foreground">{t('operations.reference')}</span>
-                            <span className="font-medium">{currentDisplayActivity.reference.id}</span>
-                          </div>
-                          <Button variant="outline" size="sm" className="w-full gap-1 h-6 px-2 text-xs">
-                            {t('common.view')}
-                            <ArrowRight className="h-3 w-3" />
-                          </Button>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground">{t('operations.reference')}</span>
+                          <span className="font-medium">
+                            {currentDisplayActivity.reference.type 
+                              ? getActivityTypeLabel(currentDisplayActivity.reference.type.toUpperCase())
+                              : currentDisplayActivity.reference.type || '—'}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -1130,16 +1237,20 @@ export function ActivitiesScreen() {
                   <div className="space-y-2">
                     <h3 className="text-sm font-semibold">{t('operations.performedBy')}</h3>
                     <div className="space-y-2 text-sm">
-                      {currentDisplayActivity.staff && (
-                        <>
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-muted-foreground">{t('operations.staff')}</span>
-                            <span className="font-medium">
-                              {currentDisplayActivity.staff.name} {currentDisplayActivity.staff.email && `(${currentDisplayActivity.staff.email})`}
-                            </span>
-                          </div>
-                        </>
-                      )}
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">{t('operations.createdBy')}</span>
+                        <span className="font-medium">
+                          {(() => {
+                            if (currentDisplayActivity.staff?.name) {
+                              return `${currentDisplayActivity.staff.name}${currentDisplayActivity.staff.email ? ` (${currentDisplayActivity.staff.email})` : ''}`;
+                            }
+                            if (currentDisplayActivity.createdBy?.name) {
+                              return currentDisplayActivity.createdBy.name;
+                            }
+                            return t('operations.system');
+                          })()}
+                        </span>
+                      </div>
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-muted-foreground">{t('operations.dateTime')}</span>
                         <span className="font-medium">

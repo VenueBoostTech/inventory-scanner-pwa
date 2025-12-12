@@ -30,6 +30,11 @@ export interface Activity {
   staff?: {
     id: string;
     name: string;
+    email?: string | null;
+  } | null;
+  createdBy?: {
+    id: string;
+    name: string;
   } | null;
   notes?: string | null;
   variantId?: string | null;
