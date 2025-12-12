@@ -16,6 +16,7 @@ export interface RecentScan {
   id: string;
   productName: string;
   sku: string;
+  barcode?: string;
   status: 'found' | 'not_found' | 'created';
   time: FormattedDateTime;
 }

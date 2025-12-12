@@ -94,7 +94,20 @@
       "confirmPassword": "Confirm New Password",
       "changePasswordButton": "Change Password",
       "languageUpdated": "Language updated",
-      "languageUpdatedDesc": "Your language preference has been updated successfully"
+      "languageUpdatedDesc": "Your language preference has been updated successfully",
+      "logout": "Logout",
+      "logoutDesc": "Are you sure you want to logout?",
+      "loggedOut": "Logged Out",
+      "loggedOutDesc": "You have been successfully logged out",
+      "nameRequired": "Name is required",
+      "profileUpdated": "Profile Updated",
+      "profileUpdatedDesc": "Your profile has been updated successfully",
+      "updateError": "Failed to update profile",
+      "passwordChanged": "Password Changed",
+      "passwordChangedDesc": "Your password has been changed successfully",
+      "passwordChangeError": "Failed to change password",
+      "passwordsDoNotMatch": "Passwords do not match",
+      "passwordMinLength": "Password must be at least 6 characters"
     },
     "recentLogins": {
       "title": "Recent Logins",

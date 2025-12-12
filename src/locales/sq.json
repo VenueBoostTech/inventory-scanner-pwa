@@ -94,7 +94,20 @@
       "confirmPassword": "Konfirmo Fjalëkalimin e Ri",
       "changePasswordButton": "Ndrysho Fjalëkalimin",
       "languageUpdated": "Gjuha u përditësua",
-      "languageUpdatedDesc": "Preferenca juaj e gjuhës u përditësua me sukses"
+      "languageUpdatedDesc": "Preferenca juaj e gjuhës u përditësua me sukses",
+      "logout": "Dil",
+      "logoutDesc": "Jeni të sigurt që dëshironi të dilni?",
+      "loggedOut": "U Dil",
+      "loggedOutDesc": "Jeni dërguar me sukses",
+      "nameRequired": "Emri është i detyrueshëm",
+      "profileUpdated": "Profili u Përditësua",
+      "profileUpdatedDesc": "Profili juaj është përditësuar me sukses",
+      "updateError": "Dështoi përditësimi i profilit",
+      "passwordChanged": "Fjalëkalimi u Ndryshua",
+      "passwordChangedDesc": "Fjalëkalimi juaj është ndryshuar me sukses",
+      "passwordChangeError": "Dështoi ndryshimi i fjalëkalimit",
+      "passwordsDoNotMatch": "Fjalëkalimet nuk përputhen",
+      "passwordMinLength": "Fjalëkalimi duhet të jetë të paktën 6 karaktere"
     },
       "recentLogins": {
       "title": "Hyrjet e Fundit",
