@@ -39,7 +39,7 @@ type QuickFilter = 'all' | 'low_stock' | 'out_of_stock' | 'no_barcode';
 type SortOption = 'stock_low_high' | 'stock_high_low' | 'name_az' | 'name_za' | 'recent';
 
 // Mock data - not used when API is available
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// @ts-expect-error - Mock data for reference only
 const _mockProducts = [
   {
     id: '1',

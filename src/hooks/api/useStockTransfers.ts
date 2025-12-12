@@ -19,6 +19,10 @@ export interface StockTransfer {
     id: string;
     name: string;
   };
+  completedBy?: {
+    id: string;
+    name: string;
+  } | null;
   status: 'pending' | 'in_transit' | 'completed' | 'cancelled';
   totalItems?: number;
   totalQuantity?: number;

@@ -42,11 +42,9 @@ export interface Profile {
 export interface UpdateProfileRequest {
   name?: string;
   phone?: string;
-  preferences?: {
-    language?: string;
-    timezone?: string;
-    notificationsEnabled?: boolean;
-  };
+  language?: string;
+  timezone?: string;
+  notificationsEnabled?: boolean;
 }
 
 export interface ChangePasswordRequest {
@@ -74,12 +72,13 @@ export function useUpdateProfile() {
       );
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       // Update auth store
       authStore.getState().setProfile(data.profile);
-      // Sync language if changed
-      if (data.profile.preferences?.language) {
-        localStorage.setItem('app-language', data.profile.preferences.language);
+      // Sync language if changed (API returns language in preferences)
+      const language = data.profile.preferences?.language || variables.language;
+      if (language) {
+        localStorage.setItem('app-language', language);
       }
       void queryClient.invalidateQueries({ queryKey: ['profile'] });
     },

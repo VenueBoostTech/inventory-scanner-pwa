@@ -15,6 +15,7 @@ import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { useProduct, useUpdateProduct } from '@/hooks/api/useProducts';
 import { useCategories, useBrands } from '@/hooks/api/useProductMeta';
+import { Package } from 'lucide-react';
 
 export function EditProductScreen() {
   const { t } = useI18n();

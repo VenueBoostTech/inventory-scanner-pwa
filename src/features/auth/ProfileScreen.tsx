@@ -77,22 +77,23 @@ export function ProfileScreen() {
     }
   };
 
-  const handleLanguageChange = (lang: 'en' | 'sq') => {
+  const handleLanguageChange = async (lang: 'en' | 'sq') => {
     setLanguage(lang);
-    if (profile) {
-      authStore.getState().setProfile({
-        ...profile,
-        preferences: {
-          ...profile.preferences,
-          language: lang === 'sq' ? 'al' : 'en', // Map sq to al for profile
-        },
+    try {
+      // API expects 'al' for Albanian, not 'sq'
+      await updateProfile({ language: lang === 'sq' ? 'al' : 'en' });
+      setIsLanguageOpen(false);
+      toast({
+        title: t('auth.profile.languageUpdated'),
+        description: t('auth.profile.languageUpdatedDesc'),
+      });
+    } catch (error: any) {
+      toast({
+        title: t('common.error'),
+        description: error?.response?.data?.message || t('auth.profile.updateError'),
+        variant: 'destructive',
       });
     }
-    setIsLanguageOpen(false);
-    toast({
-      title: t('auth.profile.languageUpdated'),
-      description: t('auth.profile.languageUpdatedDesc'),
-    });
   };
 
   const getInitials = (name: string) => {

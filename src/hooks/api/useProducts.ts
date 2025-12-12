@@ -50,9 +50,12 @@ export function useScanBarcode() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ barcode, warehouseId }: { barcode: string; warehouseId?: string }) => {
+      const { getDeviceInfo } = await import('@/lib/device');
+      const deviceInfo = getDeviceInfo();
       const { data } = await apiClient.post<ScanResult>('/scan', { 
         barcode,
         warehouseId,
+        deviceInfo,
       });
       return data;
     },

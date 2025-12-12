@@ -10,7 +10,7 @@ import { Warehouse, Search } from 'lucide-react';
 export function WarehousesScreen() {
   const { t } = useI18n();
   const [search, setSearch] = useState('');
-  const { data: warehouses = [] } = useWarehouses({ search, limit: 100 });
+  const { data: warehouses = [], isLoading } = useWarehouses({ search, limit: 100 });
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -35,7 +35,37 @@ export function WarehousesScreen() {
 
         {/* Warehouses List */}
         <div className="space-y-3">
-          {warehouses.map((warehouse) => (
+          {isLoading ? (
+            <>
+              {[1, 2, 3].map((i) => (
+                <Card key={i} className="border border-border bg-white shadow-none">
+                  <CardContent className="px-3 py-4">
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3">
+                        <Skeleton className="h-10 w-10 rounded-lg" />
+                        <div className="flex-1 space-y-2">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-3 w-48" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <Skeleton className="h-16 w-full" />
+                        <Skeleton className="h-16 w-full" />
+                        <Skeleton className="h-16 w-full" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </>
+          ) : warehouses.length === 0 ? (
+            <Card className="border border-border bg-white shadow-none">
+              <CardContent className="px-3 py-8 text-center">
+                <p className="text-sm text-muted-foreground">{t('operations.noWarehouses')}</p>
+              </CardContent>
+            </Card>
+          ) : (
+            warehouses.map((warehouse) => (
             <Card key={warehouse.id} className="border border-border bg-white shadow-none">
               <CardContent className="px-3 py-4">
                 <div className="space-y-3">
@@ -99,7 +129,8 @@ export function WarehousesScreen() {
                 </div>
               </CardContent>
             </Card>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </div>
