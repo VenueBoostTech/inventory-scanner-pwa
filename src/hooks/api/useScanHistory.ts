@@ -1,6 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 
+export interface FormattedDateTime {
+  date: string;
+  formattedDate: string;
+  formattedTime: string;
+  formattedDateTime: string;
+  timezone: string;
+  timestamp: number;
+}
+
 export interface ScanHistoryEntry {
   id: string;
   barcode: string;
@@ -18,7 +27,7 @@ export interface ScanHistoryEntry {
     name: string;
     code: string;
   };
-  scannedAt: string;
+  scannedAt: FormattedDateTime;
 }
 
 export interface ScanHistoryResponse {
@@ -48,6 +57,7 @@ export function useScanHistory(params?: {
   warehouseId?: string;
   dateFrom?: string;
   dateTo?: string;
+  search?: string;
 }) {
   return useQuery({
     queryKey: ['scan-history', params],

@@ -186,6 +186,7 @@
     "searchBySku": "Kërko me SKU",
     "searchBySkuSubtitle": "Disa produkte nuk kanë kod. Shkruani SKU-n për të parë nëse produkti ekziston tashmë në inventarin tuaj.",
     "enterSkuPlaceholder": "Shkruani SKU",
+    "searchPlaceholder": "Kërkoni me kod, SKU ose emër produkti",
     "recentScans": "Skanimet e fundit",
     "latestLookups": "Kërkimet dhe rezultatet e fundit.",
     "noScans": "Nuk ka skanime ende. Filloni skanimin ose shtoni një kod manualisht.",

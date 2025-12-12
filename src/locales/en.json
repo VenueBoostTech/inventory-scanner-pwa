@@ -186,6 +186,7 @@
     "searchBySku": "Search by SKU",
     "searchBySkuSubtitle": "Some products don't have a barcode. Enter the SKU to see if the product already exists in your inventory.",
     "enterSkuPlaceholder": "Enter SKU",
+    "searchPlaceholder": "Search by barcode, SKU, or product name",
     "recentScans": "Recent scans",
     "latestLookups": "Latest lookups and results.",
     "noScans": "No scans yet. Start scanning or add a barcode manually.",

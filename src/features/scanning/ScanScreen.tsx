@@ -10,16 +10,6 @@ import { useScanner } from '@/hooks/useScanner';
 import { useScanBarcode } from '@/hooks/api/useProducts';
 import { useScanHistory } from '@/hooks/api/useScanHistory';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { format, formatDistanceToNow } from 'date-fns';
 import { AlertCircle, CheckCircle2, Plus, Search, XCircle, ArrowRight, Info, Lightbulb } from 'lucide-react';
 import {
   Sheet,
@@ -54,30 +44,37 @@ export function ScanScreen() {
 
   const recentScans = scanHistoryData?.data || [];
 
-  const formatResult = (result: string) => {
-    const map: Record<string, { label: string; className: string; icon: ReactElement }> = {
-      found: { label: t('scan.found'), className: 'bg-emerald-50 text-emerald-700', icon: <CheckCircle2 className="h-4 w-4" /> },
-      not_found: { label: t('scan.notFound'), className: 'bg-red-50 text-red-700', icon: <XCircle className="h-4 w-4" /> },
-      created: { label: t('scan.created'), className: 'bg-blue-50 text-blue-700', icon: <Plus className="h-4 w-4" /> },
-      error: { label: t('common.error'), className: 'bg-amber-50 text-amber-700', icon: <AlertCircle className="h-4 w-4" /> },
-    };
-    return map[result] ?? map.found;
+  const getStatusIcon = (result: string) => {
+    switch (result) {
+      case 'found':
+        return <CheckCircle2 className="h-4 w-4 text-emerald-600" />;
+      case 'not_found':
+        return <XCircle className="h-4 w-4 text-red-600" />;
+      case 'created':
+        return <Plus className="h-4 w-4 text-blue-600" />;
+      case 'error':
+        return <AlertCircle className="h-4 w-4 text-amber-600" />;
+      default:
+        return <CheckCircle2 className="h-4 w-4 text-emerald-600" />;
+    }
   };
 
-  const formatAction = (action: string) => {
-    const map: Record<string, { label: string; icon: ReactElement }> = {
-      lookup: { label: t('scan.lookup'), icon: <Search className="h-4 w-4" /> },
-      add_product: { label: t('scan.added'), icon: <Plus className="h-4 w-4" /> },
-      stock_adjust: { label: t('scan.adjusted'), icon: <AlertCircle className="h-4 w-4" /> },
-      stock_count: { label: t('scan.counted'), icon: <AlertCircle className="h-4 w-4" /> },
-    };
-    return map[action] ?? map.lookup;
+  const getStatusLabel = (result: string) => {
+    switch (result) {
+      case 'found':
+        return t('scan.found');
+      case 'not_found':
+        return t('scan.notFound');
+      case 'created':
+        return t('scan.created');
+      case 'error':
+        return t('common.error');
+      default:
+        return t('scan.found');
+    }
   };
 
-  const formatTimeAgo = (date: string | Date) => {
-    const target = typeof date === 'string' ? new Date(date) : date;
-    return formatDistanceToNow(target, { addSuffix: true });
-  };
+
 
   const navigate = useNavigate();
 
@@ -257,52 +254,39 @@ export function ScanScreen() {
                 {t('scan.noScans')}
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="min-w-[200px]">{t('scan.product')}</TableHead>
-                    <TableHead className="min-w-[120px]">{t('scan.barcode')}</TableHead>
-                    <TableHead className="min-w-[180px]">{t('scan.status')}</TableHead>
-                    <TableHead className="min-w-[100px] text-right">{t('scan.time')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentScans.map((scan) => {
-                    const status = formatResult(scan.result);
-                    const action = formatAction(scan.action);
-                    return (
-                      <TableRow key={scan.id}>
-                        <TableCell className="align-middle min-w-[200px]">
-                          <div className="flex flex-col">
-                            <span className="text-sm font-semibold text-foreground">
-                              {scan.product?.title ?? 'Unknown product'}
-                            </span>
-                            <span className="text-xs text-muted-foreground">{scan.product?.sku}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground min-w-[120px]">{scan.barcode}</TableCell>
-                        <TableCell className="min-w-[180px]">
-                          <div className="flex items-center gap-2 text-sm">
-                            <span className="flex items-center gap-1 text-muted-foreground">
-                              {action.icon}
-                              {action.label}
-                            </span>
-                            <Badge className={status.className} variant="secondary">
-                              <span className="flex items-center gap-1">
-                                {status.icon}
-                                {status.label}
-                              </span>
-                            </Badge>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right text-sm text-muted-foreground min-w-[100px]">
-                          {formatTimeAgo(scan.scannedAt)}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+              <div className="space-y-3">
+                {recentScans.map((scan) => (
+                  <div
+                    key={scan.id}
+                    className="flex items-center justify-between gap-3 rounded-lg border border-border bg-white p-3"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-foreground">
+                        {scan.product?.title ?? 'Unknown Product'}
+                      </p>
+                      <div className="space-y-0.5">
+                        <p className="text-xs text-muted-foreground">
+                          SKU: {scan.product?.sku || '-'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Barcode: {scan.barcode || '-'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-1">
+                      <div className="flex items-center gap-1.5">
+                        {getStatusIcon(scan.result)}
+                        <span className="text-xs font-medium text-foreground">
+                          {getStatusLabel(scan.result)}
+                        </span>
+                      </div>
+                        <span className="text-xs text-muted-foreground">
+                          {scan.scannedAt?.formattedDateTime || scan.scannedAt?.date || '—'}
+                        </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>
