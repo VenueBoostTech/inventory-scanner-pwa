@@ -14,7 +14,6 @@ import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { useScanner } from '@/hooks/useScanner';
 import { useProduct, useUpdateProduct } from '@/hooks/api/useProducts';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Package, CheckCircle2, AlertCircle, Zap } from 'lucide-react';
 
 export function LinkBarcodeScreen() {
