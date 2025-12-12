@@ -37,106 +37,13 @@ import {
 } from '@/components/ui/table';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
+import { useMyAdjustments } from '@/hooks/api/useActivities';
+import { useProducts } from '@/hooks/api/useProducts';
+import { useWarehouses } from '@/hooks/api/useWarehouses';
+import { useStockAdjustment } from '@/hooks/api/useStockAdjustment';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Package, Plus, Search, Filter, TrendingUp, TrendingDown, Minus, Eye, AlertTriangle, Coffee } from 'lucide-react';
 import { format } from 'date-fns';
-
-// Mock products for search
-const mockProducts = [
-  {
-    id: 'prod_001',
-    title: 'Coffee Beans',
-    sku: 'COF-001',
-    barcode: '8901234567890',
-    currentStock: 150,
-    lowThreshold: 20,
-  },
-  {
-    id: 'prod_002',
-    title: 'Tea Bags',
-    sku: 'TEA-001',
-    barcode: '8901234567891',
-    currentStock: 80,
-    lowThreshold: 15,
-  },
-  {
-    id: 'prod_003',
-    title: 'Sugar',
-    sku: 'SUG-001',
-    barcode: '8901234567892',
-    currentStock: 180,
-    lowThreshold: 30,
-  },
-  {
-    id: 'prod_004',
-    title: 'Milk',
-    sku: 'MLK-001',
-    barcode: '8901234567893',
-    currentStock: 0,
-    lowThreshold: 10,
-  },
-  {
-    id: 'prod_005',
-    title: 'Honey',
-    sku: 'HON-001',
-    barcode: '8901234567894',
-    currentStock: 50,
-    lowThreshold: 5,
-  },
-];
-
-// Mock warehouses
-const mockWarehouses = [
-  { id: 'wh_001', name: 'Main Warehouse' },
-  { id: 'wh_002', name: 'Secondary Warehouse' },
-];
-
-// Mock data
-const mockAdjustments = [
-  {
-    id: 'adj_001',
-    code: 'ADJ-001',
-    product: { id: 'prod_001', title: 'Coffee Beans', sku: 'COF-001' },
-    adjustmentType: 'increase',
-    quantity: 50,
-    stockBefore: 100,
-    stockAfter: 150,
-    reason: 'Received shipment',
-    notes: 'PO #12345 - Received from Supplier ABC',
-    reference: 'PO-12345',
-    warehouse: { id: 'wh_001', name: 'Main Warehouse' },
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    createdBy: { id: 'staff_001', name: 'John D.' },
-  },
-  {
-    id: 'adj_002',
-    code: 'ADJ-002',
-    product: { id: 'prod_002', title: 'Tea Bags', sku: 'TEA-001' },
-    adjustmentType: 'decrease',
-    quantity: -5,
-    stockBefore: 80,
-    stockAfter: 75,
-    reason: 'Damaged items',
-    warehouse: { id: 'wh_001', name: 'Main Warehouse' },
-    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    createdBy: { id: 'staff_002', name: 'Sarah M.' },
-  },
-  {
-    id: 'adj_003',
-    code: 'ADJ-003',
-    product: { id: 'prod_003', title: 'Sugar', sku: 'SUG-001' },
-    adjustmentType: 'set',
-    quantity: 200,
-    stockBefore: 180,
-    stockAfter: 200,
-    reason: 'Inventory correction',
-    warehouse: { id: 'wh_001', name: 'Main Warehouse' },
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    createdBy: { id: 'staff_003', name: 'Mike T.' },
-  },
-  {
-    id: 'adj_004',
-    code: 'ADJ-004',
-    product: { id: 'prod_004', title: 'Milk', sku: 'MLK-001' },
     adjustmentType: 'increase',
     quantity: 100,
     stockBefore: 0,
@@ -184,34 +91,50 @@ export function AdjustmentsScreen() {
   const [notes, setNotes] = useState('');
   const [reference, setReference] = useState('');
 
-  const filteredAndSortedAdjustments = useMemo(() => {
-    let filtered = [...mockAdjustments];
+  // API hooks
+  const { data: adjustmentsData, isLoading: adjustmentsLoading } = useMyAdjustments({
+    limit: 100,
+  });
+  const { data: products = [] } = useProducts({ limit: 1000 });
+  const { data: warehouses = [] } = useWarehouses({ limit: 100 });
 
-    // Apply search
+  const adjustments = adjustmentsData?.data || [];
+
+  const filteredAndSortedAdjustments = useMemo(() => {
+    let filtered = [...adjustments];
+
+    // Apply search (client-side)
     if (search) {
       const searchLower = search.toLowerCase();
       filtered = filtered.filter(
         (adj) =>
-          adj.code.toLowerCase().includes(searchLower) ||
           adj.product.title.toLowerCase().includes(searchLower) ||
           adj.product.sku.toLowerCase().includes(searchLower) ||
-          (adj.reference && adj.reference.toLowerCase().includes(searchLower))
+          (adj.reference?.id && adj.reference.id.toLowerCase().includes(searchLower))
       );
     }
 
-    // Apply type filter
+    // Apply type filter (client-side, API may not support this filter)
     if (typeFilter !== 'all') {
-      filtered = filtered.filter((adj) => adj.adjustmentType === typeFilter);
+      // Map adjustment types from API to filter values
+      // API returns quantity, we need to infer type from quantity
+      filtered = filtered.filter((adj) => {
+        if (typeFilter === 'increase' && adj.quantity > 0) return true;
+        if (typeFilter === 'decrease' && adj.quantity < 0) return true;
+        if (typeFilter === 'set') {
+          // Set type might need special handling - check if quantity matches stockAfter exactly
+          return adj.stockAfter === adj.quantity;
+        }
+        return false;
+      });
     }
 
-    // Apply warehouse filter
+    // Apply warehouse filter (client-side)
     if (warehouseFilter !== 'all') {
-      const warehouseNameLower = warehouseFilter.toLowerCase();
       filtered = filtered.filter((adj) => {
-        const adjWarehouseLower = adj.warehouse.name.toLowerCase();
-        return warehouseNameLower === 'main' 
-          ? adjWarehouseLower.includes('main')
-          : adjWarehouseLower.includes('secondary');
+        // Activities may not have warehouse directly, need to check reference or other fields
+        // For now, skip warehouse filtering if warehouse data not available
+        return true;
       });
     }
 
@@ -219,11 +142,14 @@ export function AdjustmentsScreen() {
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'recent':
-          return b.createdAt.getTime() - a.createdAt.getTime();
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         case 'type':
-          return a.adjustmentType.localeCompare(b.adjustmentType);
+          const aType = a.quantity > 0 ? 'increase' : a.quantity < 0 ? 'decrease' : 'set';
+          const bType = b.quantity > 0 ? 'increase' : b.quantity < 0 ? 'decrease' : 'set';
+          return aType.localeCompare(bType);
         case 'warehouse':
-          return a.warehouse.name.localeCompare(b.warehouse.name);
+          // Skip warehouse sorting if not available
+          return 0;
         default:
           return 0;
       }
@@ -279,13 +205,13 @@ export function AdjustmentsScreen() {
   const filteredProducts = useMemo(() => {
     if (!productSearch) return [];
     const searchLower = productSearch.toLowerCase();
-    return mockProducts.filter(
+    return products.filter(
       (p) =>
         p.title.toLowerCase().includes(searchLower) ||
         p.sku.toLowerCase().includes(searchLower) ||
-        p.barcode.includes(searchLower)
+        (p.barcode && p.barcode.toLowerCase().includes(searchLower))
     );
-  }, [productSearch]);
+  }, [productSearch, products]);
 
   const handleProductSelect = (product: any) => {
     setSelectedProduct(product);
@@ -315,8 +241,8 @@ export function AdjustmentsScreen() {
 
   const preview = calculatePreview();
 
-  const handleSave = () => {
-    if (!selectedProduct || !quantity || !reason) {
+  const handleSave = async () => {
+    if (!selectedProduct || !quantity || !reason || !warehouse) {
       toast({
         title: t('common.error'),
         description: t('operations.fillRequiredFields'),
@@ -325,12 +251,45 @@ export function AdjustmentsScreen() {
       return;
     }
 
-    // TODO: Save adjustment to API
-    toast({
-      title: t('operations.adjustmentCreated'),
-      description: t('operations.adjustmentCreatedDesc'),
-    });
-    handleCloseModal();
+    const qty = parseFloat(quantity);
+    if (isNaN(qty) || qty <= 0) {
+      toast({
+        title: t('common.error'),
+        description: t('operations.quantityMustBeValid'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      let adjustmentQuantity = qty;
+      if (adjustmentType === 'decrease') {
+        adjustmentQuantity = -qty;
+      } else if (adjustmentType === 'set') {
+        const currentStock = selectedProduct.stockQuantity || 0;
+        adjustmentQuantity = qty - currentStock;
+      }
+
+      await adjustStock({
+        productId: selectedProduct.id,
+        adjustmentType: adjustmentType,
+        quantity: adjustmentType === 'set' ? qty : Math.abs(adjustmentQuantity),
+        reason,
+        notes: notes || undefined,
+        warehouseId: warehouse,
+      });
+      toast({
+        title: t('operations.adjustmentCreated'),
+        description: t('operations.adjustmentCreatedDesc'),
+      });
+      handleCloseModal();
+    } catch (error: any) {
+      toast({
+        title: t('common.error'),
+        description: error?.response?.data?.message || t('operations.adjustmentCreatedDesc'),
+        variant: 'destructive',
+      });
+    }
   };
 
   const commonReasons = [
@@ -429,8 +388,7 @@ export function AdjustmentsScreen() {
                   <div className="space-y-2">
                     {[
                       { value: 'all', label: t('operations.all') },
-                      { value: 'main', label: 'Main Warehouse' },
-                      { value: 'secondary', label: 'Secondary Warehouse' },
+                      ...warehouses.map((wh) => ({ value: wh.id, label: wh.name })),
                     ].map((option) => (
                       <label key={option.value} className="flex items-center gap-2">
                         <input
@@ -728,13 +686,13 @@ export function AdjustmentsScreen() {
                   <SelectTrigger>
                     <SelectValue placeholder={t('operations.selectWarehouse')} />
                   </SelectTrigger>
-                  <SelectContent>
-                    {mockWarehouses.map((wh) => (
-                      <SelectItem key={wh.id} value={wh.id}>
-                        {wh.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
+                <SelectContent>
+                  {warehouses.map((wh) => (
+                    <SelectItem key={wh.id} value={wh.id}>
+                      {wh.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
                 </Select>
               </div>
             </div>

@@ -29,54 +29,6 @@ import { useProducts } from '@/hooks/api/useProducts';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Truck, Plus, CheckCircle2, XCircle, AlertCircle, Search, Camera, Trash2, ArrowRight } from 'lucide-react';
 import { format, isToday } from 'date-fns';
-  {
-    id: 'trf_007',
-    code: 'TRF-007',
-    status: 'pending',
-    fromWarehouse: { id: 'wh_001', name: 'Main Warehouse' },
-    toWarehouse: { id: 'wh_002', name: 'Secondary Warehouse' },
-    itemCount: 2,
-    totalQuantity: 35,
-    items: [
-      { productId: 'prod_001', productName: 'Coffee Beans', sku: 'COF-001', quantity: 20 },
-      { productId: 'prod_002', productName: 'Tea Bags', sku: 'TEA-001', quantity: 15 },
-    ],
-    notes: 'Monthly stock rebalancing',
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    createdBy: { id: 'staff_001', name: 'John Doe' },
-  },
-  {
-    id: 'trf_006',
-    code: 'TRF-006',
-    status: 'in_transit',
-    fromWarehouse: { id: 'wh_002', name: 'Secondary Warehouse' },
-    toWarehouse: { id: 'wh_001', name: 'Main Warehouse' },
-    itemCount: 3,
-    totalQuantity: 50,
-    startedAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    createdAt: new Date(Date.now() - 26 * 60 * 60 * 1000),
-  },
-  {
-    id: 'trf_005',
-    code: 'TRF-005',
-    status: 'completed',
-    fromWarehouse: { id: 'wh_001', name: 'Main Warehouse' },
-    toWarehouse: { id: 'wh_002', name: 'Secondary Warehouse' },
-    itemCount: 10,
-    totalQuantity: 200,
-    completedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    completedBy: { id: 'staff_002', name: 'Sarah M.' },
-  },
-  {
-    id: 'trf_004',
-    code: 'TRF-004',
-    status: 'cancelled',
-    fromWarehouse: { id: 'wh_001', name: 'Main Warehouse' },
-    toWarehouse: { id: 'wh_002', name: 'Secondary Warehouse' },
-    itemCount: 2,
-    cancelledAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
-  },
-];
 
 type TransferStatus = 'all' | 'pending' | 'in_transit' | 'completed' | 'cancelled';
 type CreateStep = 'basic' | 'products' | 'confirmation';
@@ -181,7 +133,7 @@ export function TransfersScreen() {
     setTransferNotes('');
   };
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     if (createStep === 'basic') {
       if (!fromWarehouse || !toWarehouse) {
         toast({
@@ -336,11 +288,12 @@ export function TransfersScreen() {
     return transferItems.reduce((sum, item) => sum + item.quantity, 0);
   }, [transferItems]);
 
-  const getDateDisplay = (date: Date) => {
-    if (isToday(date)) {
-      return t('operations.today') + ', ' + format(date, 'h:mm a');
+  const getDateDisplay = (date: Date | string) => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    if (isToday(dateObj)) {
+      return t('operations.today') + ', ' + format(dateObj, 'h:mm a');
     }
-    return format(date, 'MMM d, yyyy');
+    return format(dateObj, 'MMM d, yyyy');
   };
 
   return (
@@ -401,34 +354,34 @@ export function TransfersScreen() {
                         <div className="min-w-0 flex-1 space-y-1">
                           <div className="flex items-center gap-2">
                             <p className="text-sm font-semibold text-foreground">
-                              {transfer.code}
+                              {transfer.referenceNumber}
                             </p>
                             {getStatusBadge(transfer.status)}
                           </div>
                           <p className="text-sm text-muted-foreground">
-                            {transfer.fromWarehouse.name} → {transfer.toWarehouse.name}
+                            {transfer.sourceWarehouse?.name || '-'} → {transfer.destinationWarehouse?.name || '-'}
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            {transfer.itemCount} {t('operations.items')} • {transfer.totalQuantity || 0} {t('operations.units')}
+                            {transfer.totalItems || 0} {t('operations.items')} • {transfer.totalQuantity || 0} {t('operations.units')}
                           </p>
-                          {transfer.status === 'pending' && transfer.createdAt && (
+                          {transfer.status === 'pending' && transfer.initiatedAt && (
                             <p className="text-sm text-muted-foreground">
-                              {t('operations.created')}: {getDateDisplay(transfer.createdAt)}
+                              {t('operations.created')}: {getDateDisplay(typeof transfer.initiatedAt === 'string' ? new Date(transfer.initiatedAt) : transfer.initiatedAt)}
                             </p>
                           )}
-                          {transfer.status === 'in_transit' && transfer.startedAt && (
+                          {transfer.status === 'in_transit' && transfer.initiatedAt && (
                             <p className="text-sm text-muted-foreground">
-                              {t('operations.started')}: {getDateDisplay(transfer.startedAt)}
+                              {t('operations.started')}: {getDateDisplay(typeof transfer.initiatedAt === 'string' ? new Date(transfer.initiatedAt) : transfer.initiatedAt)}
                             </p>
                           )}
                           {transfer.status === 'completed' && transfer.completedAt && (
                             <p className="text-sm text-muted-foreground">
-                              {t('operations.completed')}: {format(transfer.completedAt, 'MMM d, yyyy')}
+                              {t('operations.completed')}: {format(typeof transfer.completedAt === 'string' ? new Date(transfer.completedAt) : transfer.completedAt, 'MMM d, yyyy')}
                             </p>
                           )}
-                          {transfer.status === 'cancelled' && transfer.cancelledAt && (
+                          {transfer.status === 'cancelled' && transfer.initiatedAt && (
                             <p className="text-sm text-muted-foreground">
-                              {t('operations.cancelled')}: {format(transfer.cancelledAt, 'MMM d, yyyy')}
+                              {t('operations.cancelled')}: {format(typeof transfer.initiatedAt === 'string' ? new Date(transfer.initiatedAt) : transfer.initiatedAt, 'MMM d, yyyy')}
                             </p>
                           )}
                         </div>

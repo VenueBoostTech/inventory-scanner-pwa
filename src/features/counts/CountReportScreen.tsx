@@ -13,65 +13,33 @@ import {
 } from '@/components/ui/table';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
+import { useStockCount } from '@/hooks/api/useStockCounts';
+import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
-
-// Mock data - in real app, fetch by ID from API
-const mockCounts: Record<string, any> = {
-  cnt_002: {
-    id: 'cnt_002',
-    code: 'CNT-002',
-    status: 'completed',
-    warehouse: { id: 'wh_002', name: 'Secondary Warehouse' },
-    totalItems: 80,
-    itemsCounted: 80,
-    discrepancies: 5,
-    totalSurplus: 15,
-    totalShortage: -8,
-    completedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    completedBy: { id: 'staff_002', name: 'Sarah M.' },
-  },
-};
-
-const mockCountItems = [
-  {
-    productId: 'prod_001',
-    productName: 'Coffee Beans',
-    sku: 'COF-001',
-    systemQuantity: 150,
-    countedQuantity: 148,
-    discrepancy: -2,
-    status: 'discrepancy',
-  },
-  {
-    productId: 'prod_003',
-    productName: 'Sugar',
-    sku: 'SUG-001',
-    systemQuantity: 100,
-    countedQuantity: 105,
-    discrepancy: 5,
-    status: 'discrepancy',
-  },
-  {
-    productId: 'prod_005',
-    productName: 'Honey',
-    sku: 'HON-001',
-    systemQuantity: 25,
-    countedQuantity: 20,
-    discrepancy: -5,
-    status: 'discrepancy',
-  },
-];
 
 export function CountReportScreen() {
   const { t } = useI18n();
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
 
+  const { data: count, isLoading } = useStockCount(id || '');
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  const count = id ? mockCounts[id] : null;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <ScreenHeader title={t('operations.discrepancyReport')} showBack />
+        <div className="space-y-4 px-4 py-4">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+      </div>
+    );
+  }
 
   if (!count || count.status !== 'completed') {
     return (
@@ -85,11 +53,11 @@ export function CountReportScreen() {
   }
 
   const handleApplyAdjustments = () => {
+    // Adjustments are already applied when count is completed with autoAdjust=true
     toast({
-      title: t('operations.applyAdjustments'),
-      description: t('common.loading'),
+      title: t('operations.adjustmentsApplied'),
+      description: t('operations.adjustmentsAppliedDesc'),
     });
-    // TODO: Apply adjustments
   };
 
   return (
@@ -112,18 +80,20 @@ export function CountReportScreen() {
                 <p className="text-xs text-muted-foreground">{t('operations.warehouse')}</p>
                 <p className="text-sm font-medium mt-1">{count.warehouse.name}</p>
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">{t('operations.completed')}</p>
-                <p className="text-sm mt-1">
-                  {count.completedAt
-                    ? format(count.completedAt, 'MMM d, yyyy')
-                    : '—'}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">{t('operations.by')}</p>
-                <p className="text-sm mt-1">{count.completedBy?.name || '—'}</p>
-              </div>
+              {count.completedAt && (
+                <div>
+                  <p className="text-xs text-muted-foreground">{t('operations.completed')}</p>
+                  <p className="text-sm mt-1">
+                    {format(new Date(count.completedAt), 'MMM d, yyyy')}
+                  </p>
+                </div>
+              )}
+              {count.performedBy && (
+                <div>
+                  <p className="text-xs text-muted-foreground">{t('operations.by')}</p>
+                  <p className="text-sm mt-1">{count.performedBy.name}</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -136,26 +106,23 @@ export function CountReportScreen() {
               <div className="grid grid-cols-4 gap-3">
                 <div>
                   <p className="text-xs text-muted-foreground">{t('operations.totalItems')}</p>
-                  <p className="text-sm font-semibold mt-1">{count.totalItems}</p>
+                  <p className="text-sm font-semibold mt-1">{count.totalItemsCounted || 0}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">{t('operations.matched')}</p>
                   <p className="text-sm font-semibold mt-1">
-                    {count.totalItems - (count.discrepancies || 0)}
+                    {(count.totalItemsCounted || 0) - (count.itemsWithVariance || 0)}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">{t('operations.discrepancies')}</p>
-                  <p className="text-sm font-semibold mt-1">{count.discrepancies || 0}</p>
+                  <p className="text-sm font-semibold mt-1">{count.itemsWithVariance || 0}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">{t('operations.net')}</p>
                   <p className="text-sm font-semibold mt-1">
-                    {((count.totalSurplus || 0) + (count.totalShortage || 0)) > 0
-                      ? '+'
-                      : ''}
-                    {(count.totalSurplus || 0) + (count.totalShortage || 0)}{' '}
-                    {t('operations.units')}
+                    {count.totalVariance && count.totalVariance > 0 ? '+' : ''}
+                    {count.totalVariance || 0} {t('operations.units')}
                   </p>
                 </div>
               </div>
@@ -163,13 +130,13 @@ export function CountReportScreen() {
                 <div>
                   <p className="text-xs text-muted-foreground">{t('operations.totalSurplus')}</p>
                   <p className="text-sm font-semibold text-emerald-600 mt-1">
-                    +{count.totalSurplus || 0} {t('operations.units')}
+                    +{count.totalVariance && count.totalVariance > 0 ? count.totalVariance : 0} {t('operations.units')}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">{t('operations.totalShortage')}</p>
                   <p className="text-sm font-semibold text-red-600 mt-1">
-                    {count.totalShortage || 0} {t('operations.units')}
+                    {count.totalVariance && count.totalVariance < 0 ? Math.abs(count.totalVariance) : 0} {t('operations.units')}
                   </p>
                 </div>
               </div>
@@ -196,30 +163,40 @@ export function CountReportScreen() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {mockCountItems.map((item) => (
-                    <TableRow key={item.productId}>
-                      <TableCell className="font-medium">{item.productName}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{item.sku}</TableCell>
-                      <TableCell>{item.systemQuantity}</TableCell>
-                      <TableCell>{item.countedQuantity}</TableCell>
-                      <TableCell
-                        className={
-                          item.discrepancy > 0 ? 'text-emerald-600' : 'text-red-600'
-                        }
-                      >
-                        {item.discrepancy > 0 ? '+' : ''}
-                        {item.discrepancy}
-                      </TableCell>
-                      <TableCell
-                        className={
-                          item.discrepancy > 0 ? 'text-emerald-600' : 'text-red-600'
-                        }
-                      >
-                        {item.discrepancy > 0 ? '+' : ''}
-                        €{Math.abs(item.discrepancy * 15.99).toFixed(2)}
+                  {count.items && count.items.filter(item => item.variance !== 0).length > 0 ? (
+                    count.items
+                      .filter(item => item.variance !== 0)
+                      .map((item) => (
+                        <TableRow key={item.productId}>
+                          <TableCell className="font-medium">{item.productName}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{item.productSku}</TableCell>
+                          <TableCell>{item.expectedQuantity}</TableCell>
+                          <TableCell>{item.countedQuantity}</TableCell>
+                          <TableCell
+                            className={
+                              item.variance > 0 ? 'text-emerald-600' : 'text-red-600'
+                            }
+                          >
+                            {item.variance > 0 ? '+' : ''}
+                            {item.variance}
+                          </TableCell>
+                          <TableCell
+                            className={
+                              item.variance > 0 ? 'text-emerald-600' : 'text-red-600'
+                            }
+                          >
+                            {item.variance > 0 ? '+' : ''}
+                            €{Math.abs(item.variance * 15.99).toFixed(2)}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-8">
+                        {t('operations.noDiscrepancies')}
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </div>

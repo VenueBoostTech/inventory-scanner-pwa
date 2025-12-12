@@ -38,102 +38,6 @@ import type { Product } from '@/types/api';
 type QuickFilter = 'all' | 'low_stock' | 'out_of_stock' | 'no_barcode';
 type SortOption = 'stock_low_high' | 'stock_high_low' | 'name_az' | 'name_za' | 'recent';
 
-// Mock data - not used when API is available
-// @ts-expect-error - Mock data for reference only
-const _mockProducts = [
-  {
-    id: '1',
-    title: 'Premium Coffee Beans',
-    titleAl: '',
-    sku: 'COF-001',
-    barcode: '8901234567890',
-    articleNo: 'ART-001',
-    price: 25.99,
-    stockQuantity: 150,
-    lowQuantity: 20,
-    enableStock: true,
-    unitMeasure: 'kg',
-    category: { id: '1', name: 'Beverages' },
-    brand: { id: '1', name: 'Premium Brand' },
-    imagePath: '/images/coffee.jpg',
-    stockStatus: 'in_stock',
-    warehouse: { id: '1', name: 'Main Warehouse', code: 'WH-001' },
-  },
-  {
-    id: '2',
-    title: 'Organic Tea',
-    titleAl: '',
-    sku: 'TEA-001',
-    barcode: '',
-    articleNo: 'ART-002',
-    price: 15.99,
-    stockQuantity: 15,
-    lowQuantity: 20,
-    enableStock: true,
-    unitMeasure: 'box',
-    category: { id: '1', name: 'Beverages' },
-    brand: { id: '2', name: 'Organic Co' },
-    imagePath: '/images/tea.jpg',
-    stockStatus: 'low_stock',
-    warehouse: { id: '1', name: 'Main Warehouse', code: 'WH-001' },
-  },
-  {
-    id: '3',
-    title: 'Bottled Water',
-    titleAl: '',
-    sku: 'WAT-001',
-    barcode: '8901234567891',
-    articleNo: 'ART-003',
-    price: 2.99,
-    stockQuantity: 0,
-    lowQuantity: 50,
-    enableStock: true,
-    unitMeasure: 'bottle',
-    category: { id: '2', name: 'Water' },
-    brand: { id: '3', name: 'Pure Water' },
-    imagePath: '/images/water.jpg',
-    stockStatus: 'out_of_stock',
-    warehouse: { id: '2', name: 'Secondary Warehouse', code: 'WH-002' },
-  },
-  {
-    id: '4',
-    title: 'Energy Drink',
-    titleAl: '',
-    sku: 'ENG-001',
-    barcode: '8901234567892',
-    articleNo: 'ART-004',
-    price: 3.99,
-    stockQuantity: 200,
-    lowQuantity: 30,
-    enableStock: true,
-    unitMeasure: 'can',
-    category: { id: '1', name: 'Beverages' },
-    brand: { id: '4', name: 'Energy Co' },
-    imagePath: '/images/energy.jpg',
-    stockStatus: 'in_stock',
-    warehouse: { id: '1', name: 'Main Warehouse', code: 'WH-001' },
-  },
-  {
-    id: '5',
-    title: 'Snack Chips',
-    titleAl: '',
-    sku: 'CHP-001',
-    barcode: '',
-    articleNo: 'ART-005',
-    price: 4.99,
-    stockQuantity: 8,
-    lowQuantity: 15,
-    enableStock: true,
-    unitMeasure: 'bag',
-    category: { id: '3', name: 'Snacks' },
-    brand: { id: '5', name: 'Snack Co' },
-    imagePath: '/images/chips.jpg',
-    stockStatus: 'low_stock',
-    warehouse: { id: '2', name: 'Secondary Warehouse', code: 'WH-002' },
-  },
-];
-
-// Mock data - not used when API is available
 
 export function ProductsScreen() {
   const { t, language } = useI18n();
@@ -192,7 +96,7 @@ export function ProductsScreen() {
         case 'name_za':
           return b.title.localeCompare(a.title);
         case 'recent':
-          return 0; // Mock - would use updatedAt in real app
+          return 0;
         default:
           return 0;
       }

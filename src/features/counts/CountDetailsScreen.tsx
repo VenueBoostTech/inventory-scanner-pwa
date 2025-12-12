@@ -14,6 +14,8 @@ import {
 } from '@/components/ui/table';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
+import { useStockCount, useCompleteStockCount } from '@/hooks/api/useStockCounts';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   CheckCircle2,
   AlertCircle,
@@ -21,88 +23,31 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 
-// Mock data - in real app, fetch by ID from API
-const mockCounts: Record<string, any> = {
-  cnt_001: {
-    id: 'cnt_001',
-    code: 'CNT-001',
-    status: 'in_progress',
-    warehouse: { id: 'wh_001', name: 'Main Warehouse' },
-    totalItems: 150,
-    itemsCounted: 45,
-    progress: 30,
-    discrepancies: 3,
-    totalSurplus: 25,
-    totalShortage: -12,
-    startedAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
-    createdBy: { id: 'staff_001', name: 'John D.' },
-  },
-  cnt_002: {
-    id: 'cnt_002',
-    code: 'CNT-002',
-    status: 'completed',
-    warehouse: { id: 'wh_002', name: 'Secondary Warehouse' },
-    totalItems: 80,
-    itemsCounted: 80,
-    discrepancies: 5,
-    totalSurplus: 15,
-    totalShortage: -8,
-    completedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    completedBy: { id: 'staff_002', name: 'Sarah M.' },
-  },
-};
-
-const mockCountItems = [
-  {
-    productId: 'prod_001',
-    productName: 'Coffee Beans',
-    sku: 'COF-001',
-    systemQuantity: 150,
-    countedQuantity: 148,
-    discrepancy: -2,
-    status: 'discrepancy',
-    notes: '',
-  },
-  {
-    productId: 'prod_002',
-    productName: 'Tea Bags',
-    sku: 'TEA-001',
-    systemQuantity: 80,
-    countedQuantity: 80,
-    discrepancy: 0,
-    status: 'match',
-  },
-  {
-    productId: 'prod_003',
-    productName: 'Sugar',
-    sku: 'SUG-001',
-    systemQuantity: 100,
-    countedQuantity: 105,
-    discrepancy: 5,
-    status: 'discrepancy',
-    notes: '',
-  },
-  {
-    productId: 'prod_004',
-    productName: 'Milk',
-    sku: 'MLK-001',
-    systemQuantity: 50,
-    countedQuantity: 50,
-    discrepancy: 0,
-    status: 'match',
-  },
-];
-
 export function CountDetailsScreen() {
   const { t } = useI18n();
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const { data: count, isLoading } = useStockCount(id || '');
+  const { mutateAsync: completeStockCount, isPending: isCompleting } = useCompleteStockCount();
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  const count = id ? mockCounts[id] : null;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <ScreenHeader title={t('operations.stockCounts')} showBack />
+        <div className="space-y-4 px-4 py-4">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+      </div>
+    );
+  }
 
   if (!count) {
     return (
@@ -143,18 +88,32 @@ export function CountDetailsScreen() {
   };
 
   const handleContinue = () => {
-    toast({
-      title: t('operations.continueCounting'),
-      description: t('common.loading'),
-    });
-    // TODO: Navigate to counting screen
+    if (id) {
+      navigate(`/operations/counts/${id}/counting`);
+    }
   };
 
-  const handleComplete = () => {
-    toast({
-      title: t('operations.completeCount'),
-      description: t('common.loading'),
-    });
+  const handleComplete = async () => {
+    if (!id) return;
+    
+    try {
+      await completeStockCount({
+        countId: id,
+        autoAdjust: false,
+        notes: '',
+      });
+      toast({
+        title: t('operations.completeCount'),
+        description: t('operations.countCompletedDesc'),
+      });
+      navigate(`/operations/counts/${id}/report`);
+    } catch (error: any) {
+      toast({
+        title: t('common.error'),
+        description: error?.response?.data?.message || t('operations.countCompletedDesc'),
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -181,16 +140,20 @@ export function CountDetailsScreen() {
                 <p className="text-xs text-muted-foreground">{t('operations.warehouse')}</p>
                 <p className="text-sm font-medium mt-1">{count.warehouse.name}</p>
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">{t('operations.started')}</p>
-                <p className="text-sm mt-1">
-                  {format(count.startedAt, 'MMM d, yyyy, h:mm a')}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">{t('operations.startedBy')}</p>
-                <p className="text-sm mt-1">{count.createdBy?.name || '—'}</p>
-              </div>
+              {count.startedAt && (
+                <div>
+                  <p className="text-xs text-muted-foreground">{t('operations.started')}</p>
+                  <p className="text-sm mt-1">
+                    {format(new Date(count.startedAt), 'MMM d, yyyy, h:mm a')}
+                  </p>
+                </div>
+              )}
+              {count.performedBy && (
+                <div>
+                  <p className="text-xs text-muted-foreground">{t('operations.startedBy')}</p>
+                  <p className="text-sm mt-1">{count.performedBy.name}</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -218,20 +181,20 @@ export function CountDetailsScreen() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Card className="border border-border bg-muted/30 shadow-none">
             <CardContent className="px-3 py-3 text-center">
-              <div className="text-lg font-bold text-foreground">{count.itemsCounted}</div>
+              <div className="text-lg font-bold text-foreground">{count.totalItemsCounted || 0}</div>
               <div className="text-xs text-muted-foreground">{t('operations.counted')}</div>
             </CardContent>
           </Card>
           <Card className="border border-border bg-muted/30 shadow-none">
             <CardContent className="px-3 py-3 text-center">
-              <div className="text-lg font-bold text-foreground">{count.discrepancies || 0}</div>
+              <div className="text-lg font-bold text-foreground">{count.itemsWithVariance || 0}</div>
               <div className="text-xs text-muted-foreground">{t('operations.discrepancies')}</div>
             </CardContent>
           </Card>
           <Card className="border border-border bg-muted/30 shadow-none">
             <CardContent className="px-3 py-3 text-center">
               <div className="text-lg font-bold text-emerald-600">
-                +{count.totalSurplus || 0}
+                +{count.totalVariance && count.totalVariance > 0 ? count.totalVariance : 0}
               </div>
               <div className="text-xs text-muted-foreground">{t('operations.surplus')}</div>
             </CardContent>
@@ -239,7 +202,7 @@ export function CountDetailsScreen() {
           <Card className="border border-border bg-muted/30 shadow-none">
             <CardContent className="px-3 py-3 text-center">
               <div className="text-lg font-bold text-red-600">
-                {count.totalShortage || 0}
+                {count.totalVariance && count.totalVariance < 0 ? Math.abs(count.totalVariance) : 0}
               </div>
               <div className="text-xs text-muted-foreground">{t('operations.shortage')}</div>
             </CardContent>
@@ -267,40 +230,48 @@ export function CountDetailsScreen() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {mockCountItems.map((item) => (
-                    <TableRow key={item.productId}>
-                      <TableCell className="font-medium">{item.productName}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{item.sku}</TableCell>
-                      <TableCell>{item.systemQuantity}</TableCell>
-                      <TableCell>{item.countedQuantity}</TableCell>
-                      <TableCell
-                        className={
-                          item.discrepancy > 0
-                            ? 'text-emerald-600'
-                            : item.discrepancy < 0
-                            ? 'text-red-600'
-                            : ''
-                        }
-                      >
-                        {item.discrepancy > 0 ? '+' : ''}
-                        {item.discrepancy}
-                      </TableCell>
-                      <TableCell>
-                        {item.status === 'match' ? (
-                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                        ) : (
-                          <AlertCircle className="h-4 w-4 text-amber-600" />
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {item.notes && (
-                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                            <Plus className="h-3 w-3" />
-                          </Button>
-                        )}
+                  {count.items && count.items.length > 0 ? (
+                    count.items.map((item) => (
+                      <TableRow key={item.productId}>
+                        <TableCell className="font-medium">{item.productName}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{item.productSku}</TableCell>
+                        <TableCell>{item.expectedQuantity}</TableCell>
+                        <TableCell>{item.countedQuantity}</TableCell>
+                        <TableCell
+                          className={
+                            item.variance > 0
+                              ? 'text-emerald-600'
+                              : item.variance < 0
+                              ? 'text-red-600'
+                              : ''
+                          }
+                        >
+                          {item.variance > 0 ? '+' : ''}
+                          {item.variance}
+                        </TableCell>
+                        <TableCell>
+                          {item.variance === 0 ? (
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                          ) : (
+                            <AlertCircle className="h-4 w-4 text-amber-600" />
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {item.notes && (
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-8">
+                        {t('operations.noItemsCounted')}
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -334,8 +305,9 @@ export function CountDetailsScreen() {
             <Button
               className="flex-1 w-full sm:w-auto border-none bg-[#164945] text-white hover:bg-[#123b37]"
               onClick={handleComplete}
+              disabled={isCompleting}
             >
-              {t('operations.completeCount')}
+              {isCompleting ? t('common.loading') : t('operations.completeCount')}
             </Button>
           </div>
         )}

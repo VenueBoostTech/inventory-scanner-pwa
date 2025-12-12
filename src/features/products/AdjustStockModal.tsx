@@ -19,6 +19,7 @@ import {
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { useStockAdjustment } from '@/hooks/api/useStockAdjustment';
+import { useWarehouses } from '@/hooks/api/useWarehouses';
 import { authStore } from '@/stores/authStore';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
@@ -42,15 +43,11 @@ const commonReasons = [
   { value: 'other', label: 'Other' },
 ];
 
-const mockWarehouses = [
-  { id: 'wh_001', name: 'Main Warehouse' },
-  { id: 'wh_002', name: 'Secondary Warehouse' },
-];
-
 export function AdjustStockModal({ open, onOpenChange, product }: AdjustStockModalProps) {
   const { t } = useI18n();
   const { toast } = useToast();
   const { mutateAsync: adjustStock, isPending } = useStockAdjustment();
+  const { data: warehouses = [] } = useWarehouses({ limit: 100 });
   const profile = authStore((state) => state.profile);
   const [adjustmentType, setAdjustmentType] = useState<AdjustmentType>('increase');
   const [quantity, setQuantity] = useState('');
@@ -283,7 +280,7 @@ export function AdjustStockModal({ open, onOpenChange, product }: AdjustStockMod
                 <SelectValue placeholder={t('products.selectWarehouse')} />
               </SelectTrigger>
               <SelectContent>
-                {mockWarehouses.map((wh) => (
+                {warehouses.map((wh) => (
                   <SelectItem key={wh.id} value={wh.id}>
                     {wh.name}
                   </SelectItem>

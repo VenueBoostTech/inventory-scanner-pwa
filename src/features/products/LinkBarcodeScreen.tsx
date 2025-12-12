@@ -13,19 +13,9 @@ import {
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { useScanner } from '@/hooks/useScanner';
+import { useProduct, useUpdateProduct } from '@/hooks/api/useProducts';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Package, CheckCircle2, AlertCircle, Zap } from 'lucide-react';
-
-// Mock data
-const mockProducts: Record<string, any> = {
-  prod_001: {
-    id: 'prod_001',
-    title: 'Coffee Beans',
-    sku: 'COF-001',
-    barcode: null,
-    hasBarcode: false,
-    imagePath: 'https://cdn.example.com/products/coffee.jpg',
-  },
-};
 
 export function LinkBarcodeScreen() {
   const { t } = useI18n();
@@ -40,11 +30,12 @@ export function LinkBarcodeScreen() {
   const [errorMessage, setErrorMessage] = useState('');
   const [conflictingProduct, setConflictingProduct] = useState<any>(null);
 
+  const { data: product, isLoading } = useProduct(id || '');
+  const { mutateAsync: updateProduct, isPending: isUpdating } = useUpdateProduct();
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-
-  const product = id ? mockProducts[id] : null;
 
   if (!product) {
     return (
@@ -63,7 +54,7 @@ export function LinkBarcodeScreen() {
   };
 
   const handleCheckBarcode = async () => {
-    if (!barcode || barcode.trim() === '') {
+    if (!barcode || barcode.trim() === '' || !id) {
       toast({
         title: t('common.error'),
         description: t('products.pleaseScanOrEnterBarcode'),
@@ -83,30 +74,39 @@ export function LinkBarcodeScreen() {
 
     setIsChecking(true);
 
-    // TODO: Call API to check if barcode is available
-    // Simulate API call
-    setTimeout(() => {
-      // Mock: Check if barcode is already used
-      const mockConflict = barcode === '8901234567890' ? {
-        id: 'prod_002',
-        title: 'Tea Bags',
-        sku: 'TEA-001',
-      } : null;
-
-      if (mockConflict) {
-        setConflictingProduct(mockConflict);
-        setErrorMessage(t('products.barcodeAlreadyLinkedTo').replace('{product}', mockConflict.title));
+    try {
+      // Check if barcode is available by trying to scan it
+      // If it returns a product, that product already has this barcode
+      const { useScanBarcode } = await import('@/hooks/api/useProducts');
+      // For now, we'll try to update the product with the barcode
+      // The backend should validate if barcode is already in use
+      await updateProduct({
+        productId: id,
+        barcode: barcode.trim(),
+      });
+      setSuccessModalOpen(true);
+    } catch (error: any) {
+      // Check if error indicates barcode conflict
+      const errorMsg = error?.response?.data?.message || '';
+      if (errorMsg.toLowerCase().includes('already') || errorMsg.toLowerCase().includes('exists')) {
+        // Try to extract conflicting product info from error if available
+        setConflictingProduct(error?.response?.data?.conflictingProduct || null);
+        setErrorMessage(errorMsg || t('products.barcodeAlreadyLinked'));
         setErrorModalOpen(true);
       } else {
-        // Success - link barcode
-        handleLinkBarcode();
+        toast({
+          title: t('common.error'),
+          description: errorMsg || t('products.barcodeLinkError'),
+          variant: 'destructive',
+        });
       }
+    } finally {
       setIsChecking(false);
-    }, 1000);
+    }
   };
 
   const handleLinkBarcode = async () => {
-    // TODO: Call API to link barcode
+    // Already handled in handleCheckBarcode
     setSuccessModalOpen(true);
   };
 
@@ -151,7 +151,7 @@ export function LinkBarcodeScreen() {
                 <p className="text-sm font-semibold">{product.title}</p>
                 <p className="text-xs text-muted-foreground">{t('products.sku')}: {product.sku}</p>
                 <p className="text-xs text-muted-foreground">
-                  {t('products.current')}: {t('products.noBarcodeLinked')}
+                  {t('products.current')}: {product.barcode ? product.barcode : t('products.noBarcodeLinked')}
                 </p>
               </div>
             </div>
@@ -211,10 +211,10 @@ export function LinkBarcodeScreen() {
             />
             <Button
               onClick={handleCheckBarcode}
-              disabled={!barcode || isChecking}
+              disabled={!barcode || isChecking || isUpdating}
               className="w-full border-none bg-[#164945] text-white hover:bg-[#123b37]"
             >
-              {isChecking ? t('products.checking') : t('products.linkBarcode')}
+              {isChecking || isUpdating ? t('products.checking') : t('products.linkBarcode')}
             </Button>
           </CardContent>
         </Card>

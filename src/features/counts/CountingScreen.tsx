@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
@@ -22,6 +22,9 @@ import {
 } from '@/components/ui/table';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
+import { useStockCount, useUpdateStockCount, useCompleteStockCount } from '@/hooks/api/useStockCounts';
+import { useProducts } from '@/hooks/api/useProducts';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Coffee,
   Search,
@@ -35,121 +38,50 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 
-// Mock data
-const mockCount = {
-  id: 'cnt_005',
-  code: 'CNT-005',
-  status: 'in_progress',
-  warehouse: { id: 'wh_001', name: 'Main Warehouse' },
-  totalItems: 150,
-  itemsCounted: 12,
-  progress: 8,
-  startedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-  createdBy: { id: 'staff_001', name: 'John Doe' },
-};
-
-const mockProducts = [
-  {
-    id: 'prod_001',
-    title: 'Coffee Beans',
-    sku: 'COF-001',
-    location: 'Aisle 3, Shelf B',
-    systemQuantity: 150,
-  },
-  {
-    id: 'prod_002',
-    title: 'Tea Bags',
-    sku: 'TEA-001',
-    location: 'Aisle 2, Shelf A',
-    systemQuantity: 80,
-  },
-  {
-    id: 'prod_003',
-    title: 'Sugar',
-    sku: 'SUG-001',
-    location: 'Aisle 1, Shelf C',
-    systemQuantity: 100,
-  },
-  {
-    id: 'prod_004',
-    title: 'Milk',
-    sku: 'MLK-001',
-    location: 'Aisle 4, Shelf A',
-    systemQuantity: 50,
-  },
-  {
-    id: 'prod_005',
-    title: 'Honey',
-    sku: 'HON-001',
-    location: 'Aisle 2, Shelf B',
-    systemQuantity: 40,
-  },
-];
-
-const mockCountedItems = [
-  {
-    productId: 'prod_002',
-    productName: 'Tea Bags',
-    sku: 'TEA-001',
-    systemQuantity: 80,
-    countedQuantity: 80,
-    discrepancy: 0,
-    status: 'match',
-    countedAt: new Date(Date.now() - 105 * 60 * 1000),
-  },
-  {
-    productId: 'prod_003',
-    productName: 'Sugar',
-    sku: 'SUG-001',
-    systemQuantity: 100,
-    countedQuantity: 105,
-    discrepancy: 5,
-    status: 'discrepancy',
-    countedAt: new Date(Date.now() - 100 * 60 * 1000),
-  },
-  {
-    productId: 'prod_004',
-    productName: 'Milk',
-    sku: 'MLK-001',
-    systemQuantity: 50,
-    countedQuantity: 50,
-    discrepancy: 0,
-    status: 'match',
-    countedAt: new Date(Date.now() - 95 * 60 * 1000),
-  },
-  {
-    productId: 'prod_005',
-    productName: 'Honey',
-    sku: 'HON-001',
-    systemQuantity: 40,
-    countedQuantity: 38,
-    discrepancy: -2,
-    status: 'discrepancy',
-    countedAt: new Date(Date.now() - 90 * 60 * 1000),
-  },
-];
-
 export function CountingScreen() {
   const { t } = useI18n();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [search, setSearch] = useState('');
-  const [currentProduct, setCurrentProduct] = useState(mockProducts[0]);
+  const [currentProductId, setCurrentProductId] = useState<string | null>(null);
   const [countedQuantity, setCountedQuantity] = useState('');
   const [currentNotes, setCurrentNotes] = useState('');
   const [completeModalOpen, setCompleteModalOpen] = useState(false);
   const [applyAdjustments, setApplyAdjustments] = useState(true);
 
+  // API hooks
+  const { data: count, isLoading: countLoading } = useStockCount(id || '');
+  const { data: productsData } = useProducts({ 
+    warehouseId: count?.warehouse.id,
+    limit: 1000,
+  });
+  const { mutateAsync: updateStockCount, isPending: isUpdating } = useUpdateStockCount();
+  const { mutateAsync: completeStockCount, isPending: isCompleting } = useCompleteStockCount();
+
+  const products = productsData?.data || [];
+  const countedItems = count?.items || [];
+  const countedProductIds = new Set(countedItems.map(item => item.productId));
+  const uncountedProducts = products.filter(p => !countedProductIds.has(p.id));
+  const currentProduct = currentProductId ? products.find(p => p.id === currentProductId) : uncountedProducts[0] || null;
+
+  // Initialize current product if not set
+  useEffect(() => {
+    if (!currentProductId && uncountedProducts.length > 0) {
+      setCurrentProductId(uncountedProducts[0].id);
+    }
+  }, [uncountedProducts, currentProductId]);
+
   const discrepancy = useMemo(() => {
-    if (!countedQuantity) return null;
+    if (!countedQuantity || !currentProduct) return null;
     const counted = parseFloat(countedQuantity);
     if (isNaN(counted)) return null;
-    return counted - currentProduct.systemQuantity;
+    const expectedQty = currentProduct.stockQuantity || 0;
+    return counted - expectedQty;
   }, [countedQuantity, currentProduct]);
 
-  const handleSaveAndNext = () => {
-    if (!countedQuantity) {
+  const handleSaveAndNext = async () => {
+    if (!countedQuantity || !currentProduct || !id) {
       toast({
         title: t('common.error'),
         description: t('operations.enterQuantity'),
@@ -158,28 +90,62 @@ export function CountingScreen() {
       return;
     }
 
-    // TODO: Save count item
-    toast({
-      title: t('operations.itemSaved'),
-      description: t('operations.itemSavedDesc'),
-    });
+    const qty = parseFloat(countedQuantity);
+    if (isNaN(qty) || qty < 0) {
+      toast({
+        title: t('common.error'),
+        description: t('operations.quantityMustBeValid'),
+        variant: 'destructive',
+      });
+      return;
+    }
 
-    // Move to next product
-    const currentIndex = mockProducts.findIndex((p) => p.id === currentProduct.id);
-    if (currentIndex < mockProducts.length - 1) {
-      setCurrentProduct(mockProducts[currentIndex + 1]);
+    try {
+      await updateStockCount({
+        countId: id,
+        items: [{
+          productId: currentProduct.id,
+          countedQuantity: qty,
+          notes: currentNotes || undefined,
+        }],
+      });
+      toast({
+        title: t('operations.itemSaved'),
+        description: t('operations.itemSavedDesc'),
+      });
+
+      // Move to next uncounted product
+      const currentIndex = uncountedProducts.findIndex((p) => p.id === currentProduct.id);
+      if (currentIndex < uncountedProducts.length - 1) {
+        setCurrentProductId(uncountedProducts[currentIndex + 1].id);
+      } else if (uncountedProducts.length > 0) {
+        setCurrentProductId(uncountedProducts[0].id);
+      } else {
+        setCurrentProductId(null);
+      }
       setCountedQuantity('');
       setCurrentNotes('');
+    } catch (error: any) {
+      toast({
+        title: t('common.error'),
+        description: error?.response?.data?.message || t('operations.itemSavedDesc'),
+        variant: 'destructive',
+      });
     }
   };
 
   const handleSkip = () => {
-    const currentIndex = mockProducts.findIndex((p) => p.id === currentProduct.id);
-    if (currentIndex < mockProducts.length - 1) {
-      setCurrentProduct(mockProducts[currentIndex + 1]);
-      setCountedQuantity('');
-      setCurrentNotes('');
+    if (!currentProduct) return;
+    const currentIndex = uncountedProducts.findIndex((p) => p.id === currentProduct.id);
+    if (currentIndex < uncountedProducts.length - 1) {
+      setCurrentProductId(uncountedProducts[currentIndex + 1].id);
+    } else if (uncountedProducts.length > 0) {
+      setCurrentProductId(uncountedProducts[0].id);
+    } else {
+      setCurrentProductId(null);
     }
+    setCountedQuantity('');
+    setCurrentNotes('');
   };
 
   const handlePause = () => {
@@ -195,28 +161,75 @@ export function CountingScreen() {
     setCompleteModalOpen(true);
   };
 
-  const handleCompleteCount = () => {
-    // TODO: Complete count and optionally apply adjustments
-    toast({
-      title: t('operations.countCompleted'),
-      description: t('operations.countCompletedDesc'),
-    });
-    navigate(`/operations/counts/${id}`);
+  const handleCompleteCount = async () => {
+    if (!id) return;
+    
+    try {
+      await completeStockCount({
+        countId: id,
+        autoAdjust: applyAdjustments,
+        notes: '',
+      });
+      toast({
+        title: t('operations.countCompleted'),
+        description: t('operations.countCompletedDesc'),
+      });
+      navigate(`/operations/counts/${id}/report`);
+    } catch (error: any) {
+      toast({
+        title: t('common.error'),
+        description: error?.response?.data?.message || t('operations.countCompletedDesc'),
+        variant: 'destructive',
+      });
+    }
   };
 
-  const totalDiscrepancies = mockCountedItems.filter((item) => item.discrepancy !== 0).length;
-  const totalMatched = mockCountedItems.filter((item) => item.discrepancy === 0).length;
-  const totalSurplus = mockCountedItems
-    .filter((item) => item.discrepancy > 0)
-    .reduce((sum, item) => sum + item.discrepancy, 0);
-  const totalShortage = mockCountedItems
-    .filter((item) => item.discrepancy < 0)
-    .reduce((sum, item) => sum + item.discrepancy, 0);
+  const totalDiscrepancies = countedItems.filter((item) => item.variance !== 0).length;
+  const totalMatched = countedItems.filter((item) => item.variance === 0).length;
+  const totalSurplus = countedItems
+    .filter((item) => item.variance > 0)
+    .reduce((sum, item) => sum + item.variance, 0);
+  const totalShortage = countedItems
+    .filter((item) => item.variance < 0)
+    .reduce((sum, item) => sum + item.variance, 0);
+
+  // Calculate progress
+  const progress = count && products.length > 0 
+    ? Math.round((countedItems.length / products.length) * 100) 
+    : 0;
+
+  if (countLoading) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <ScreenHeader title={t('operations.stockCount')} showBack={false} />
+        <div className="space-y-4 px-4 py-4">
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!count) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <ScreenHeader title={t('operations.stockCount')} showBack={false} />
+        <div className="space-y-4 px-4 py-4">
+          <Card className="border border-border bg-white shadow-none">
+            <CardContent className="px-3 py-8 text-center">
+              <p className="text-sm text-muted-foreground">{t('common.notFound')}</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20">
       <ScreenHeader
-        title={`${t('operations.stockCount')} #${mockCount.code}`}
+        title={`${t('operations.stockCount')} #${count.referenceNumber}`}
         showBack={false}
         action={
           <div className="flex items-center gap-2">
@@ -232,10 +245,11 @@ export function CountingScreen() {
             <Button
               size="sm"
               onClick={handleComplete}
+              disabled={isCompleting}
               className="gap-2 border-none bg-[#164945] text-white hover:bg-[#123b37]"
             >
               <CheckCircle className="h-4 w-4" />
-              {t('operations.completeCount')}
+              {isCompleting ? t('common.loading') : t('operations.completeCount')}
             </Button>
           </div>
         }
@@ -244,14 +258,14 @@ export function CountingScreen() {
         {/* Info Bar */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-muted-foreground">
           <div>
-            <span className="font-medium">{t('operations.warehouse')}:</span> {mockCount.warehouse.name}
+            <span className="font-medium">{t('operations.warehouse')}:</span> {count.warehouse?.name || '-'}
           </div>
           <div>
             <span className="font-medium">{t('operations.started')}:</span>{' '}
-            {format(mockCount.startedAt, 'MMM d, yyyy, h:mm a')}
+            {count.startedAt ? format(new Date(count.startedAt), 'MMM d, yyyy, h:mm a') : '-'}
           </div>
           <div>
-            <span className="font-medium">{t('operations.by')}:</span> {mockCount.createdBy.name}
+            <span className="font-medium">{t('operations.by')}:</span> {count.performedBy?.name || '-'}
           </div>
         </div>
 
@@ -259,13 +273,13 @@ export function CountingScreen() {
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium">
-              {t('operations.progress')}: {mockCount.itemsCounted}/{mockCount.totalItems} {t('operations.items')} ({mockCount.progress}%)
+              {t('operations.progress')}: {countedItems.length}/{products.length} {t('operations.items')} ({progress}%)
             </span>
           </div>
           <div className="w-full bg-muted rounded-full h-2">
             <div
               className="bg-[#164945] h-2 rounded-full transition-all"
-              style={{ width: `${mockCount.progress}%` }}
+              style={{ width: `${progress}%` }}
             />
           </div>
         </div>
@@ -288,31 +302,34 @@ export function CountingScreen() {
         </div>
 
         {/* Current Item */}
-        <Card className="border border-border bg-white shadow-none">
-          <CardContent className="px-3 py-3">
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-foreground">{t('operations.currentItem')}</h3>
+        {currentProduct ? (
+          <Card className="border border-border bg-white shadow-none">
+            <CardContent className="px-3 py-3">
               <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <Coffee className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">{currentProduct.title}</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs text-muted-foreground mt-1">
-                      <div>
-                        <span className="font-medium">SKU:</span> {currentProduct.sku}
-                      </div>
-                      <div>
-                        <span className="font-medium">{t('operations.location')}:</span> {currentProduct.location}
+                <h3 className="text-sm font-semibold text-foreground">{t('operations.currentItem')}</h3>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <Coffee className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">{currentProduct.title}</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs text-muted-foreground mt-1">
+                        <div>
+                          <span className="font-medium">SKU:</span> {currentProduct.sku}
+                        </div>
+                        {currentProduct.location && (
+                          <div>
+                            <span className="font-medium">{t('operations.location')}:</span> {currentProduct.location}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="pt-2 border-t border-border space-y-3">
-                  <div>
-                    <label className="text-xs text-muted-foreground">{t('operations.systemQuantity')}</label>
-                    <p className="text-sm font-medium">{currentProduct.systemQuantity}</p>
-                  </div>
+                  <div className="pt-2 border-t border-border space-y-3">
+                    <div>
+                      <label className="text-xs text-muted-foreground">{t('operations.systemQuantity')}</label>
+                      <p className="text-sm font-medium">{currentProduct.stockQuantity || 0}</p>
+                    </div>
 
                   <div>
                     <label className="text-xs text-muted-foreground mb-1 block">
@@ -378,7 +395,7 @@ export function CountingScreen() {
           <CardContent className="px-3 py-3">
             <div className="space-y-3">
               <h3 className="text-sm font-semibold text-foreground">
-                {t('operations.countedItems')} ({mockCountedItems.length})
+                {t('operations.countedItems')} ({countedItems.length})
               </h3>
               <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 <Table>
@@ -393,28 +410,28 @@ export function CountingScreen() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {mockCountedItems.map((item) => (
+                    {countedItems.map((item) => (
                       <TableRow key={item.productId}>
                         <TableCell>
                           <div>
                             <div className="text-sm font-medium">{item.productName}</div>
-                            <div className="text-xs text-muted-foreground">{item.sku}</div>
+                            <div className="text-xs text-muted-foreground">{item.productSku}</div>
                           </div>
                         </TableCell>
-                        <TableCell className="text-sm">{item.systemQuantity}</TableCell>
+                        <TableCell className="text-sm">{item.expectedQuantity}</TableCell>
                         <TableCell className="text-sm">{item.countedQuantity}</TableCell>
-                        <TableCell className={`text-sm font-semibold ${item.discrepancy === 0 ? 'text-emerald-600' : 'text-amber-600'}`}>
-                          {item.discrepancy > 0 ? '+' : ''}{item.discrepancy}
+                        <TableCell className={`text-sm font-semibold ${item.variance === 0 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                          {item.variance > 0 ? '+' : ''}{item.variance}
                         </TableCell>
                         <TableCell>
-                          {item.status === 'match' ? (
+                          {item.variance === 0 ? (
                             <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                           ) : (
                             <AlertTriangle className="h-4 w-4 text-amber-600" />
                           )}
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">
-                          {format(item.countedAt, 'h:mm a')}
+                          {item.countedAt ? format(new Date(item.countedAt), 'h:mm a') : '-'}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -426,21 +443,24 @@ export function CountingScreen() {
         </Card>
 
         {/* Pending Items */}
-        <Card className="border border-border bg-white shadow-none">
-          <CardContent className="px-3 py-3">
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-foreground">
-                {t('operations.pendingItems')} ({mockCount.totalItems - mockCount.itemsCounted})
-              </h3>
-              <p className="text-xs text-muted-foreground">
-                {t('operations.next')}: Olive Oil (OIL-001), Vinegar (VIN-001), Salt (SAL-001)...
-              </p>
-              <Button variant="outline" size="sm" className="w-full text-xs">
-                {t('operations.showAllProducts')}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        {uncountedProducts.length > 0 && (
+          <Card className="border border-border bg-white shadow-none">
+            <CardContent className="px-3 py-3">
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-foreground">
+                  {t('operations.pendingItems')} ({uncountedProducts.length})
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  {t('operations.next')}: {uncountedProducts.slice(0, 3).map(p => `${p.title} (${p.sku})`).join(', ')}
+                  {uncountedProducts.length > 3 ? '...' : ''}
+                </p>
+                <Button variant="outline" size="sm" className="w-full text-xs">
+                  {t('operations.showAllProducts')}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Complete Count Modal */}
@@ -462,11 +482,11 @@ export function CountingScreen() {
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
                       <span className="text-muted-foreground">{t('operations.totalItems')}:</span>
-                      <span className="ml-2 font-medium">{mockCount.totalItems}</span>
+                      <span className="ml-2 font-medium">{products.length}</span>
                     </div>
                     <div>
                       <span className="text-muted-foreground">{t('operations.itemsCounted')}:</span>
-                      <span className="ml-2 font-medium">{mockCount.itemsCounted}</span>
+                      <span className="ml-2 font-medium">{countedItems.length}</span>
                     </div>
                     <div>
                       <span className="text-muted-foreground">{t('operations.itemsMatched')}:</span>
@@ -513,23 +533,23 @@ export function CountingScreen() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {mockCountedItems
-                        .filter((item) => item.discrepancy !== 0)
+                      {countedItems
+                        .filter((item) => item.variance !== 0)
                         .map((item) => (
                           <TableRow key={item.productId}>
                             <TableCell>
                               <div>
                                 <div className="text-sm font-medium">{item.productName}</div>
-                                <div className="text-xs text-muted-foreground">{item.sku}</div>
+                                <div className="text-xs text-muted-foreground">{item.productSku}</div>
                               </div>
                             </TableCell>
-                            <TableCell className="text-sm">{item.systemQuantity}</TableCell>
+                            <TableCell className="text-sm">{item.expectedQuantity}</TableCell>
                             <TableCell className="text-sm">{item.countedQuantity}</TableCell>
-                            <TableCell className={`text-sm font-semibold ${item.discrepancy > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                              {item.discrepancy > 0 ? '+' : ''}{item.discrepancy}
+                            <TableCell className={`text-sm font-semibold ${item.variance > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                              {item.variance > 0 ? '+' : ''}{item.variance}
                             </TableCell>
-                            <TableCell className={`text-sm font-semibold ${item.discrepancy > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                              {item.discrepancy > 0 ? '+' : ''}€{(item.discrepancy * 12.5).toFixed(2)}
+                            <TableCell className={`text-sm font-semibold ${item.variance > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                              {item.variance > 0 ? '+' : ''}€{(item.variance * 12.5).toFixed(2)}
                             </TableCell>
                           </TableRow>
                         ))}
@@ -570,9 +590,10 @@ export function CountingScreen() {
             </Button>
             <Button
               onClick={handleCompleteCount}
+              disabled={isCompleting}
               className="w-full sm:w-auto border-none bg-[#164945] text-white hover:bg-[#123b37]"
             >
-              {t('operations.completeAndApply')}
+              {isCompleting ? t('common.loading') : t('operations.completeAndApply')}
             </Button>
           </DialogFooter>
         </DialogContent>

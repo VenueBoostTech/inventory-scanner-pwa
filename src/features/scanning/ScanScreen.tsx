@@ -8,6 +8,7 @@ import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { useI18n } from '@/lib/i18n';
 import { useScanner } from '@/hooks/useScanner';
 import { useScanBarcode } from '@/hooks/api/useProducts';
+import { useScanHistory } from '@/hooks/api/useScanHistory';
 import { useToast } from '@/hooks/use-toast';
 import {
   Table,
@@ -45,17 +46,13 @@ export function ScanScreen() {
   const profile = authStore((state) => state.profile);
   const warehouseId = profile?.permissions?.warehouseIds?.[0];
 
-  const recentScans = [
-    {
-      id: 'scan_001',
-      barcode: '8901234567890',
-      action: 'lookup',
-      result: 'found',
-      product: { title: 'Premium Coffee Beans', sku: 'COF-001' },
-      warehouse: { name: 'Main Warehouse', code: 'WH-001' },
-      scannedAt: '2025-12-09T14:30:00Z',
-    },
-  ];
+  // API hooks
+  const { data: scanHistoryData } = useScanHistory({
+    limit: 10,
+    warehouseId,
+  });
+
+  const recentScans = scanHistoryData?.data || [];
 
   const formatResult = (result: string) => {
     const map: Record<string, { label: string; className: string; icon: ReactElement }> = {
