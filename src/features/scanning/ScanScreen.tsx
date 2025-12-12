@@ -1,5 +1,7 @@
 import { useState, type ReactElement } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { authStore } from '@/stores/authStore';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
@@ -40,6 +42,8 @@ export function ScanScreen() {
   const { toast } = useToast();
   const { mutateAsync, isPending } = useScanBarcode();
   const { isScanning, error, startScanning, stopScanning } = useScanner();
+  const profile = authStore((state) => state.profile);
+  const warehouseId = profile?.permissions?.warehouseIds?.[0];
 
   const recentScans = [
     {
@@ -78,28 +82,37 @@ export function ScanScreen() {
     return formatDistanceToNow(target, { addSuffix: true });
   };
 
+  const navigate = useNavigate();
+
   const handleDecoded = async (code: string) => {
-    const result = await mutateAsync(code);
-    setLastScan({
-      code,
-      productName: (result as { title?: string } | null)?.title ?? 'Unknown product',
-      time: new Date(),
-    });
-    toast({ title: 'Scan captured', description: code });
-    await stopScanning();
+    try {
+      const result = await mutateAsync({ barcode: code, warehouseId });
+      await stopScanning();
+      navigate('/scan/result', { state: { scanResult: result, barcode: code } });
+    } catch (error) {
+      await stopScanning();
+      toast({
+        title: t('common.error'),
+        description: t('scan.scanError'),
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleManualSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!manualCode) return;
-    const result = await mutateAsync(manualCode);
-    setLastScan({
-      code: manualCode,
-      productName: (result as { title?: string } | null)?.title ?? 'Unknown product',
-      time: new Date(),
-    });
-    toast({ title: 'Submitted', description: manualCode });
-    setManualCode('');
+    try {
+      const result = await mutateAsync({ barcode: manualCode, warehouseId });
+      navigate('/scan/result', { state: { scanResult: result, barcode: manualCode } });
+      setManualCode('');
+    } catch (error) {
+      toast({
+        title: t('common.error'),
+        description: t('scan.scanError'),
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleSkuSubmit = async (event: React.FormEvent<HTMLFormElement>) => {

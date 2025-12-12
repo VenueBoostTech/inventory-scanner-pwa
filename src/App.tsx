@@ -5,6 +5,11 @@ import { I18nProvider } from '@/lib/i18n';
 import { AppShell } from '@/components/layout/AppShell';
 import { LoginScreen } from '@/features/auth/LoginScreen';
 import { ScanScreen } from '@/features/scanning/ScanScreen';
+import { ScanResultScreen } from '@/features/scanning/ScanResultScreen';
+import { SearchProductsScreen } from '@/features/scanning/SearchProductsScreen';
+import { CreateProductFromScanScreen } from '@/features/scanning/CreateProductFromScanScreen';
+import { LinkSuccessScreen } from '@/features/scanning/LinkSuccessScreen';
+import { CreateSuccessScreen } from '@/features/scanning/CreateSuccessScreen';
 import { ProductsScreen } from '@/features/products/ProductsScreen';
 import { ProductDetailsScreen } from '@/features/products/ProductDetailsScreen';
 import { EditProductScreen } from '@/features/products/EditProductScreen';
@@ -61,6 +66,11 @@ function App() {
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<DashboardScreen />} />
             <Route path="scan" element={<ScanScreen />} />
+            <Route path="scan/result" element={<ScanResultScreen />} />
+            <Route path="scan/search" element={<SearchProductsScreen />} />
+            <Route path="scan/create-product" element={<CreateProductFromScanScreen />} />
+            <Route path="scan/link-success" element={<LinkSuccessScreen />} />
+            <Route path="scan/create-success" element={<CreateSuccessScreen />} />
             <Route path="products" element={<ProductsScreen />} />
             <Route path="products/:id" element={<ProductDetailsScreen />} />
             <Route path="products/:id/edit" element={<EditProductScreen />} />
