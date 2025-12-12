@@ -6,7 +6,6 @@ import { useI18n } from '@/lib/i18n';
 import { useActivity } from '@/hooks/api/useActivities';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Package, TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { format } from 'date-fns';
 
 export function AdjustmentDetailsScreen() {
   const { t } = useI18n();
@@ -180,7 +179,7 @@ export function AdjustmentDetailsScreen() {
                 <div className="flex items-center justify-between">
                   <p className="text-xs text-muted-foreground">{t('operations.createdAt')}</p>
                   <span className="text-sm font-medium">
-                    {format(new Date(activity.createdAt), 'MMM d, yyyy, h:mm a')}
+                    {activity.createdAt?.formattedDateTime || activity.createdAt?.date || '—'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">

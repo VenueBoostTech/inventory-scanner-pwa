@@ -42,7 +42,6 @@ import { useProducts } from '@/hooks/api/useProducts';
 import { useWarehouses } from '@/hooks/api/useWarehouses';
 import { useStockAdjustment } from '@/hooks/api/useStockAdjustment';
 import { Package, Plus, Search, Filter, TrendingUp, TrendingDown, Minus, Eye, AlertTriangle, Coffee } from 'lucide-react';
-import { format } from 'date-fns';
 
 type SortOption = 'recent' | 'type' | 'warehouse';
 
@@ -119,7 +118,9 @@ export function AdjustmentsScreen() {
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'recent':
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          const aDate = a.createdAt?.date ? new Date(a.createdAt.date).getTime() : 0;
+          const bDate = b.createdAt?.date ? new Date(b.createdAt.date).getTime() : 0;
+          return bDate - aDate;
         case 'type':
           const aType = a.quantity > 0 ? 'increase' : a.quantity < 0 ? 'decrease' : 'set';
           const bType = b.quantity > 0 ? 'increase' : b.quantity < 0 ? 'decrease' : 'set';
@@ -468,7 +469,7 @@ export function AdjustmentsScreen() {
                           {adjustment.notes || '-'}
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">
-                          {format(new Date(adjustment.createdAt), 'MMM d')}
+                          {adjustment.createdAt?.formattedDate || adjustment.createdAt?.date || '—'}
                         </TableCell>
                         <TableCell className="text-right">
                           <button

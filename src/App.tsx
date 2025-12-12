@@ -7,6 +7,7 @@ import { LoginScreen } from '@/features/auth/LoginScreen';
 import { ScanScreen } from '@/features/scanning/ScanScreen';
 import { ScanResultScreen } from '@/features/scanning/ScanResultScreen';
 import { SearchProductsScreen } from '@/features/scanning/SearchProductsScreen';
+import { AllScansScreen } from '@/features/scanning/AllScansScreen';
 import { CreateProductFromScanScreen } from '@/features/scanning/CreateProductFromScanScreen';
 import { LinkSuccessScreen } from '@/features/scanning/LinkSuccessScreen';
 import { CreateSuccessScreen } from '@/features/scanning/CreateSuccessScreen';
@@ -66,6 +67,7 @@ function App() {
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<DashboardScreen />} />
             <Route path="scan" element={<ScanScreen />} />
+            <Route path="scan/all" element={<AllScansScreen />} />
             <Route path="scan/result" element={<ScanResultScreen />} />
             <Route path="scan/search" element={<SearchProductsScreen />} />
             <Route path="scan/create-product" element={<CreateProductFromScanScreen />} />

@@ -1,12 +1,21 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 
+export interface FormattedDateTime {
+  date: string;
+  formattedDate: string;
+  formattedTime: string;
+  formattedDateTime: string;
+  timezone: string;
+  timestamp: number;
+}
+
 export interface Activity {
   id: string;
   activityType: string;
   quantity: number;
-  stockBefore: number;
-  stockAfter: number;
+  stockBefore?: number | null;
+  stockAfter?: number | null;
   source: string;
   product: {
     id: string;
@@ -21,10 +30,15 @@ export interface Activity {
   staff?: {
     id: string;
     name: string;
+    email?: string | null;
+  } | null;
+  createdBy?: {
+    id: string;
+    name: string;
   } | null;
   notes?: string | null;
   variantId?: string | null;
-  createdAt: string;
+  createdAt?: FormattedDateTime | null;
 }
 
 export interface ActivityDetails extends Activity {
@@ -49,8 +63,10 @@ export interface ActivitySummary {
     adjustment: number;
     order_created: number;
     order_cancelled: number;
+    order_returned?: number;
+    order_refunded?: number;
     initial_stock: number;
-    sync: number;
+    sync?: number;
   };
 }
 
