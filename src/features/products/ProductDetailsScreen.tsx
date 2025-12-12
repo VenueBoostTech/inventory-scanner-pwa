@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
+import { useProduct } from '@/hooks/api/useProducts';
 import {
   Package,
   Edit,
@@ -27,13 +29,11 @@ import {
   Tag,
   ChevronDown,
   ChevronUp,
+  Lock,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ProductGallery } from './ProductGallery';
 import { AdjustStockModal } from './AdjustStockModal';
-
-// Mock data - in real app, fetch from API
-const mockProducts: Record<string, any> = {
   prod_001: {
     id: 'prod_001',
     title: 'Single Handle Guide Pot 18cm',
@@ -150,7 +150,20 @@ export function ProductDetailsScreen() {
     window.scrollTo(0, 0);
   }, []);
 
-  const product = id ? mockProducts[id] : null;
+  const { data: product, isLoading } = useProduct(id || '');
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <ScreenHeader title={t('products.title')} showBack />
+        <div className="space-y-4 px-4 py-4">
+          <Skeleton className="h-64 w-full rounded-lg" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -445,7 +458,7 @@ export function ProductDetailsScreen() {
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">{t('products.price')}</p>
               <p className="text-lg font-semibold">
-                €{product.pricing.price.toFixed(2)} / {product.pricing.priceAl.toLocaleString()} L
+                €{product.pricing?.priceEur?.toFixed(2) || product.pricing?.price?.toFixed(2) || '0.00'} / {product.pricing?.priceAl?.toLocaleString() || '0'} L
               </p>
             </div>
           </CardContent>
@@ -467,17 +480,23 @@ export function ProductDetailsScreen() {
                 </Badge>
                 <div className="space-y-1 text-sm">
                   <p className="text-muted-foreground">
-                    {t('products.type')}: {product.saleInfo.discountPercent}% {t('products.off')} ({t('products.percentage')})
+                    {t('products.type')}: {product.saleInfo.discountType === 'percentage' 
+                      ? `${product.saleInfo.discountPercent || product.saleInfo.discountValue}% ${t('products.off')} (${t('products.percentage')})`
+                      : `€${product.saleInfo.discountAmount?.toFixed(2) || '0.00'} ${t('products.off')} (${t('products.fixed')})`}
                   </p>
                   <p className="text-muted-foreground">
-                    {t('products.salePrice')}: €{product.saleInfo.salePrice.toFixed(2)} / {product.saleInfo.salePriceAl.toLocaleString()} L
+                    {t('products.salePrice')}: €{product.saleInfo.salePriceEur?.toFixed(2) || product.saleInfo.salePrice?.toFixed(2) || '0.00'} / {product.saleInfo.salePriceAl?.toLocaleString() || '0'} L
                   </p>
-                  <p className="text-muted-foreground">
-                    {t('products.youSave')}: €{product.saleInfo.discountAmount.toFixed(2)}
-                  </p>
-                  <p className="text-muted-foreground">
-                    {t('products.valid')}: {format(new Date(product.saleInfo.dateSaleStart), 'MMM d')} - {format(new Date(product.saleInfo.dateSaleEnd), 'MMM d, yyyy')}
-                  </p>
+                  {product.saleInfo.discountAmount && (
+                    <p className="text-muted-foreground">
+                      {t('products.youSave')}: €{product.saleInfo.discountAmount.toFixed(2)}
+                    </p>
+                  )}
+                  {product.saleInfo.dateSaleStart && product.saleInfo.dateSaleEnd && (
+                    <p className="text-muted-foreground">
+                      {t('products.valid')}: {format(new Date(product.saleInfo.dateSaleStart), 'MMM d')} - {format(new Date(product.saleInfo.dateSaleEnd), 'MMM d, yyyy')}
+                    </p>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -490,25 +509,29 @@ export function ProductDetailsScreen() {
             <h3 className="text-sm font-semibold mb-3">{t('products.activityStats')}</h3>
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                {t('products.totalActivities')}: {product.stats.totalActivities}
+                {t('products.totalActivities')}: {product.stats?.totalActivities || 0}
               </p>
               <div className="grid grid-cols-3 gap-2">
                 <div className="text-center p-2 bg-muted/50 rounded-md">
-                  <p className="text-lg font-semibold">{product.stats.breakdown.adjustments}</p>
+                  <p className="text-lg font-semibold">{product.stats?.breakdown?.adjustments || 0}</p>
                   <p className="text-xs text-muted-foreground">{t('products.adjusts')}</p>
                 </div>
                 <div className="text-center p-2 bg-muted/50 rounded-md">
-                  <p className="text-lg font-semibold">{product.stats.breakdown.scans}</p>
+                  <p className="text-lg font-semibold">{product.stats?.breakdown?.scans || 0}</p>
                   <p className="text-xs text-muted-foreground">{t('products.scans')}</p>
                 </div>
                 <div className="text-center p-2 bg-muted/50 rounded-md">
-                  <p className="text-lg font-semibold">{product.stats.breakdown.transfers}</p>
+                  <p className="text-lg font-semibold">{product.stats?.breakdown?.transfers || 0}</p>
                   <p className="text-xs text-muted-foreground">{t('products.transfer')}</p>
                 </div>
               </div>
               <div className="space-y-1 text-xs text-muted-foreground">
-                <p>{t('products.first')}: {format(new Date(product.stats.firstActivityAt), 'MMM d, yyyy')}</p>
-                <p>{t('products.last')}: {format(new Date(product.stats.lastActivityAt), 'MMM d, yyyy')}</p>
+                {product.stats?.firstActivityAt && (
+                  <p>{t('products.first')}: {format(new Date(product.stats.firstActivityAt), 'MMM d, yyyy')}</p>
+                )}
+                {product.stats?.lastActivityAt && (
+                  <p>{t('products.last')}: {format(new Date(product.stats.lastActivityAt), 'MMM d, yyyy')}</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -530,7 +553,7 @@ export function ProductDetailsScreen() {
               </Button>
             </div>
             <div className="space-y-3">
-              {product.stats.recentActivities?.map((activity: any) => (
+              {product.stats?.recentActivities?.map((activity: any) => (
                 <div key={activity.id} className="space-y-1">
                   <div className="flex items-center gap-2">
                     {getActivityIcon(activity.type)}

@@ -1,25 +1,93 @@
 export interface Product {
   id: string;
   title: string;
-  titleAl: string;
+  titleAl: string | null;
   sku: string;
-  barcode: string;
+  barcode: string | null;
+  hasBarcode: boolean;
   articleNo: string;
-  price: number;
   stockQuantity: number;
   lowQuantity: number;
   enableStock: boolean;
+  enableLowStockAlert: boolean;
+  stockStatus: 'in_stock' | 'low_stock' | 'out_of_stock' | 'not_tracked';
   unitMeasure: string;
   category: {
     id: string;
     name: string;
+    nameAl?: string | null;
   } | null;
   brand: {
     id: string;
     name: string;
   } | null;
   imagePath: string | null;
-  stockStatus: 'in_stock' | 'low_stock' | 'out_of_stock';
+  imageThumbnailPath?: string | null;
+  description?: string | null;
+  descriptionAl?: string | null;
+  shortDescription?: string | null;
+  shortDescriptionAl?: string | null;
+  pricing?: {
+    price: number;
+    priceAl?: number;
+    priceEur?: number;
+  };
+  saleInfo?: {
+    isOnSale: boolean;
+    discountType?: 'percentage' | 'fixed';
+    discountValue?: number;
+    discountAmount?: number;
+    discountPercent?: number;
+    salePrice?: number;
+    salePriceAl?: number;
+    salePriceEur?: number;
+    dateSaleStart?: string;
+    dateSaleEnd?: string;
+  } | null;
+  productType?: string;
+  tags?: string[];
+  weight?: number;
+  dimensions?: {
+    length: number;
+    width: number;
+    height: number;
+  };
+  gallery?: Array<{
+    id: string;
+    imagePath: string;
+    imageThumbnailPath?: string;
+    sortOrder: number;
+  }>;
+  stats?: {
+    totalActivities: number;
+    breakdown: {
+      adjustments: number;
+      scans: number;
+      transfers: number;
+      counts: number;
+    };
+    firstActivityAt?: string;
+    lastActivityAt?: string;
+    recentActivities?: Array<{
+      id: string;
+      type: string;
+      source: string;
+      quantityChange?: number;
+      previousQuantity?: number;
+      newQuantity?: number;
+      notes?: string;
+      createdAt: string;
+      createdBy?: {
+        id: string;
+        name: string;
+      };
+      toWarehouse?: {
+        name: string;
+      };
+    }>;
+  };
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Warehouse {

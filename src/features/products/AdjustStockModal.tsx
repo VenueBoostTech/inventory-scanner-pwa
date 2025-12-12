@@ -18,6 +18,8 @@ import {
 } from '@/components/ui/select';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
+import { useStockAdjustment } from '@/hooks/api/useStockAdjustment';
+import { authStore } from '@/stores/authStore';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 interface AdjustStockModalProps {
@@ -48,11 +50,13 @@ const mockWarehouses = [
 export function AdjustStockModal({ open, onOpenChange, product }: AdjustStockModalProps) {
   const { t } = useI18n();
   const { toast } = useToast();
+  const { mutateAsync: adjustStock, isPending } = useStockAdjustment();
+  const profile = authStore((state) => state.profile);
   const [adjustmentType, setAdjustmentType] = useState<AdjustmentType>('increase');
   const [quantity, setQuantity] = useState('');
   const [reason, setReason] = useState('');
   const [notes, setNotes] = useState('');
-  const [warehouseId, setWarehouseId] = useState('');
+  const [warehouseId, setWarehouseId] = useState(profile?.permissions?.warehouseIds?.[0] || '');
 
   const preview = useMemo(() => {
     if (!quantity) return null;
@@ -112,18 +116,34 @@ export function AdjustStockModal({ open, onOpenChange, product }: AdjustStockMod
       return;
     }
 
-    // TODO: Call API to adjust stock
-    toast({
-      title: t('products.stockAdjusted'),
-      description: t('products.stockAdjustedDesc'),
-    });
+    try {
+      await adjustStock({
+        productId: product.id,
+        adjustmentType,
+        quantity: qty,
+        reason,
+        notes: notes || undefined,
+        warehouseId: warehouseId || undefined,
+      });
 
-    // Reset form
-    setQuantity('');
-    setReason('');
-    setNotes('');
-    setWarehouseId('');
-    onOpenChange(false);
+      toast({
+        title: t('products.stockAdjusted'),
+        description: t('products.stockAdjustedDesc'),
+      });
+
+      // Reset form
+      setQuantity('');
+      setReason('');
+      setNotes('');
+      setWarehouseId(profile?.permissions?.warehouseIds?.[0] || '');
+      onOpenChange(false);
+    } catch (error: any) {
+      toast({
+        title: t('common.error'),
+        description: error?.response?.data?.message || t('products.adjustmentError'),
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleClose = () => {
@@ -283,9 +303,10 @@ export function AdjustStockModal({ open, onOpenChange, product }: AdjustStockMod
           </Button>
           <Button
             onClick={handleSave}
+            disabled={isPending}
             className="w-full sm:w-auto border-none bg-[#164945] text-white hover:bg-[#123b37]"
           >
-            {t('products.saveAdjustment')}
+            {isPending ? t('common.loading') : t('products.saveAdjustment')}
           </Button>
         </DialogFooter>
       </DialogContent>

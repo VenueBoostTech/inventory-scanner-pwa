@@ -31,21 +31,12 @@ import {
   CheckCircle2,
   XCircle,
 } from 'lucide-react';
+import { useProducts } from '@/hooks/api/useProducts';
+import { Skeleton } from '@/components/ui/skeleton';
 import type { Product } from '@/types/api';
 
 type QuickFilter = 'all' | 'low_stock' | 'out_of_stock' | 'no_barcode';
 type SortOption = 'stock_low_high' | 'stock_high_low' | 'name_az' | 'name_za' | 'recent';
-
-interface ProductWithWarehouse extends Product {
-  warehouse: {
-    id: string;
-    name: string;
-    code: string;
-  };
-}
-
-// Mock data with warehouse
-const mockProducts: ProductWithWarehouse[] = [
   {
     id: '1',
     title: 'Premium Coffee Beans',
@@ -139,7 +130,7 @@ const mockProducts: ProductWithWarehouse[] = [
 ];
 
 export function ProductsScreen() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
@@ -149,40 +140,38 @@ export function ProductsScreen() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [barcodeStatusFilter, setBarcodeStatusFilter] = useState<string>('all');
 
-  const filteredAndSortedProducts = useMemo(() => {
-    let filtered = [...mockProducts];
-
-    // Apply search
-    if (search) {
-      const searchLower = search.toLowerCase();
-      filtered = filtered.filter(
-        (p) =>
-          p.title.toLowerCase().includes(searchLower) ||
-          p.sku.toLowerCase().includes(searchLower) ||
-          p.barcode.toLowerCase().includes(searchLower)
-      );
+  // Build API params
+  const apiParams = useMemo(() => {
+    const params: any = {
+      search: search || undefined,
+      limit: 100, // Adjust as needed
+    };
+    if (stockStatusFilter !== 'all') {
+      params.stockStatus = stockStatusFilter;
     }
+    if (categoryFilter !== 'all') {
+      params.categoryId = categoryFilter;
+    }
+    if (barcodeStatusFilter === 'has_barcode') {
+      params.hasBarcode = true;
+    } else if (barcodeStatusFilter === 'no_barcode') {
+      params.hasBarcode = false;
+    }
+    return params;
+  }, [search, stockStatusFilter, categoryFilter, barcodeStatusFilter]);
 
-    // Apply quick filter
+  const { data: products = [], isLoading } = useProducts(apiParams);
+
+  const filteredAndSortedProducts = useMemo(() => {
+    let filtered = [...(products || [])];
+
+    // Apply quick filter (client-side for better UX with tabs)
     if (quickFilter === 'low_stock') {
       filtered = filtered.filter((p) => p.stockStatus === 'low_stock');
     } else if (quickFilter === 'out_of_stock') {
       filtered = filtered.filter((p) => p.stockStatus === 'out_of_stock');
     } else if (quickFilter === 'no_barcode') {
-      filtered = filtered.filter((p) => !p.barcode || p.barcode === '');
-    }
-
-    // Apply advanced filters
-    if (stockStatusFilter !== 'all') {
-      filtered = filtered.filter((p) => p.stockStatus === stockStatusFilter);
-    }
-    if (categoryFilter !== 'all') {
-      filtered = filtered.filter((p) => p.category?.id === categoryFilter);
-    }
-    if (barcodeStatusFilter === 'has_barcode') {
-      filtered = filtered.filter((p) => p.barcode && p.barcode !== '');
-    } else if (barcodeStatusFilter === 'no_barcode') {
-      filtered = filtered.filter((p) => !p.barcode || p.barcode === '');
+      filtered = filtered.filter((p) => !p.hasBarcode);
     }
 
     // Apply sorting
@@ -204,7 +193,7 @@ export function ProductsScreen() {
     });
 
     return filtered;
-  }, [search, quickFilter, sortBy, stockStatusFilter, categoryFilter, barcodeStatusFilter]);
+  }, [products, quickFilter, sortBy]);
 
   const getStockStatusBadge = (status: string, _quantity: number) => {
     if (status === 'in_stock') {
@@ -258,8 +247,8 @@ export function ProductsScreen() {
     );
   };
 
-  const getBarcodeStatus = (barcode: string) => {
-    if (!barcode || barcode === '') {
+  const getBarcodeStatus = (hasBarcode: boolean) => {
+    if (!hasBarcode) {
       return (
         <div className="flex items-center gap-1 text-xs text-amber-600">
           <AlertTriangle className="h-3 w-3" />
@@ -275,6 +264,10 @@ export function ProductsScreen() {
     );
   };
 
+  const getProductDisplayName = (product: Product) => {
+    return language === 'sq' && product.titleAl ? product.titleAl : product.title;
+  };
+
   const clearFilters = () => {
     setStockStatusFilter('all');
     setCategoryFilter('all');
@@ -282,13 +275,13 @@ export function ProductsScreen() {
     setQuickFilter('all');
   };
 
-  const categories = Array.from(new Set(mockProducts.map((p) => p.category?.name).filter(Boolean)));
+  const categories = Array.from(new Set(products.map((p) => p.category?.name).filter(Boolean)));
 
   const counts = {
-    all: mockProducts.length,
-    low_stock: mockProducts.filter((p) => p.stockStatus === 'low_stock').length,
-    out_of_stock: mockProducts.filter((p) => p.stockStatus === 'out_of_stock').length,
-    no_barcode: mockProducts.filter((p) => !p.barcode || p.barcode === '').length,
+    all: products.length,
+    low_stock: products.filter((p) => p.stockStatus === 'low_stock').length,
+    out_of_stock: products.filter((p) => p.stockStatus === 'out_of_stock').length,
+    no_barcode: products.filter((p) => !p.hasBarcode).length,
   };
 
   return (
@@ -436,7 +429,24 @@ export function ProductsScreen() {
 
         {/* Products List */}
         <div className="space-y-3">
-          {filteredAndSortedProducts.length === 0 ? (
+          {isLoading ? (
+            <>
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Card key={i} className="border border-border bg-white shadow-none">
+                  <CardContent className="px-3 py-3">
+                    <div className="flex gap-3">
+                      <Skeleton className="h-16 w-16 rounded-lg" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-3 w-24" />
+                        <Skeleton className="h-3 w-40" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </>
+          ) : filteredAndSortedProducts.length === 0 ? (
             <Card className="border border-border bg-white shadow-none">
               <CardContent className="px-3 py-8 text-center">
                 <p className="text-sm text-muted-foreground">{t('products.noProducts')}</p>
@@ -453,27 +463,22 @@ export function ProductsScreen() {
                   <div className="flex gap-3">
                     {/* Product Image */}
                     <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-border">
-                      <ProductImage imagePath={product.imagePath} title={product.title} />
+                      <ProductImage imagePath={product.imagePath} title={getProductDisplayName(product)} />
                     </div>
 
                     {/* Product Info */}
                     <div className="min-w-0 flex-1 space-y-1.5">
                       <div>
-                        <h3 className="text-sm font-semibold text-foreground">{product.title}</h3>
+                        <h3 className="text-sm font-semibold text-foreground">{getProductDisplayName(product)}</h3>
                         <p className="text-xs text-muted-foreground">SKU: {product.sku}</p>
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2">
-                        {getBarcodeStatus(product.barcode)}
+                        {getBarcodeStatus(product.hasBarcode)}
                         <div className="text-xs text-muted-foreground">
                           {t('products.stock')} <span className="font-semibold text-foreground">{product.stockQuantity}</span>
                         </div>
                         {getStockStatusBadge(product.stockStatus, product.stockQuantity)}
-                      </div>
-
-                      {/* Warehouse */}
-                      <div className="text-xs text-muted-foreground">
-                        {t('products.warehouse')} <span className="font-medium text-foreground">{product.warehouse.name}</span>
                       </div>
                     </div>
                   </div>
