@@ -15,20 +15,16 @@ import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { useProduct, useUpdateProduct } from '@/hooks/api/useProducts';
 import { useCategories, useBrands } from '@/hooks/api/useProductMeta';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Package } from 'lucide-react';
 
 export function EditProductScreen() {
   const { t } = useI18n();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { data: product, isLoading } = useProduct(id || '');
+  const { data: product } = useProduct(id || '');
   const { data: categories = [] } = useCategories();
   const { data: brands = [] } = useBrands();
   const { mutateAsync: updateProduct, isPending } = useUpdateProduct();
-
-  const product = id ? mockProducts[id] : null;
 
   const [title, setTitle] = useState('');
   const [titleAl, setTitleAl] = useState('');

@@ -37,6 +37,10 @@ import type { Product } from '@/types/api';
 
 type QuickFilter = 'all' | 'low_stock' | 'out_of_stock' | 'no_barcode';
 type SortOption = 'stock_low_high' | 'stock_high_low' | 'name_az' | 'name_za' | 'recent';
+
+// Mock data - not used when API is available
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _mockProducts = [
   {
     id: '1',
     title: 'Premium Coffee Beans',
@@ -128,6 +132,8 @@ type SortOption = 'stock_low_high' | 'stock_high_low' | 'name_az' | 'name_za' | 
     warehouse: { id: '2', name: 'Secondary Warehouse', code: 'WH-002' },
   },
 ];
+
+// Mock data - not used when API is available
 
 export function ProductsScreen() {
   const { t, language } = useI18n();

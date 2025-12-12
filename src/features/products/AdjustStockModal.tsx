@@ -78,7 +78,7 @@ export function AdjustStockModal({ open, onOpenChange, product }: AdjustStockMod
     }
   }, [quantity, adjustmentType, product.stockQuantity]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!quantity) {
       toast({
         title: t('common.error'),

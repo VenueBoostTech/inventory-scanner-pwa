@@ -34,7 +34,7 @@ export function ScanScreen() {
   const [manualCode, setManualCode] = useState('');
   const [skuCode, setSkuCode] = useState('');
   const [infoOpen, setInfoOpen] = useState(false);
-  const [lastScan, setLastScan] = useState<{
+  const [lastScan] = useState<{
     code: string;
     productName: string;
     time: Date;

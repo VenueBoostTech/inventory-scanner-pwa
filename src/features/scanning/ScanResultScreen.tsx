@@ -4,7 +4,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/lib/i18n';
-import { useToast } from '@/hooks/use-toast';
 import {
   CheckCircle2,
   XCircle,
@@ -12,7 +11,6 @@ import {
   Search,
   Plus,
   Scan,
-  ArrowRight,
 } from 'lucide-react';
 import type { ScanResult } from '@/types/api';
 
@@ -25,7 +23,7 @@ export function ScanResultScreen() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
   const { scanResult, barcode } = (location.state as LocationState) || {};
 
@@ -91,10 +89,10 @@ export function ScanResultScreen() {
                   <span className="text-sm text-muted-foreground">{t('products.barcode')}:</span>
                   <span className="text-sm font-medium">{product.barcode}</span>
                 </div>
-                {product.price && (
+                {product.pricing?.priceEur && (
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">{t('products.price')}:</span>
-                    <span className="text-sm font-medium">€{product.price.toFixed(2)}</span>
+                    <span className="text-sm font-medium">€{product.pricing.priceEur.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex items-center justify-between">

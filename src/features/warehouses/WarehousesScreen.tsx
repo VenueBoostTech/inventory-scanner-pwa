@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Input } from '@/components/ui/input';
@@ -10,9 +9,8 @@ import { Warehouse, Search } from 'lucide-react';
 
 export function WarehousesScreen() {
   const { t } = useI18n();
-  const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const { data: warehouses = [], isLoading } = useWarehouses({ search, limit: 100 });
+  const { data: warehouses = [] } = useWarehouses({ search, limit: 100 });
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -37,7 +35,7 @@ export function WarehousesScreen() {
 
         {/* Warehouses List */}
         <div className="space-y-3">
-          {mockWarehouses.map((warehouse) => (
+          {warehouses.map((warehouse) => (
             <Card key={warehouse.id} className="border border-border bg-white shadow-none">
               <CardContent className="px-3 py-4">
                 <div className="space-y-3">
@@ -52,38 +50,40 @@ export function WarehousesScreen() {
                   </div>
 
                   {/* Stats Cards */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <Card className="border border-border bg-muted/30 shadow-none">
-                      <CardContent className="px-2 py-2 text-center">
-                        <div className="text-lg font-bold text-foreground">
-                          {warehouse.stats.totalProducts.toLocaleString()}
-                        </div>
-                        <div className="text-[10px] text-muted-foreground leading-tight">
-                          {t('operations.totalProducts')}
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card className="border border-border bg-muted/30 shadow-none">
-                      <CardContent className="px-2 py-2 text-center">
-                        <div className="text-lg font-bold text-foreground">
-                          {warehouse.stats.lowStockProducts}
-                        </div>
-                        <div className="text-[10px] text-muted-foreground leading-tight">
-                          {t('operations.lowStock')}
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card className="border border-border bg-muted/30 shadow-none">
-                      <CardContent className="px-2 py-2 text-center">
-                        <div className="text-lg font-bold text-foreground">
-                          {warehouse.stats.outOfStockProducts}
-                        </div>
-                        <div className="text-[10px] text-muted-foreground leading-tight">
-                          {t('operations.outStock')}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
+                  {warehouse.stats && (
+                    <div className="grid grid-cols-3 gap-2">
+                      <Card className="border border-border bg-muted/30 shadow-none">
+                        <CardContent className="px-2 py-2 text-center">
+                          <div className="text-lg font-bold text-foreground">
+                            {(warehouse.stats.totalProducts || 0).toLocaleString()}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground leading-tight">
+                            {t('operations.totalProducts')}
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card className="border border-border bg-muted/30 shadow-none">
+                        <CardContent className="px-2 py-2 text-center">
+                          <div className="text-lg font-bold text-foreground">
+                            {warehouse.stats.lowStockProducts || 0}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground leading-tight">
+                            {t('operations.lowStock')}
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card className="border border-border bg-muted/30 shadow-none">
+                        <CardContent className="px-2 py-2 text-center">
+                          <div className="text-lg font-bold text-foreground">
+                            {warehouse.stats.outOfStockProducts || 0}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground leading-tight">
+                            {t('operations.outStock')}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
 
                   {/* Additional Info */}
                   {warehouse.stats && (

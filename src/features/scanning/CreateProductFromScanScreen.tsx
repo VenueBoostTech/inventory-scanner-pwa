@@ -17,8 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCreateProductFromScan } from '@/hooks/api/useCreateProductFromScan';
 import { useCategories } from '@/hooks/api/useProductMeta';
 import { authStore } from '@/stores/authStore';
-import { getDeviceInfo } from '@/lib/device';
-import { Package, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 
 interface LocationState {
   barcode: string;

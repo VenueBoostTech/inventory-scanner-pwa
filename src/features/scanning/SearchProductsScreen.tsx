@@ -18,7 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useScanSearch } from '@/hooks/api/useScanSearch';
 import { apiClient } from '@/lib/api-client';
 import { authStore } from '@/stores/authStore';
-import { Search, Package, CheckCircle2, XCircle, Plus, Link2 } from 'lucide-react';
+import { Search, Package, Plus, Link2 } from 'lucide-react';
 import { getDeviceInfo } from '@/lib/device';
 
 interface LocationState {

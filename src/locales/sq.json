@@ -248,7 +248,7 @@
     "titleRequired": "Titulli i produktit është i detyrueshëm",
     "categoryRequired": "Kategoria është e detyrueshme",
     "warehouseRequired": "Depoja është e detyrueshme",
-    "selectCategory": "Zgjidh kategori..."
+    "selectCategory": "Zgjidh kategori...",
     "afterLinking": "Pas lidhjes së një kodi me një produkt, skanimet e ardhshme do ta gjejnë automatikisht!"
   },
   "products": {

@@ -29,114 +29,10 @@ import {
   Tag,
   ChevronDown,
   ChevronUp,
-  Lock,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ProductGallery } from './ProductGallery';
 import { AdjustStockModal } from './AdjustStockModal';
-  prod_001: {
-    id: 'prod_001',
-    title: 'Single Handle Guide Pot 18cm',
-    titleAl: 'Tenxhere me dorezë 18cm',
-    sku: '108100031',
-    barcode: '6041234567890',
-    hasBarcode: true,
-    articleNo: 'HM-POT-18',
-    stockQuantity: 60,
-    lowQuantity: 10,
-    enableStock: true,
-    enableLowStockAlert: true,
-    stockStatus: 'in_stock',
-    unitMeasure: 'pcs',
-    category: {
-      id: 'cat_001',
-      name: 'Kitchenware',
-      nameAl: 'Enë kuzhine',
-    },
-    brand: null,
-    imagePath: 'https://cdn.example.com/products/pot.jpg',
-    imageThumbnailPath: 'https://cdn.example.com/products/pot_thumb.jpg',
-    description: 'High-quality stainless steel pot with single handle, 18cm diameter.',
-    descriptionAl: 'Tenxhere inoksi me cilësi të lartë me dorezë të vetme, 18cm diametër.',
-    shortDescription: '18cm stainless steel pot',
-    shortDescriptionAl: 'Tenxhere inoksi 18cm',
-    pricing: {
-      price: 15.99,
-      priceAl: 1800,
-      priceEur: 15.99,
-    },
-    saleInfo: {
-      isOnSale: true,
-      discountType: 'percentage',
-      discountValue: 19,
-      discountAmount: 3.0,
-      discountPercent: 19,
-      salePrice: 12.99,
-      salePriceAl: 1500,
-      salePriceEur: 12.99,
-      dateSaleStart: '2025-12-01T00:00:00Z',
-      dateSaleEnd: '2025-12-31T23:59:59Z',
-    },
-    productType: 'single',
-    tags: ['kitchenware', 'steel'],
-    weight: 500,
-    dimensions: {
-      length: 20,
-      width: 18,
-      height: 10,
-    },
-    gallery: [
-      {
-        id: 'gal_001',
-        imagePath: 'https://cdn.example.com/products/pot_1.jpg',
-        imageThumbnailPath: 'https://cdn.example.com/products/pot_1_thumb.jpg',
-        sortOrder: 1,
-      },
-    ],
-    stats: {
-      totalActivities: 25,
-      breakdown: {
-        adjustments: 5,
-        scans: 15,
-        transfers: 3,
-        counts: 2,
-      },
-      firstActivityAt: '2025-01-15T10:30:00Z',
-      lastActivityAt: '2025-12-09T08:00:00Z',
-      recentActivities: [
-        {
-          id: 'act_001',
-          type: 'STOCK_ADJUSTMENT',
-          source: 'MOBILE_SCANNING',
-          quantityChange: -5,
-          previousQuantity: 155,
-          newQuantity: 150,
-          notes: 'Damaged items removed',
-          createdAt: '2025-12-09T08:00:00Z',
-          createdBy: { id: 'staff_001', name: 'John Doe' },
-        },
-        {
-          id: 'act_002',
-          type: 'SCAN',
-          source: 'MOBILE_SCANNING',
-          createdAt: '2025-12-08T14:30:00Z',
-          createdBy: { id: 'staff_002', name: 'Sarah M.' },
-        },
-        {
-          id: 'act_003',
-          type: 'TRANSFER',
-          source: 'MOBILE_SCANNING',
-          quantityChange: -10,
-          createdAt: '2025-12-07T11:00:00Z',
-          createdBy: { id: 'staff_003', name: 'Mike T.' },
-          toWarehouse: { name: 'Secondary Warehouse' },
-        },
-      ],
-    },
-    createdAt: '2025-01-15T10:30:00Z',
-    updatedAt: '2025-12-09T08:00:00Z',
-  },
-};
 
 export function ProductDetailsScreen() {
   const { t, language } = useI18n();
@@ -284,7 +180,7 @@ export function ProductDetailsScreen() {
               <p className="text-sm text-muted-foreground">{product.title}</p>
             )}
             <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-              <span>{t('products.category')}: {product.category.name}</span>
+              {product.category && <span>{t('products.category')}: {product.category.name}</span>}
               {product.brand && (
                 <>
                   <span>•</span>
@@ -314,8 +210,8 @@ export function ProductDetailsScreen() {
                   <Copy className="h-4 w-4 mr-2" />
                   {t('products.copySku')}
                 </DropdownMenuItem>
-                {product.hasBarcode && (
-                  <DropdownMenuItem onClick={() => handleCopy(product.barcode, t('products.barcode'))}>
+                {product.hasBarcode && product.barcode && (
+                  <DropdownMenuItem onClick={() => handleCopy(product.barcode!, t('products.barcode'))}>
                     <Copy className="h-4 w-4 mr-2" />
                     {t('products.copyBarcode')}
                   </DropdownMenuItem>
@@ -403,7 +299,7 @@ export function ProductDetailsScreen() {
                     variant="outline"
                     size="sm"
                     className="h-8 w-8 p-0"
-                    onClick={() => handleCopy(product.barcode, t('products.barcode'))}
+                    onClick={() => product.barcode && handleCopy(product.barcode, t('products.barcode'))}
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
