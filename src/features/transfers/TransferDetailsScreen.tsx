@@ -24,56 +24,8 @@ import {
   Package,
 } from 'lucide-react';
 import { format } from 'date-fns';
-
-// Mock data
-const mockTransfers: Record<string, any> = {
-  trf_007: {
-    id: 'trf_007',
-    code: 'TRF-007',
-    status: 'pending',
-    fromWarehouse: { id: 'wh_001', name: 'Main Warehouse' },
-    toWarehouse: { id: 'wh_002', name: 'Secondary Warehouse' },
-    itemCount: 2,
-    totalQuantity: 35,
-    items: [
-      { productId: 'prod_001', productName: 'Coffee Beans', sku: 'COF-001', quantity: 20 },
-      { productId: 'prod_002', productName: 'Tea Bags', sku: 'TEA-001', quantity: 15 },
-    ],
-    notes: 'Monthly stock rebalancing',
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    createdBy: { id: 'staff_001', name: 'John Doe' },
-  },
-  trf_006: {
-    id: 'trf_006',
-    code: 'TRF-006',
-    status: 'in_transit',
-    fromWarehouse: { id: 'wh_002', name: 'Secondary Warehouse' },
-    toWarehouse: { id: 'wh_001', name: 'Main Warehouse' },
-    itemCount: 3,
-    totalQuantity: 50,
-    items: [
-      { productId: 'prod_003', productName: 'Sugar', sku: 'SUG-001', quantity: 30 },
-      { productId: 'prod_004', productName: 'Milk', sku: 'MLK-001', quantity: 20 },
-    ],
-    startedAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    createdAt: new Date(Date.now() - 26 * 60 * 60 * 1000),
-  },
-  trf_005: {
-    id: 'trf_005',
-    code: 'TRF-005',
-    status: 'completed',
-    fromWarehouse: { id: 'wh_001', name: 'Main Warehouse' },
-    toWarehouse: { id: 'wh_002', name: 'Secondary Warehouse' },
-    itemCount: 10,
-    totalQuantity: 200,
-    items: [
-      { productId: 'prod_001', productName: 'Coffee Beans', sku: 'COF-001', quantity: 100 },
-      { productId: 'prod_002', productName: 'Tea Bags', sku: 'TEA-001', quantity: 100 },
-    ],
-    completedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    completedBy: { id: 'staff_002', name: 'Sarah M.' },
-  },
-};
+import { useStockTransfer, useCompleteTransfer, useCancelTransfer } from '@/hooks/api/useStockTransfers';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function TransferDetailsScreen() {
   const { t } = useI18n();
@@ -82,11 +34,26 @@ export function TransferDetailsScreen() {
   const { toast } = useToast();
   const [completeModalOpen, setCompleteModalOpen] = useState(false);
 
+  const { data: transfer, isLoading } = useStockTransfer(id || '');
+  const { mutateAsync: completeTransfer, isPending: isCompleting } = useCompleteTransfer();
+  const { mutateAsync: cancelTransfer } = useCancelTransfer();
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  const transfer = id ? mockTransfers[id] : null;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <ScreenHeader title={t('operations.stockTransfers')} showBack />
+        <div className="space-y-4 px-4 py-4">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+        </div>
+      </div>
+    );
+  }
 
   if (!transfer) {
     return (
@@ -136,21 +103,50 @@ export function TransferDetailsScreen() {
     setCompleteModalOpen(true);
   };
 
-  const handleCompleteTransfer = () => {
-    toast({
-      title: t('transfers.transferCompleted'),
-      description: t('transfers.transferCompletedDesc'),
-    });
-    setCompleteModalOpen(false);
-    navigate('/operations/transfers');
+  const handleCompleteTransfer = async () => {
+    if (!id || !transfer) return;
+    
+    try {
+      await completeTransfer({
+        transferId: id,
+        receivedItems: transfer.items?.map((item: any) => ({
+          productId: item.productId,
+          receivedQuantity: item.receivedQuantity || item.quantity,
+        })) || [],
+        notes: '',
+      });
+      toast({
+        title: t('transfers.transferCompleted'),
+        description: t('transfers.transferCompletedDesc'),
+      });
+      setCompleteModalOpen(false);
+      navigate('/operations/transfers');
+    } catch (error: any) {
+      toast({
+        title: t('common.error'),
+        description: error?.response?.data?.message || t('transfers.transferCompletedDesc'),
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleCancel = () => {
-    toast({
-      title: t('transfers.transferCancelled'),
-      description: t('transfers.transferCancelledDesc'),
-    });
-    navigate('/operations/transfers');
+  const handleCancel = async () => {
+    if (!id) return;
+    
+    try {
+      await cancelTransfer(id);
+      toast({
+        title: t('transfers.transferCancelled'),
+        description: t('transfers.transferCancelledDesc'),
+      });
+      navigate('/operations/transfers');
+    } catch (error: any) {
+      toast({
+        title: t('common.error'),
+        description: error?.response?.data?.message || t('transfers.transferCancelledDesc'),
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleMarkInTransit = () => {
@@ -163,14 +159,14 @@ export function TransferDetailsScreen() {
   return (
     <div className="min-h-screen bg-background pb-20">
       <ScreenHeader
-        title={`${t('transfers.transfer')} #${transfer.code}`}
+        title={`${t('transfers.transfer')} #${transfer.referenceNumber}`}
         showBack
       />
       <div className="space-y-4 px-4 py-4">
         {/* Title and Subtitle */}
         <div>
           <h1 className="text-xl font-semibold text-foreground">
-            {t('transfers.transfer')} #{transfer.code}
+            {t('transfers.transfer')} #{transfer.referenceNumber}
           </h1>
           <p className="text-sm text-muted-foreground">{t('transfers.transferDetails')}</p>
         </div>
@@ -181,12 +177,12 @@ export function TransferDetailsScreen() {
             <div className="flex flex-col items-center gap-2">
               <div className="flex items-center gap-2 w-full">
                 <Warehouse className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium">{transfer.fromWarehouse.name}</span>
+                <span className="text-sm font-medium">{transfer.sourceWarehouse.name}</span>
               </div>
               <ArrowDown className="h-4 w-4 text-muted-foreground" />
               <div className="flex items-center gap-2 w-full">
                 <Warehouse className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium">{transfer.toWarehouse.name}</span>
+                <span className="text-sm font-medium">{transfer.destinationWarehouse.name}</span>
               </div>
             </div>
           </CardContent>
@@ -200,18 +196,18 @@ export function TransferDetailsScreen() {
                 <span className="text-sm text-muted-foreground">{t('operations.status')}:</span>
                 {getStatusBadge(transfer.status)}
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">{t('operations.created')}:</span>
-                <span className="text-sm font-medium">
-                  {transfer.createdAt
-                    ? format(new Date(transfer.createdAt), 'MMM d, yyyy, h:mm a')
-                    : '—'}
-                </span>
-              </div>
-              {transfer.createdBy && (
+              {transfer.initiatedAt && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">{t('operations.created')}:</span>
+                  <span className="text-sm font-medium">
+                    {format(new Date(transfer.initiatedAt), 'MMM d, yyyy, h:mm a')}
+                  </span>
+                </div>
+              )}
+              {transfer.initiatedBy && (
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">{t('operations.by')}:</span>
-                  <span className="text-sm font-medium">{transfer.createdBy.name}</span>
+                  <span className="text-sm font-medium">{transfer.initiatedBy.name}</span>
                 </div>
               )}
               {transfer.startedAt && (
@@ -245,7 +241,7 @@ export function TransferDetailsScreen() {
           <CardContent className="px-3 py-3">
             <div className="space-y-3">
               <h3 className="text-sm font-semibold">
-                {t('operations.items')} ({transfer.itemCount} {t('operations.products')}, {transfer.totalQuantity} {t('operations.units')})
+                {t('operations.items')} ({transfer.totalItems || 0} {t('operations.products')}, {transfer.totalQuantity || 0} {t('operations.units')})
               </h3>
               <div className="space-y-2">
                 {transfer.items?.map((item: any, index: number) => (
@@ -389,9 +385,10 @@ export function TransferDetailsScreen() {
             <Button
               size="sm"
               onClick={handleCompleteTransfer}
+              disabled={isCompleting}
               className="w-full sm:w-auto py-2.5 border-none bg-[#164945] text-white hover:bg-[#123b37]"
             >
-              {t('operations.complete')}
+              {isCompleting ? t('common.loading') : t('operations.complete')}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Button } from '@/components/ui/button';
@@ -36,6 +37,9 @@ import {
 } from '@/components/ui/table';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
+import { useActivities, useActivitySummary, useActivity } from '@/hooks/api/useActivities';
+import { useWarehouses } from '@/hooks/api/useWarehouses';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Package,
   Truck,
@@ -57,176 +61,9 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 
-// Mock data
-const mockActivities = [
-  {
-    id: 'act_001',
-    code: 'ACT-20251209-001',
-    activityType: 'ADJUSTMENT',
-    product: {
-      id: 'prod_001',
-      title: 'Coffee Beans',
-      sku: 'COF-001',
-      barcode: '8901234567890',
-    },
-    quantity: -5,
-    stockBefore: 155,
-    stockAfter: 150,
-    source: 'MOBILE_SCANNING',
-    staff: {
-      id: 'staff_001',
-      name: 'John Doe',
-      email: 'john.doe@company.com',
-    },
-    warehouse: { id: 'wh_001', name: 'Main Warehouse' },
-    reason: 'Damaged items',
-    notes: 'Found 5 damaged bags during inspection',
-    reference: { type: 'adjustment', id: 'adj_001', code: 'ADJ-001' },
-    deviceInfo: 'iPhone 14 Pro, iOS 17.0, App v1.0.0',
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-  },
-  {
-    id: 'act_002',
-    code: 'ACT-20251209-002',
-    activityType: 'TRANSFER',
-    product: {
-      id: 'prod_002',
-      title: 'Tea Bags',
-      sku: 'TEA-001',
-    },
-    quantity: -20,
-    stockBefore: 100,
-    stockAfter: 80,
-    fromWarehouse: { id: 'wh_001', name: 'Main Warehouse' },
-    toWarehouse: { id: 'wh_002', name: 'Secondary Warehouse' },
-    source: 'PANDACOMET',
-    staff: {
-      id: 'staff_002',
-      name: 'Sarah M.',
-      email: 'sarah.m@company.com',
-    },
-    createdAt: new Date(Date.now() - 2.5 * 60 * 60 * 1000),
-  },
-  {
-    id: 'act_003',
-    code: 'ACT-20251209-003',
-    activityType: 'COUNT',
-    product: {
-      id: 'prod_003',
-      title: 'Sugar',
-      sku: 'SUG-001',
-    },
-    quantity: 5,
-    stockBefore: 95,
-    stockAfter: 100,
-    source: 'MOBILE_SCANNING',
-    staff: {
-      id: 'staff_003',
-      name: 'Mike T.',
-      email: 'mike.t@company.com',
-    },
-    warehouse: { id: 'wh_001', name: 'Main Warehouse' },
-    createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
-  },
-  {
-    id: 'act_004',
-    code: 'ACT-20251208-001',
-    activityType: 'ORDER',
-    product: {
-      id: 'prod_004',
-      title: 'Milk',
-      sku: 'MLK-001',
-    },
-    quantity: -2,
-    stockBefore: 52,
-    stockAfter: 50,
-    source: 'ORDER',
-    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-  },
-  {
-    id: 'act_005',
-    code: 'ACT-20251208-002',
-    activityType: 'SCAN',
-    product: {
-      id: 'prod_005',
-      title: 'Honey',
-      sku: 'HON-001',
-    },
-    quantity: 0,
-    stockBefore: 40,
-    stockAfter: 40,
-    source: 'MOBILE_SCANNING',
-    staff: {
-      id: 'staff_001',
-      name: 'John Doe',
-      email: 'john.doe@company.com',
-    },
-    warehouse: { id: 'wh_001', name: 'Main Warehouse' },
-    createdAt: new Date(Date.now() - 25 * 60 * 60 * 1000),
-  },
-  {
-    id: 'act_006',
-    code: 'ACT-20251208-003',
-    activityType: 'RETURN',
-    product: {
-      id: 'prod_001',
-      title: 'Coffee Beans',
-      sku: 'COF-001',
-    },
-    quantity: 1,
-    stockBefore: 154,
-    stockAfter: 155,
-    source: 'ORDER',
-    createdAt: new Date(Date.now() - 26 * 60 * 60 * 1000),
-  },
-  {
-    id: 'act_007',
-    code: 'ACT-20251208-004',
-    activityType: 'ADJUSTMENT',
-    product: {
-      id: 'prod_002',
-      title: 'Tea Bags',
-      sku: 'TEA-001',
-    },
-    quantity: 100,
-    stockBefore: 0,
-    stockAfter: 100,
-    source: 'PANDACOMET',
-    staff: {
-      id: 'staff_admin',
-      name: 'Admin',
-      email: 'admin@company.com',
-    },
-    warehouse: { id: 'wh_001', name: 'Main Warehouse' },
-    createdAt: new Date(Date.now() - 27 * 60 * 60 * 1000),
-  },
-];
-
-const mockSummary = {
-  totalActivities: 85,
-  adjustments: 12,
-  transfers: 5,
-  counts: 3,
-  orders: 45,
-  scans: 20,
-  stockAdded: 1250,
-  stockRemoved: 320,
-};
-
-const mockWarehouses = [
-  { id: 'wh_001', name: 'Main Warehouse' },
-  { id: 'wh_002', name: 'Secondary Warehouse' },
-];
-
-const mockStaff = [
-  { id: 'staff_001', name: 'John Doe' },
-  { id: 'staff_002', name: 'Sarah M.' },
-  { id: 'staff_003', name: 'Mike T.' },
-  { id: 'staff_admin', name: 'Admin' },
-];
-
 export function ActivitiesScreen() {
   const { t } = useI18n();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [search, setSearch] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -235,8 +72,89 @@ export function ActivitiesScreen() {
   const [warehouseFilter, setWarehouseFilter] = useState<string>('all');
   const [staffFilter, setStaffFilter] = useState<string>('all');
   const [dateRangeFilter, setDateRangeFilter] = useState<string>('all');
-  const [selectedActivity, setSelectedActivity] = useState<any>(null);
+  const [displayActivity, setSelectedActivity] = useState<any>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [dateFilter, setDateFilter] = useState<string>('today');
+
+  // Calculate date range for API
+  const getDateRange = (range: string) => {
+    const now = new Date();
+    let dateFrom: string | undefined;
+    let dateTo: string | undefined = now.toISOString();
+
+    switch (range) {
+      case 'today':
+        const todayStart = new Date(now);
+        todayStart.setHours(0, 0, 0, 0);
+        dateFrom = todayStart.toISOString();
+        break;
+      case 'yesterday':
+        const yesterday = new Date(now);
+        yesterday.setDate(now.getDate() - 1);
+        yesterday.setHours(0, 0, 0, 0);
+        dateFrom = yesterday.toISOString();
+        const yesterdayEnd = new Date(yesterday);
+        yesterdayEnd.setHours(23, 59, 59, 999);
+        dateTo = yesterdayEnd.toISOString();
+        break;
+      case 'last7':
+        const last7 = new Date(now);
+        last7.setDate(now.getDate() - 7);
+        dateFrom = last7.toISOString();
+        break;
+      case 'last30':
+        const last30 = new Date(now);
+        last30.setDate(now.getDate() - 30);
+        dateFrom = last30.toISOString();
+        break;
+      default:
+        dateFrom = undefined;
+        dateTo = undefined;
+    }
+    return { dateFrom, dateTo };
+  };
+
+  const { dateFrom, dateTo } = getDateRange(dateRangeFilter);
+
+  // API hooks
+  const { data: activitiesData, isLoading: activitiesLoading } = useActivities({
+    page: 1,
+    limit: 100,
+    activityType: typeFilter !== 'all' ? typeFilter : undefined,
+    dateFrom,
+    dateTo,
+  });
+
+  const { data: summaryData, isLoading: summaryLoading } = useActivitySummary();
+  const { data: warehouses = [] } = useWarehouses({ limit: 100 });
+  const { data: activityDetails, isLoading: detailLoading } = useActivity(
+    displayActivity?.id || ''
+  );
+
+  const activities = activitiesData?.data || [];
+  const summary = summaryData || {
+    today: 0,
+    thisWeek: 0,
+    mobileActivities: 0,
+    byType: {
+      adjustment: 0,
+      order_created: 0,
+      order_cancelled: 0,
+      initial_stock: 0,
+      sync: 0,
+    },
+  };
+
+  // Extract unique staff from activities
+  const staffList = useMemo(() => {
+    const staffMap = new Map();
+    activities.forEach((act) => {
+      if (act.staff?.id && act.staff?.name) {
+        staffMap.set(act.staff.id, act.staff);
+      }
+    });
+    return Array.from(staffMap.values());
+  }, [activities]);
 
   const getActivityIcon = (type: string) => {
     switch (type) {
@@ -315,14 +233,14 @@ export function ActivitiesScreen() {
   };
 
   const filteredActivities = useMemo(() => {
-    let filtered = [...mockActivities];
+    let filtered = [...activities];
 
-    // Search filter
+    // Client-side search filter (API doesn't support search param for activities)
     if (search) {
       const searchLower = search.toLowerCase();
       filtered = filtered.filter(
         (act) =>
-          act.code.toLowerCase().includes(searchLower) ||
+          act.id.toLowerCase().includes(searchLower) ||
           (act.product?.title?.toLowerCase().includes(searchLower)) ||
           (act.product?.sku?.toLowerCase().includes(searchLower)) ||
           (act.staff?.name?.toLowerCase().includes(searchLower)) ||
@@ -330,58 +248,34 @@ export function ActivitiesScreen() {
       );
     }
 
-    // Type filter
-    if (typeFilter !== 'all') {
-      filtered = filtered.filter((act) => act.activityType === typeFilter);
-    }
-
-    // Source filter
+    // Source filter (client-side, API doesn't support source param)
     if (sourceFilter !== 'all') {
       filtered = filtered.filter((act) => act.source === sourceFilter);
     }
 
-    // Warehouse filter
+    // Warehouse filter (client-side, API doesn't support warehouse param)
     if (warehouseFilter !== 'all') {
       filtered = filtered.filter((act) => {
-        const warehouseName = act.warehouse?.name || act.fromWarehouse?.name || '';
-        return warehouseName.toLowerCase().includes(warehouseFilter.toLowerCase());
+        // Activities don't have warehouse field directly, skip for now
+        return true;
       });
     }
 
-    // Staff filter
+    // Staff filter (client-side)
     if (staffFilter !== 'all') {
       filtered = filtered.filter((act) => act.staff?.id === staffFilter);
     }
 
-    // Date range filter (simplified)
-    if (dateRangeFilter !== 'all') {
-      const now = new Date();
-      let cutoffDate = new Date();
-      switch (dateRangeFilter) {
-        case 'today':
-          cutoffDate.setHours(0, 0, 0, 0);
-          break;
-        case 'yesterday':
-          cutoffDate.setDate(now.getDate() - 1);
-          cutoffDate.setHours(0, 0, 0, 0);
-          break;
-        case 'last7':
-          cutoffDate.setDate(now.getDate() - 7);
-          break;
-        case 'last30':
-          cutoffDate.setDate(now.getDate() - 30);
-          break;
-      }
-      filtered = filtered.filter((act) => act.createdAt >= cutoffDate);
-    }
-
     return filtered;
-  }, [search, typeFilter, sourceFilter, warehouseFilter, staffFilter, dateRangeFilter]);
+  }, [activities, search, sourceFilter, warehouseFilter, staffFilter]);
 
   const handleViewDetails = (activity: any) => {
     setSelectedActivity(activity);
     setDetailModalOpen(true);
   };
+
+  // Use activity details from API if available
+  const currentDisplayActivity = activityDetails || displayActivity;
 
   const handleExport = () => {
     toast({
@@ -399,7 +293,7 @@ export function ActivitiesScreen() {
     setDateRangeFilter('all');
   };
 
-  const SourceIcon = selectedActivity ? getSourceIcon(selectedActivity.source) : Monitor;
+  const SourceIcon = currentDisplayActivity ? getSourceIcon(currentDisplayActivity.source) : Monitor;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -426,7 +320,7 @@ export function ActivitiesScreen() {
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               {t('operations.activitySummary')}
             </h2>
-            <Select defaultValue="today">
+            <Select value={dateFilter} onValueChange={setDateFilter}>
               <SelectTrigger className="h-8 w-[120px] text-xs">
                 <SelectValue />
               </SelectTrigger>
@@ -439,54 +333,64 @@ export function ActivitiesScreen() {
             </Select>
           </div>
           <div className="grid grid-cols-4 gap-2">
-            <Card className="border border-border bg-white shadow-none">
-              <CardContent className="px-2 py-3 text-center">
-                <div className="text-lg font-bold text-foreground">{mockSummary.totalActivities}</div>
-                <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{t('operations.totalActivities')}</div>
-              </CardContent>
-            </Card>
-            <Card className="border border-border bg-white shadow-none">
-              <CardContent className="px-2 py-3 text-center">
-                <div className="text-lg font-bold text-foreground">{mockSummary.adjustments}</div>
-                <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{t('operations.adjustments')}</div>
-              </CardContent>
-            </Card>
-            <Card className="border border-border bg-white shadow-none">
-              <CardContent className="px-2 py-3 text-center">
-                <div className="text-lg font-bold text-foreground">{mockSummary.transfers}</div>
-                <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{t('operations.transfers')}</div>
-              </CardContent>
-            </Card>
-            <Card className="border border-border bg-white shadow-none">
-              <CardContent className="px-2 py-3 text-center">
-                <div className="text-lg font-bold text-foreground">{mockSummary.counts}</div>
-                <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{t('operations.counts')}</div>
-              </CardContent>
-            </Card>
-            <Card className="border border-border bg-white shadow-none">
-              <CardContent className="px-2 py-3 text-center">
-                <div className="text-lg font-bold text-foreground">{mockSummary.orders}</div>
-                <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{t('operations.orders')}</div>
-              </CardContent>
-            </Card>
-            <Card className="border border-border bg-white shadow-none">
-              <CardContent className="px-2 py-3 text-center">
-                <div className="text-lg font-bold text-foreground">{mockSummary.scans}</div>
-                <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{t('operations.scans')} ({t('operations.mobile')})</div>
-              </CardContent>
-            </Card>
-            <Card className="border border-border bg-white shadow-none">
-              <CardContent className="px-2 py-3 text-center">
-                <div className="text-lg font-bold text-emerald-600">+{mockSummary.stockAdded}</div>
-                <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{t('operations.stockAdded')}</div>
-              </CardContent>
-            </Card>
-            <Card className="border border-border bg-white shadow-none">
-              <CardContent className="px-2 py-3 text-center">
-                <div className="text-lg font-bold text-red-600">-{mockSummary.stockRemoved}</div>
-                <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{t('operations.stockRemoved')}</div>
-              </CardContent>
-            </Card>
+            {summaryLoading ? (
+              <>
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                  <Skeleton key={i} className="h-16 w-full" />
+                ))}
+              </>
+            ) : (
+              <>
+                <Card className="border border-border bg-white shadow-none">
+                  <CardContent className="px-2 py-3 text-center">
+                    <div className="text-lg font-bold text-foreground">{summary.today || 0}</div>
+                    <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{t('operations.totalActivities')}</div>
+                  </CardContent>
+                </Card>
+                <Card className="border border-border bg-white shadow-none">
+                  <CardContent className="px-2 py-3 text-center">
+                    <div className="text-lg font-bold text-foreground">{summary.byType?.adjustment || 0}</div>
+                    <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{t('operations.adjustments')}</div>
+                  </CardContent>
+                </Card>
+                <Card className="border border-border bg-white shadow-none">
+                  <CardContent className="px-2 py-3 text-center">
+                    <div className="text-lg font-bold text-foreground">{summary.byType?.order_created || 0}</div>
+                    <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{t('operations.transfers')}</div>
+                  </CardContent>
+                </Card>
+                <Card className="border border-border bg-white shadow-none">
+                  <CardContent className="px-2 py-3 text-center">
+                    <div className="text-lg font-bold text-foreground">{summary.thisWeek || 0}</div>
+                    <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{t('operations.counts')}</div>
+                  </CardContent>
+                </Card>
+                <Card className="border border-border bg-white shadow-none">
+                  <CardContent className="px-2 py-3 text-center">
+                    <div className="text-lg font-bold text-foreground">{summary.byType?.order_created || 0}</div>
+                    <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{t('operations.orders')}</div>
+                  </CardContent>
+                </Card>
+                <Card className="border border-border bg-white shadow-none">
+                  <CardContent className="px-2 py-3 text-center">
+                    <div className="text-lg font-bold text-foreground">{summary.mobileActivities || 0}</div>
+                    <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{t('operations.scans')} ({t('operations.mobile')})</div>
+                  </CardContent>
+                </Card>
+                <Card className="border border-border bg-white shadow-none">
+                  <CardContent className="px-2 py-3 text-center">
+                    <div className="text-lg font-bold text-emerald-600">+{summary.byType?.initial_stock || 0}</div>
+                    <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{t('operations.stockAdded')}</div>
+                  </CardContent>
+                </Card>
+                <Card className="border border-border bg-white shadow-none">
+                  <CardContent className="px-2 py-3 text-center">
+                    <div className="text-lg font-bold text-red-600">-{summary.byType?.order_created || 0}</div>
+                    <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{t('operations.stockRemoved')}</div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
           </div>
         </div>
 
@@ -576,7 +480,7 @@ export function ActivitiesScreen() {
                   <div className="space-y-2">
                     {[
                       { value: 'all', label: t('operations.all') },
-                      ...mockWarehouses.map((wh) => ({ value: wh.name, label: wh.name })),
+                      ...warehouses.map((wh) => ({ value: wh.name, label: wh.name })),
                     ].map((option) => (
                       <label key={option.value} className="flex items-center gap-2">
                         <input
@@ -599,7 +503,7 @@ export function ActivitiesScreen() {
                   <div className="space-y-2">
                     {[
                       { value: 'all', label: t('operations.all') },
-                      ...mockStaff.map((staff) => ({ value: staff.id, label: staff.name })),
+                      ...staffList.map((staff) => ({ value: staff.id, label: staff.name })),
                     ].map((option) => (
                       <label key={option.value} className="flex items-center gap-2">
                         <input
@@ -674,7 +578,21 @@ export function ActivitiesScreen() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredActivities.length === 0 ? (
+                  {activitiesLoading ? (
+                    <>
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <TableRow key={i}>
+                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                        </TableRow>
+                      ))}
+                    </>
+                  ) : filteredActivities.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-8 text-sm text-muted-foreground">
                         {t('operations.noActivities')}
@@ -691,7 +609,7 @@ export function ActivitiesScreen() {
                           onClick={() => handleViewDetails(activity)}
                         >
                           <TableCell className="text-xs text-muted-foreground">
-                            {format(activity.createdAt, 'MMM d, h:mm')}
+                            {format(new Date(activity.createdAt), 'MMM d, h:mm')}
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-1">
@@ -766,24 +684,24 @@ export function ActivitiesScreen() {
             <DialogTitle>{t('operations.activityDetails')}</DialogTitle>
           </DialogHeader>
 
-          {selectedActivity && (
+          {currentDisplayActivity && (
             <div className="space-y-4">
               {/* Type and ID */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {(() => {
-                    const Icon = getActivityIcon(selectedActivity.activityType);
+                    const Icon = getActivityIcon(currentDisplayActivity.activityType);
                     return <Icon className="h-5 w-5 text-muted-foreground" />;
                   })()}
                   <span className="text-sm font-semibold">
-                    {getActivityTypeLabel(selectedActivity.activityType)}
+                    {getActivityTypeLabel(currentDisplayActivity.activityType)}
                   </span>
                 </div>
-                <span className="text-xs text-muted-foreground">ID: {selectedActivity.code}</span>
+                <span className="text-xs text-muted-foreground">ID: {currentDisplayActivity.code}</span>
               </div>
 
               {/* Product */}
-              {selectedActivity.product && (
+              {currentDisplayActivity.product && (
                 <Card className="border border-border bg-muted/50 shadow-none">
                   <CardContent className="px-3 py-3">
                     <div className="space-y-3">
@@ -791,20 +709,20 @@ export function ActivitiesScreen() {
                       <div className="flex items-start gap-2">
                         <Coffee className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                         <div className="flex-1">
-                          <p className="text-sm font-medium">{selectedActivity.product.title}</p>
+                          <p className="text-sm font-medium">{displayActivity.product.title}</p>
                           <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
                             <div>
-                              <span className="font-medium">SKU:</span> {selectedActivity.product.sku}
+                              <span className="font-medium">SKU:</span> {displayActivity.product.sku}
                             </div>
-                            {selectedActivity.product.barcode && (
+                            {displayActivity.product.barcode && (
                               <div>
-                                <span className="font-medium">{t('operations.barcode')}:</span> {selectedActivity.product.barcode}
+                                <span className="font-medium">{t('operations.barcode')}:</span> {displayActivity.product.barcode}
                               </div>
                             )}
                           </div>
                         </div>
                       </div>
-                      {selectedActivity.product.id && (
+                      {displayActivity.product.id && (
                         <div className="pt-2 border-t border-border">
                           <Button variant="outline" size="sm" className="gap-1 text-xs w-full sm:w-auto">
                             {t('common.view')}
@@ -818,7 +736,7 @@ export function ActivitiesScreen() {
               )}
 
               {/* Stock Change */}
-              {selectedActivity.stockBefore !== undefined && selectedActivity.stockAfter !== undefined && (
+              {displayActivity.stockBefore !== undefined && displayActivity.stockAfter !== undefined && (
                 <Card className="border border-border bg-muted/50 shadow-none">
                   <CardContent className="px-3 py-3">
                     <div className="space-y-2">
@@ -826,16 +744,16 @@ export function ActivitiesScreen() {
                       <div className="grid grid-cols-3 gap-2 text-sm">
                         <div>
                           <p className="text-xs text-muted-foreground">{t('operations.before')}</p>
-                          <p className="font-medium">{selectedActivity.stockBefore}</p>
+                          <p className="font-medium">{displayActivity.stockBefore}</p>
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">{t('operations.after')}</p>
-                          <p className="font-medium">{selectedActivity.stockAfter}</p>
+                          <p className="font-medium">{displayActivity.stockAfter}</p>
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">{t('operations.change')}</p>
-                          <p className={`font-semibold ${selectedActivity.quantity > 0 ? 'text-emerald-600' : selectedActivity.quantity < 0 ? 'text-red-600' : ''}`}>
-                            {selectedActivity.quantity > 0 ? '+' : ''}{selectedActivity.quantity}
+                          <p className={`font-semibold ${displayActivity.quantity > 0 ? 'text-emerald-600' : displayActivity.quantity < 0 ? 'text-red-600' : ''}`}>
+                            {displayActivity.quantity > 0 ? '+' : ''}{displayActivity.quantity}
                           </p>
                         </div>
                       </div>
@@ -854,32 +772,32 @@ export function ActivitiesScreen() {
                         <span className="text-xs text-muted-foreground">{t('operations.source')}</span>
                         <div className="flex items-center gap-1">
                           <SourceIcon className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{getSourceLabel(selectedActivity.source)} ({selectedActivity.source})</span>
+                          <span className="font-medium">{getSourceLabel(displayActivity.source)} ({displayActivity.source})</span>
                         </div>
                       </div>
-                      {selectedActivity.reason && (
+                      {displayActivity.reason && (
                         <div className="flex items-center justify-between">
                           <span className="text-xs text-muted-foreground">{t('operations.reason')}</span>
-                          <span className="font-medium">{selectedActivity.reason}</span>
+                          <span className="font-medium">{displayActivity.reason}</span>
                         </div>
                       )}
-                      {selectedActivity.notes && (
+                      {displayActivity.notes && (
                         <div className="flex items-start justify-between pt-2 border-t border-border">
                           <span className="text-xs text-muted-foreground">{t('operations.notes')}</span>
-                          <span className="text-right flex-1 ml-4">{selectedActivity.notes}</span>
+                          <span className="text-right flex-1 ml-4">{displayActivity.notes}</span>
                         </div>
                       )}
-                      {selectedActivity.warehouse && (
+                      {displayActivity.warehouse && (
                         <div className="flex items-center justify-between">
                           <span className="text-xs text-muted-foreground">{t('operations.warehouse')}</span>
-                          <span className="font-medium">{selectedActivity.warehouse.name}</span>
+                          <span className="font-medium">{displayActivity.warehouse.name}</span>
                         </div>
                       )}
-                      {selectedActivity.reference && (
+                      {displayActivity.reference && (
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-muted-foreground">{t('operations.reference')}</span>
-                            <span className="font-medium">{selectedActivity.reference.code}</span>
+                            <span className="font-medium">{displayActivity.reference.code}</span>
                           </div>
                           <Button variant="outline" size="sm" className="w-full gap-1 h-6 px-2 text-xs">
                             {t('common.view')}
@@ -898,12 +816,12 @@ export function ActivitiesScreen() {
                   <div className="space-y-2">
                     <h3 className="text-sm font-semibold">{t('operations.performedBy')}</h3>
                     <div className="space-y-2 text-sm">
-                      {selectedActivity.staff && (
+                      {displayActivity.staff && (
                         <>
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-muted-foreground">{t('operations.staff')}</span>
                             <span className="font-medium">
-                              {selectedActivity.staff.name} {selectedActivity.staff.email && `(${selectedActivity.staff.email})`}
+                              {displayActivity.staff.name} {displayActivity.staff.email && `(${displayActivity.staff.email})`}
                             </span>
                           </div>
                         </>
@@ -911,15 +829,9 @@ export function ActivitiesScreen() {
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-muted-foreground">{t('operations.dateTime')}</span>
                         <span className="font-medium">
-                          {format(selectedActivity.createdAt, 'MMMM d, yyyy, h:mm:ss a')}
+                          {format(new Date(displayActivity.createdAt), 'MMMM d, yyyy, h:mm:ss a')}
                         </span>
                       </div>
-                      {selectedActivity.deviceInfo && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-muted-foreground">{t('operations.device')}</span>
-                          <span className="font-medium text-xs">{selectedActivity.deviceInfo}</span>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </CardContent>

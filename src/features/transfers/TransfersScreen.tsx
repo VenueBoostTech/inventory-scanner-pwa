@@ -20,14 +20,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
+import { useStockTransfers, useCreateTransfer, useCompleteTransfer, useCancelTransfer } from '@/hooks/api/useStockTransfers';
+import { useWarehouses } from '@/hooks/api/useWarehouses';
+import { useProducts } from '@/hooks/api/useProducts';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Truck, Plus, CheckCircle2, XCircle, AlertCircle, Search, Camera, Trash2, ArrowRight } from 'lucide-react';
 import { format, isToday } from 'date-fns';
-
-// Mock data
-const mockTransfers = [
   {
     id: 'trf_007',
     code: 'TRF-007',
@@ -77,32 +78,6 @@ const mockTransfers = [
   },
 ];
 
-const mockWarehouses = [
-  { id: 'wh_001', name: 'Main Warehouse' },
-  { id: 'wh_002', name: 'Secondary Warehouse' },
-];
-
-const mockProducts = [
-  {
-    id: 'prod_001',
-    title: 'Coffee Beans',
-    sku: 'COF-001',
-    availableStock: 150,
-  },
-  {
-    id: 'prod_002',
-    title: 'Tea Bags',
-    sku: 'TEA-001',
-    availableStock: 80,
-  },
-  {
-    id: 'prod_003',
-    title: 'Sugar',
-    sku: 'SUG-001',
-    availableStock: 100,
-  },
-];
-
 type TransferStatus = 'all' | 'pending' | 'in_transit' | 'completed' | 'cancelled';
 type CreateStep = 'basic' | 'products' | 'confirmation';
 
@@ -124,10 +99,23 @@ export function TransfersScreen() {
   const [selectedTransfer, setSelectedTransfer] = useState<any>(null);
   const [completeModalOpen, setCompleteModalOpen] = useState(false);
 
+  // API hooks
+  const { data: transfersData, isLoading: transfersLoading } = useStockTransfers({
+    status: statusFilter !== 'all' ? statusFilter : undefined,
+    limit: 100,
+  });
+  const { data: warehouses = [] } = useWarehouses({ limit: 100 });
+  const { data: products = [] } = useProducts({ limit: 100 });
+  const { mutateAsync: createTransfer, isPending: isCreating } = useCreateTransfer();
+  const { mutateAsync: completeTransfer, isPending: isCompleting } = useCompleteTransfer();
+  const { mutateAsync: cancelTransfer, isPending: isCancelling } = useCancelTransfer();
+
+  const transfers = transfersData?.data || [];
+
   const filteredTransfers = useMemo(() => {
-    if (statusFilter === 'all') return mockTransfers;
-    return mockTransfers.filter((t) => t.status === statusFilter);
-  }, [statusFilter]);
+    if (statusFilter === 'all') return transfers;
+    return transfers.filter((t) => t.status === statusFilter);
+  }, [transfers, statusFilter]);
 
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { label: string; className: string; icon: any }> = {
@@ -165,7 +153,7 @@ export function TransfersScreen() {
   const filteredProducts = useMemo(() => {
     if (!productSearch) return [];
     const searchLower = productSearch.toLowerCase();
-    return mockProducts.filter(
+    return products.filter(
       (p) =>
         p.title.toLowerCase().includes(searchLower) ||
         p.sku.toLowerCase().includes(searchLower)
@@ -221,7 +209,29 @@ export function TransfersScreen() {
         });
         return;
       }
-      setCreateStep('confirmation');
+      // Create transfer via API
+      try {
+        await createTransfer({
+          sourceWarehouseId: fromWarehouse,
+          destinationWarehouseId: toWarehouse,
+          items: transferItems.map(item => ({
+            productId: item.productId,
+            quantity: item.quantity,
+          })),
+          notes: transferNotes,
+        });
+        toast({
+          title: t('transfers.transferCreated'),
+          description: t('transfers.transferCreatedDesc'),
+        });
+        handleCloseCreate();
+      } catch (error: any) {
+        toast({
+          title: t('common.error'),
+          description: error?.response?.data?.message || t('transfers.transferCreatedDesc'),
+          variant: 'destructive',
+        });
+      }
     }
   };
 
@@ -243,10 +253,10 @@ export function TransfersScreen() {
       });
       return;
     }
-    if (quantity > selectedProduct.availableStock) {
+    if (quantity > (selectedProduct.stockQuantity || 0)) {
       toast({
         title: t('common.error'),
-        description: t('transfers.notEnoughStock').replace('{available}', String(selectedProduct.availableStock)),
+        description: t('transfers.notEnoughStock').replace('{available}', String(selectedProduct.stockQuantity || 0)),
         variant: 'destructive',
       });
       return;
@@ -277,22 +287,47 @@ export function TransfersScreen() {
     setCompleteModalOpen(true);
   };
 
-  const handleCompleteTransfer = () => {
-    // TODO: Complete transfer via API
-    toast({
-      title: t('transfers.transferCompleted'),
-      description: t('transfers.transferCompletedDesc'),
-    });
-    setCompleteModalOpen(false);
-    setSelectedTransfer(null);
+  const handleCompleteTransfer = async () => {
+    if (!selectedTransfer) return;
+    
+    try {
+      await completeTransfer({
+        transferId: selectedTransfer.id,
+        receivedItems: selectedTransfer.items?.map((item: any) => ({
+          productId: item.productId,
+          receivedQuantity: item.quantity,
+        })) || [],
+        notes: '',
+      });
+      toast({
+        title: t('transfers.transferCompleted'),
+        description: t('transfers.transferCompletedDesc'),
+      });
+      setCompleteModalOpen(false);
+      setSelectedTransfer(null);
+    } catch (error: any) {
+      toast({
+        title: t('common.error'),
+        description: error?.response?.data?.message || t('transfers.transferCompletedDesc'),
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleCancel = (_transfer: any) => {
-    // TODO: Cancel transfer via API
-    toast({
-      title: t('transfers.transferCancelled'),
-      description: t('transfers.transferCancelledDesc'),
-    });
+  const handleCancel = async (transfer: any) => {
+    try {
+      await cancelTransfer(transfer.id);
+      toast({
+        title: t('transfers.transferCancelled'),
+        description: t('transfers.transferCancelledDesc'),
+      });
+    } catch (error: any) {
+      toast({
+        title: t('common.error'),
+        description: error?.response?.data?.message || t('transfers.transferCancelledDesc'),
+        variant: 'destructive',
+      });
+    }
   };
 
   // handleMarkInTransit removed - unused
@@ -502,7 +537,7 @@ export function TransfersScreen() {
                     <SelectValue placeholder={t('operations.selectWarehouse')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockWarehouses.map((wh) => (
+                    {warehouses.map((wh) => (
                       <SelectItem key={wh.id} value={wh.id}>
                         {wh.name}
                       </SelectItem>
@@ -520,7 +555,7 @@ export function TransfersScreen() {
                     <SelectValue placeholder={t('transfers.selectDestination')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockWarehouses
+                    {warehouses
                       .filter((wh) => wh.id !== fromWarehouse)
                       .map((wh) => (
                         <SelectItem key={wh.id} value={wh.id}>
@@ -566,7 +601,7 @@ export function TransfersScreen() {
             <DialogHeader>
               <DialogTitle>{t('transfers.addProducts')}</DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">
-                {mockWarehouses.find((w) => w.id === fromWarehouse)?.name} → {mockWarehouses.find((w) => w.id === toWarehouse)?.name}
+                {warehouses.find((w) => w.id === fromWarehouse)?.name} → {warehouses.find((w) => w.id === toWarehouse)?.name}
               </DialogDescription>
             </DialogHeader>
 
@@ -619,7 +654,7 @@ export function TransfersScreen() {
                         <div>
                           <p className="text-sm font-medium">{selectedProduct.title}</p>
                           <p className="text-sm text-muted-foreground">
-                            SKU: {selectedProduct.sku} • {t('transfers.available')}: {selectedProduct.availableStock}
+                            SKU: {selectedProduct.sku} • {t('transfers.available')}: {selectedProduct.stockQuantity || 0}
                           </p>
                         </div>
                         <Button
@@ -775,7 +810,7 @@ export function TransfersScreen() {
               <div className="space-y-1">
                 <p className="text-sm font-semibold">Transfer #TRF-008</p>
                 <p className="text-sm text-muted-foreground">
-                  {mockWarehouses.find((w) => w.id === fromWarehouse)?.name} → {mockWarehouses.find((w) => w.id === toWarehouse)?.name}
+                  {warehouses.find((w) => w.id === fromWarehouse)?.name} → {warehouses.find((w) => w.id === toWarehouse)?.name}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {transferItems.length} {t('operations.products')}, {totalQuantity} {t('operations.units')}
