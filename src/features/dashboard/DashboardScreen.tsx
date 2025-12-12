@@ -350,17 +350,24 @@ export function DashboardScreen() {
                     >
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold text-foreground">{scan.productName}</p>
-                        <p className="text-xs text-muted-foreground">{scan.sku}</p>
+                        <div className="space-y-0.5">
+                          <p className="text-xs text-muted-foreground">
+                            SKU: {scan.sku || '-'}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Barcode: {scan.barcode || '-'}
+                          </p>
+                        </div>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
                         <div className="flex items-center gap-1.5">
                           {getStatusIcon(scan.status)}
-                          <span className="text-xs font-medium text-foreground">
+                          <span className="hidden sm:inline text-xs font-medium text-foreground">
                             {getStatusLabel(scan.status)}
                           </span>
                         </div>
                         <span className="text-xs text-muted-foreground">
-                          {scan.time.formattedTime}
+                          {scan.time.formattedDateTime}
                         </span>
                       </div>
                     </div>
@@ -423,7 +430,7 @@ export function DashboardScreen() {
                         </p>
                       </div>
                       <span className="shrink-0 text-xs text-muted-foreground">
-                        {activity.created_at.formattedTime}
+                        {activity.created_at.formattedDateTime}
                       </span>
                     </div>
                   ))

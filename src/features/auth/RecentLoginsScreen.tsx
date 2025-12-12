@@ -20,11 +20,22 @@ export function RecentLoginsScreen() {
   };
 
   const getDeviceDisplayName = (deviceInfo: { platform?: string; deviceModel?: string }) => {
-    if (deviceInfo.deviceModel) {
+    // If deviceModel is "Unknown", show capitalized platform instead
+    if (deviceInfo.deviceModel && deviceInfo.deviceModel !== 'Unknown') {
       return deviceInfo.deviceModel;
     }
     if (deviceInfo.platform) {
-      return deviceInfo.platform === 'ios' ? 'iOS Device' : 'Android Device';
+      // Capitalize platform: web -> Web, android -> Android, ios -> iOS
+      const platform = deviceInfo.platform.toLowerCase();
+      if (platform === 'web') {
+        return 'Web';
+      } else if (platform === 'ios') {
+        return 'iOS';
+      } else if (platform === 'android') {
+        return 'Android';
+      }
+      // Fallback: capitalize first letter
+      return platform.charAt(0).toUpperCase() + platform.slice(1);
     }
     return t('auth.recentLogins.unknownDevice');
   };
