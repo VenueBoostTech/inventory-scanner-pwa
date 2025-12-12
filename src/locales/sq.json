@@ -186,6 +186,7 @@
     "searchBySku": "Kërko me SKU",
     "searchBySkuSubtitle": "Disa produkte nuk kanë kod. Shkruani SKU-n për të parë nëse produkti ekziston tashmë në inventarin tuaj.",
     "enterSkuPlaceholder": "Shkruani SKU",
+    "searchPlaceholder": "Kërkoni me kod, SKU ose emër produkti",
     "recentScans": "Skanimet e fundit",
     "latestLookups": "Kërkimet dhe rezultatet e fundit.",
     "noScans": "Nuk ka skanime ende. Filloni skanimin ose shtoni një kod manualisht.",
@@ -702,7 +703,8 @@
     "settingsUpdatedDesc": "Cilësimet tuaja të njoftimeve u përditësuan"
   },
   "transfers": {
-    "noTransfers": "Nuk u gjetën transferta.",
+    "noTransfers": "Nuk u gjetën transferta",
+    "noTransfersDesc": "Krijoni transferimin tuaj të parë të stokut për të lëvizur artikujt midis depove.",
     "selectBothWarehouses": "Ju lutemi zgjidhni të dy magazinat",
     "cannotTransferSameWarehouse": "Nuk mund të transferoni në të njëjtën magazinë",
     "addAtLeastOneProduct": "Shtoni të paktën një produkt",
