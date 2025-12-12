@@ -1,4 +1,4 @@
-import { useState, type ReactElement } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { authStore } from '@/stores/authStore';
@@ -10,7 +10,8 @@ import { useScanner } from '@/hooks/useScanner';
 import { useScanBarcode } from '@/hooks/api/useProducts';
 import { useScanHistory } from '@/hooks/api/useScanHistory';
 import { useToast } from '@/hooks/use-toast';
-import { AlertCircle, CheckCircle2, Plus, Search, XCircle, ArrowRight, Info, Lightbulb } from 'lucide-react';
+import { format } from 'date-fns';
+import { AlertCircle, CheckCircle2, Plus, XCircle, ArrowRight, Info, Lightbulb } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
