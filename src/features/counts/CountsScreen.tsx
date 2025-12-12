@@ -345,57 +345,58 @@ export function CountsScreen() {
                     .map((count) => {
                       const progress = count.totalItemsCounted ? Math.round((count.totalItemsCounted / (count.totalItemsCounted + (count.itemsWithVariance || 0))) * 100) : 0;
                       return (
-                      <TableRow key={count.id}>
-                        <TableCell className="font-medium">{count.referenceNumber}</TableCell>
-                        <TableCell>{count.warehouse.name}</TableCell>
-                        <TableCell>{getStatusBadge(count.status)}</TableCell>
-                        <TableCell>
-                          {count.status === 'cancelled' ? (
-                            <span className="text-xs text-muted-foreground">—</span>
-                          ) : count.totalItemsCounted ? (
-                            `${count.totalItemsCounted} ${t('operations.items')} (${progress}%)`
-                          ) : (
-                            <span className="text-xs text-muted-foreground">—</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {count.status === 'completed' || count.status === 'in_progress' ? (
-                            <span className="text-xs text-muted-foreground">
-                              {count.itemsWithVariance || 0} {t('operations.items')}
-                            </span>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">—</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
-                          {count.status === 'completed' && count.completedAt
-                            ? format(new Date(count.completedAt), 'MMM d')
-                            : count.startedAt
-                            ? format(new Date(count.startedAt), 'MMM d')
-                            : '—'}
-                        </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => handleViewDetails(count)}
-                            className="p-1 hover:bg-muted rounded"
-                            title={t('operations.viewDetails')}
-                          >
-                            <Eye className="h-4 w-4 text-muted-foreground" />
-                          </button>
-                          {count.status === 'completed' && (
-                            <button
-                              onClick={() => handleViewReport(count)}
-                              className="p-1 hover:bg-muted rounded"
-                              title={t('operations.viewReport')}
-                            >
-                              <FileText className="h-4 w-4 text-muted-foreground" />
-                            </button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        <TableRow key={count.id}>
+                          <TableCell className="font-medium">{count.referenceNumber}</TableCell>
+                          <TableCell>{count.warehouse.name}</TableCell>
+                          <TableCell>{getStatusBadge(count.status)}</TableCell>
+                          <TableCell>
+                            {count.status === 'cancelled' ? (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            ) : count.totalItemsCounted ? (
+                              `${count.totalItemsCounted} ${t('operations.items')} (${progress}%)`
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {count.status === 'completed' || count.status === 'in_progress' ? (
+                              <span className="text-xs text-muted-foreground">
+                                {count.itemsWithVariance || 0} {t('operations.items')}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {count.status === 'completed' && count.completedAt
+                              ? format(new Date(count.completedAt), 'MMM d')
+                              : count.startedAt
+                              ? format(new Date(count.startedAt), 'MMM d')
+                              : '—'}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => handleViewDetails(count)}
+                                className="p-1 hover:bg-muted rounded"
+                                title={t('operations.viewDetails')}
+                              >
+                                <Eye className="h-4 w-4 text-muted-foreground" />
+                              </button>
+                              {count.status === 'completed' && (
+                                <button
+                                  onClick={() => handleViewReport(count)}
+                                  className="p-1 hover:bg-muted rounded"
+                                  title={t('operations.viewReport')}
+                                >
+                                  <FileText className="h-4 w-4 text-muted-foreground" />
+                                </button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                 </TableBody>
               </Table>
             </div>

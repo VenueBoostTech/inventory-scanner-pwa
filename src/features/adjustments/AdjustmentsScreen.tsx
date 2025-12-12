@@ -44,29 +44,6 @@ import { useStockAdjustment } from '@/hooks/api/useStockAdjustment';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Package, Plus, Search, Filter, TrendingUp, TrendingDown, Minus, Eye, AlertTriangle, Coffee } from 'lucide-react';
 import { format } from 'date-fns';
-    adjustmentType: 'increase',
-    quantity: 100,
-    stockBefore: 0,
-    stockAfter: 100,
-    reason: 'Received shipment',
-    warehouse: { id: 'wh_001', name: 'Main Warehouse' },
-    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-    createdBy: { id: 'staff_001', name: 'John D.' },
-  },
-  {
-    id: 'adj_005',
-    code: 'ADJ-005',
-    product: { id: 'prod_005', title: 'Honey', sku: 'HON-001' },
-    adjustmentType: 'decrease',
-    quantity: -10,
-    stockBefore: 50,
-    stockAfter: 40,
-    reason: 'Expired items',
-    warehouse: { id: 'wh_001', name: 'Main Warehouse' },
-    createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
-    createdBy: { id: 'staff_002', name: 'Sarah M.' },
-  },
-];
 
 type SortOption = 'recent' | 'type' | 'warehouse';
 
@@ -97,6 +74,7 @@ export function AdjustmentsScreen() {
   });
   const { data: products = [] } = useProducts({ limit: 1000 });
   const { data: warehouses = [] } = useWarehouses({ limit: 100 });
+  const { mutateAsync: adjustStock } = useStockAdjustment();
 
   const adjustments = adjustmentsData?.data || [];
 

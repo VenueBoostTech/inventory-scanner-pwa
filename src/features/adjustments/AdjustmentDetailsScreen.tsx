@@ -99,16 +99,15 @@ export function AdjustmentDetailsScreen() {
                   <Package className="h-4 w-4 text-muted-foreground" />
                   <p className="text-sm font-medium">{activity.product.title}</p>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-muted-foreground pl-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-muted-foreground pl-6">
                   <div>
-                    <span className="font-medium">SKU:</span> {adjustment.product.sku}
+                    <span className="font-medium">SKU:</span> {activity.product.sku}
                   </div>
-                  <div>
-                    <span className="font-medium">{t('operations.barcode')}:</span> {adjustment.product.barcode}
-                  </div>
-                  <div>
-                    <span className="font-medium">{t('operations.category')}:</span> {adjustment.product.category}
-                  </div>
+                  {activity.product.imagePath && (
+                    <div>
+                      <span className="font-medium">{t('operations.image')}:</span> {activity.product.imagePath}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -172,20 +171,22 @@ export function AdjustmentDetailsScreen() {
             <div className="space-y-3">
               <h3 className="text-sm font-semibold text-foreground">{t('operations.metadata')}</h3>
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs text-muted-foreground">{t('operations.createdBy')}</p>
-                  <span className="text-sm font-medium">{adjustment.createdBy.name}</span>
-                </div>
+                {activity.staff && (
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">{t('operations.createdBy')}</p>
+                    <span className="text-sm font-medium">{activity.staff.name}</span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between">
                   <p className="text-xs text-muted-foreground">{t('operations.createdAt')}</p>
                   <span className="text-sm font-medium">
-                    {format(adjustment.createdAt, 'MMM d, yyyy, h:mm a')}
+                    {format(new Date(activity.createdAt), 'MMM d, yyyy, h:mm a')}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <p className="text-xs text-muted-foreground">{t('operations.source')}</p>
                   <span className="text-sm font-medium">
-                    {adjustment.source === 'MOBILE_SCANNING' ? t('operations.mobileApp') : t('operations.adminPanel')}
+                    {activity.source === 'MOBILE_SCANNING' ? t('operations.mobileApp') : t('operations.adminPanel')}
                   </span>
                 </div>
               </div>

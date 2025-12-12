@@ -389,6 +389,7 @@ export function CountingScreen() {
             </div>
           </CardContent>
         </Card>
+        ) : null}
 
         {/* Counted Items */}
         <Card className="border border-border bg-white shadow-none">
