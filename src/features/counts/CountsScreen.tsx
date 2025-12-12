@@ -396,7 +396,8 @@ export function CountsScreen() {
                           </TableCell>
                         </TableRow>
                       );
-                    })}
+                    })
+                  )}
                 </TableBody>
               </Table>
             </div>
