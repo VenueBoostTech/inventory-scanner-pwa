@@ -194,6 +194,8 @@
     "searchPlaceholder": "Kërkoni me kod, SKU ose emër produkti",
     "recentScans": "Skanimet e fundit",
     "latestLookups": "Kërkimet dhe rezultatet e fundit.",
+    "allScans": "Të Gjitha Skanimet",
+    "allScansSubtitle": "Shikoni të gjithë historikun dhe rezultatet e skanimeve.",
     "noScans": "Nuk ka skanime ende. Filloni skanimin ose shtoni një kod manualisht.",
     "product": "Produkti",
     "barcode": "Barcode",

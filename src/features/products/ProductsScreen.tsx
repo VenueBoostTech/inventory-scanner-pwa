@@ -152,6 +152,8 @@ export function ProductsScreen() {
         src={imagePath}
         alt={title}
         className="h-full w-full object-cover"
+        loading="lazy"
+        decoding="async"
         onError={() => setHasError(true)}
       />
     );

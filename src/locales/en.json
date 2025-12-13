@@ -194,6 +194,8 @@
     "searchPlaceholder": "Search by barcode, SKU, or product name",
     "recentScans": "Recent scans",
     "latestLookups": "Latest lookups and results.",
+    "allScans": "All Scans",
+    "allScansSubtitle": "View all scan history and results.",
     "noScans": "No scans yet. Start scanning or add a barcode manually.",
     "product": "Product",
     "barcode": "Barcode",
