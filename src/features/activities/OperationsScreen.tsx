@@ -80,25 +80,25 @@ export function OperationsScreen() {
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-muted-foreground">{t('operations.pending')}</span>
+                      <span className="text-sm text-muted-foreground">{t('operations.pending')}</span>
                       <span className="text-sm font-semibold text-foreground">
                         {overview?.summary.transfers.pending || 0}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-muted-foreground">{t('operations.inTransit')}</span>
+                      <span className="text-sm text-muted-foreground">{t('operations.inTransit')}</span>
                       <span className="text-sm font-semibold text-foreground">
                         {overview?.summary.transfers.inTransit || 0}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-muted-foreground">{t('operations.today')}</span>
+                      <span className="text-sm text-muted-foreground">{t('operations.today')}</span>
                       <span className="text-sm font-semibold text-foreground">
                         {overview?.summary.transfers.today || 0}
                       </span>
                     </div>
                     <div className="flex items-center justify-between pt-1 border-t border-border">
-                      <span className="text-[10px] font-medium text-muted-foreground">{t('operations.total')}</span>
+                      <span className="text-sm font-medium text-muted-foreground">{t('operations.total')}</span>
                       <span className="text-base font-bold text-[#164945]">
                         {overview?.summary.transfers.total || 0}
                       </span>
@@ -118,19 +118,19 @@ export function OperationsScreen() {
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-muted-foreground">{t('operations.active')}</span>
+                      <span className="text-sm text-muted-foreground">{t('operations.active')}</span>
                       <span className="text-sm font-semibold text-foreground">
                         {overview?.summary.stockCounts.active || 0}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-muted-foreground">{t('operations.today')}</span>
+                      <span className="text-sm text-muted-foreground">{t('operations.today')}</span>
                       <span className="text-sm font-semibold text-foreground">
                         {overview?.summary.stockCounts.today || 0}
                       </span>
                     </div>
                     <div className="flex items-center justify-between pt-1 border-t border-border">
-                      <span className="text-[10px] font-medium text-muted-foreground">{t('operations.total')}</span>
+                      <span className="text-sm font-medium text-muted-foreground">{t('operations.total')}</span>
                       <span className="text-base font-bold text-[#164945]">
                         {overview?.summary.stockCounts.total || 0}
                       </span>
@@ -150,19 +150,19 @@ export function OperationsScreen() {
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-muted-foreground">{t('operations.today')}</span>
+                      <span className="text-sm text-muted-foreground">{t('operations.today')}</span>
                       <span className="text-sm font-semibold text-foreground">
                         {overview?.summary.adjustments.today || 0}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-muted-foreground">{t('operations.thisWeek')}</span>
+                      <span className="text-sm text-muted-foreground">{t('operations.thisWeek')}</span>
                       <span className="text-sm font-semibold text-foreground">
                         {overview?.summary.adjustments.thisWeek || 0}
                       </span>
                     </div>
                     <div className="flex items-center justify-between pt-1 border-t border-border">
-                      <span className="text-[10px] font-medium text-muted-foreground">{t('operations.total')}</span>
+                      <span className="text-sm font-medium text-muted-foreground">{t('operations.total')}</span>
                       <span className="text-base font-bold text-[#164945]">
                         {overview?.summary.adjustments.total || 0}
                       </span>
@@ -182,19 +182,19 @@ export function OperationsScreen() {
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-muted-foreground">{t('operations.today')}</span>
+                      <span className="text-sm text-muted-foreground">{t('operations.today')}</span>
                       <span className="text-sm font-semibold text-foreground">
                         {overview?.summary.activities.today || 0}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-muted-foreground">{t('operations.thisWeek')}</span>
+                      <span className="text-sm text-muted-foreground">{t('operations.thisWeek')}</span>
                       <span className="text-sm font-semibold text-foreground">
                         {overview?.summary.activities.thisWeek || 0}
                       </span>
                     </div>
                     <div className="flex items-center justify-between pt-1 border-t border-border">
-                      <span className="text-[10px] font-medium text-muted-foreground">{t('operations.total')}</span>
+                      <span className="text-sm font-medium text-muted-foreground">{t('operations.total')}</span>
                       <span className="text-base font-bold text-[#164945]">
                         {overview?.summary.activities.total || 0}
                       </span>

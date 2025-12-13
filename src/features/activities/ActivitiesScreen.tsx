@@ -169,7 +169,8 @@ export function ActivitiesScreen() {
   }, [activities]);
 
   const getActivityIcon = (type: string) => {
-    switch (type) {
+    // Handle uppercase filter values
+    switch (type.toUpperCase()) {
       case 'ADJUSTMENT':
         return Package;
       case 'TRANSFER':
@@ -182,13 +183,32 @@ export function ActivitiesScreen() {
         return RotateCcw;
       case 'SCAN':
         return Scan;
+    }
+    
+    // Handle lowercase API values with underscores
+    switch (type.toLowerCase()) {
+      case 'adjustment':
+        return Package;
+      case 'transfer':
+        return Truck;
+      case 'count':
+        return ClipboardList;
+      case 'order_created':
+      case 'order_cancelled':
+      case 'order_returned':
+      case 'order_refunded':
+        return ShoppingCart;
+      case 'initial_stock':
+      case 'sync':
+        return Package;
       default:
         return Package;
     }
   };
 
   const getActivityTypeLabel = (type: string) => {
-    switch (type) {
+    // Handle uppercase filter values
+    switch (type.toUpperCase()) {
       case 'ADJUSTMENT':
         return t('operations.adjustment');
       case 'TRANSFER':
@@ -201,6 +221,28 @@ export function ActivitiesScreen() {
         return t('operations.return');
       case 'SCAN':
         return t('operations.scan');
+    }
+    
+    // Handle lowercase API values with underscores
+    switch (type.toLowerCase()) {
+      case 'adjustment':
+        return t('operations.adjustment');
+      case 'transfer':
+        return t('operations.transfer');
+      case 'count':
+        return t('operations.count');
+      case 'order_created':
+        return t('operations.orderCreated');
+      case 'order_cancelled':
+        return t('operations.orderCancelled');
+      case 'order_returned':
+        return t('operations.orderReturned');
+      case 'order_refunded':
+        return t('operations.orderRefunded');
+      case 'initial_stock':
+        return t('operations.initialStock');
+      case 'sync':
+        return t('operations.sync');
       default:
         return type;
     }
@@ -530,12 +572,12 @@ export function ActivitiesScreen() {
                   )}
                 </Button>
               </SheetTrigger>
-            <SheetContent side="left" className="w-[300px] sm:w-[400px]">
-              <SheetHeader className="text-left space-y-1">
+            <SheetContent side="left" className="w-[300px] sm:w-[400px] flex flex-col">
+              <SheetHeader className="text-left space-y-1 shrink-0">
                 <SheetTitle className="text-left">{t('common.filter')}</SheetTitle>
                 <SheetDescription className="text-left">{t('operations.filterActivities')}</SheetDescription>
               </SheetHeader>
-              <div className="mt-4 space-y-4">
+              <div className="mt-4 space-y-4 flex-1 overflow-y-auto scrollbar-hide pr-2">
                 {/* Type Filter */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-left">{t('operations.activityType')}</label>
@@ -661,7 +703,7 @@ export function ActivitiesScreen() {
                   </div>
                 </div>
               </div>
-              <SheetFooter className="mt-4 gap-2">
+              <SheetFooter className="mt-4 gap-2 shrink-0 border-t border-border pt-4">
                 <Button variant="outline" onClick={clearFilters} className="w-full">
                   {t('products.clearFilters')}
                 </Button>
