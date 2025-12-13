@@ -54,7 +54,7 @@ export function useScanner() {
       try {
         cameras = await Html5Qrcode.getCameras();
       } catch (camError) {
-        console.warn('Could not enumerate cameras, using facingMode:', camError);
+        // Fallback to facingMode if camera enumeration fails
       }
 
       let cameraId: string | undefined;
@@ -140,14 +140,13 @@ export function useScanner() {
               
               await scanner.applyVideoConstraints(constraints);
             } catch (constraintError) {
-              console.warn('Failed to apply video constraints:', constraintError);
+              // Failed to apply video constraints, continue without them
             }
           }, 2000);
         }
       } catch (startError) {
         // If environment camera fails, try user camera (front) as fallback
         if (!cameraId && videoConstraints.facingMode === 'environment') {
-          console.warn('Back camera failed, trying front camera...');
           try {
             await scanner.start(
               { facingMode: 'user' },
@@ -158,8 +157,8 @@ export function useScanner() {
                 disableFlip: false,
               },
               onSuccess,
-              (errorMessage) => {
-                console.debug('Scanning error:', errorMessage);
+              () => {
+                // Ignore scanning errors
               },
             );
           } catch (fallbackError) {
@@ -177,8 +176,6 @@ export function useScanner() {
       let errorMessage = 'Camera failed to start. Check permissions and try again.';
       
       if (err instanceof Error) {
-        console.error('Scanner start error:', err);
-        
         // Provide more specific error messages
         if (err.name === 'NotAllowedError' || err.message.includes('permission')) {
           errorMessage = 'Camera permission denied. Please allow camera access in your browser settings.';
@@ -191,8 +188,6 @@ export function useScanner() {
         } else {
           errorMessage = `Camera error: ${err.message}`;
         }
-      } else {
-        console.error('Scanner start error:', err);
       }
       
       setError(errorMessage);
@@ -208,7 +203,7 @@ export function useScanner() {
         await scannerRef.current.clear();
       }
     } catch (err) {
-      console.error('Scanner stop error:', err);
+      // Ignore stop errors
     } finally {
       scannerRef.current = null;
       setIsScanning(false);

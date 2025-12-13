@@ -179,6 +179,8 @@
     "holdSteady": "Mbaj qetë mbi një kod për të identifikuar produktin dhe për të marrë informacionin e stokut.",
     "startScanning": "Fillo skanimin",
     "scannerPlaceholder": "Parapamja e kamerës do të shfaqet këtu",
+    "scanningInProgress": "Skanimi në progres...",
+    "scanningTip": "Nëse nuk funksionon, provoni të fokusoni kamerën brenda zonës së kodit të shiritit më afër dhe sigurohuni që të mos shfaqen elementë të tjerë.",
     "stop": "Ndalo",
     "lastScan": "Skanimi i fundit:",
     "noScansYet": "Nuk ka skanime ende",
