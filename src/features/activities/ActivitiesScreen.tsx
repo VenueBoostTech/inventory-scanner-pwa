@@ -864,6 +864,8 @@ export function ActivitiesScreen() {
                                       src={activity.product.imagePath}
                                       alt={activity.product.title}
                                       className="h-10 w-10 rounded object-cover shrink-0"
+                                      loading="lazy"
+                                      decoding="async"
                                       onError={(e) => {
                                         e.currentTarget.style.display = 'none';
                                         const fallback = e.currentTarget.nextElementSibling as HTMLElement;
@@ -1154,6 +1156,8 @@ export function ActivitiesScreen() {
                               src={currentDisplayActivity.product.imagePath}
                               alt={currentDisplayActivity.product.title}
                               className="h-16 w-16 rounded object-cover shrink-0"
+                              loading="lazy"
+                              decoding="async"
                               onError={(e) => {
                                 e.currentTarget.style.display = 'none';
                                 const fallback = e.currentTarget.nextElementSibling as HTMLElement;
