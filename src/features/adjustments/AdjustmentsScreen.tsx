@@ -114,7 +114,8 @@ export function AdjustmentsScreen() {
   // Get warehouses and products for filters
   const { data: warehousesData } = useWarehouses({ limit: 100 });
   const warehouses = warehousesData?.data || [];
-  const { data: products = [] } = useProducts({ limit: 1000 });
+  const { data: productsResponse } = useProducts({ limit: 1000 });
+  const products = productsResponse?.data || [];
   const { mutateAsync: adjustStock } = useStockAdjustment();
   
   // Fetch warehouses where product has stock when warehouse tracking is enabled

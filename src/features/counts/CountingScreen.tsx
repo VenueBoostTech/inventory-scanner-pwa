@@ -52,13 +52,13 @@ export function CountingScreen() {
 
   // API hooks
   const { data: count, isLoading: countLoading } = useStockCount(id || '');
-  const { data: productsData } = useProducts({ 
+  const { data: productsResponse } = useProducts({ 
     limit: 1000,
   });
   const { mutateAsync: updateStockCount } = useUpdateStockCount();
   const { mutateAsync: completeStockCount, isPending: isCompleting } = useCompleteStockCount();
 
-  const products = (Array.isArray(productsData) ? productsData : []) as any[];
+  const products = productsResponse?.data || [];
   const countedItems = count?.items || [];
   const countedProductIds = new Set(countedItems.map((item: any) => item.productId));
   const uncountedProducts = products.filter((p: any) => !countedProductIds.has(p.id));

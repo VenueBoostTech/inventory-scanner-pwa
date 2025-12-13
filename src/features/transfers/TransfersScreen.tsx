@@ -59,7 +59,8 @@ export function TransfersScreen() {
   });
   const { data: warehousesData } = useWarehouses({ limit: 100 });
   const warehouses = warehousesData?.data || [];
-  const { data: products = [] } = useProducts({ limit: 100 });
+  const { data: productsResponse } = useProducts({ limit: 100 });
+  const products = productsResponse?.data || [];
   const { mutateAsync: createTransfer } = useCreateTransfer();
   const { mutateAsync: completeTransfer } = useCompleteTransfer();
   const { mutateAsync: cancelTransfer } = useCancelTransfer();
