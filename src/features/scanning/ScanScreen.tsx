@@ -34,7 +34,7 @@ export function ScanScreen() {
     time: Date;
   } | null>(null);
   const { toast } = useToast();
-  const { mutateAsync, isPending } = useScanBarcode();
+  const { mutateAsync } = useScanBarcode();
   const { isScanning, error, startScanning, stopScanning } = useScanner();
 
   // API hooks

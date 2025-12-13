@@ -19,7 +19,6 @@ import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { useStockAdjustment } from '@/hooks/api/useStockAdjustment';
 import { useProductWarehouses } from '@/hooks/api/useProductWarehouses';
-import { authStore } from '@/stores/authStore';
 import { TrendingUp, TrendingDown, Minus, Loader2, AlertCircle, Package } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
