@@ -210,9 +210,9 @@ export function ProductsScreen() {
         </div>
 
         {/* Quick Filter Tabs */}
-        <Tabs value={quickFilter} onValueChange={(v) => setQuickFilter(v as QuickFilter)}>
-          <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
-            <TabsList className="inline-flex w-auto min-w-full sm:min-w-0">
+        <div className="overflow-x-auto scrollbar-hide w-full">
+          <Tabs value={quickFilter} onValueChange={(v) => setQuickFilter(v as QuickFilter)}>
+            <TabsList className="inline-flex w-auto min-w-full sm:w-full sm:min-w-0">
               <TabsTrigger value="all" className="text-sm whitespace-nowrap shrink-0">
                 {t('products.all')} ({counts.all})
               </TabsTrigger>
@@ -226,8 +226,8 @@ export function ProductsScreen() {
                 {t('products.noBarcode')} ({counts.no_barcode})
               </TabsTrigger>
             </TabsList>
-          </div>
-        </Tabs>
+          </Tabs>
+        </div>
 
         {/* Filters and Sort Bar */}
         <div className="flex items-center justify-between gap-2">
