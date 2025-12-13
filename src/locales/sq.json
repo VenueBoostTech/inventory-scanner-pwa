@@ -24,7 +24,9 @@
     "copiedToClipboard": "u kopjua në clipboard",
     "edit": "Redakto",
     "showMore": "Shfaq Më Shumë",
-    "showLess": "Shfaq Më Pak"
+    "showLess": "Shfaq Më Pak",
+    "active": "Aktiv",
+    "inactive": "Jo Aktiv"
   },
   "auth": {
     "login": {
@@ -639,6 +641,19 @@
     "activitiesInfoDesc": "Mësoni ndryshimin midis aktiviteteve mobile dhe regjistrave të skanimit.",
     "activitiesGuide": "Udhëzues për Aktivitetet dhe Skanimet",
     "activitiesGuideDesc": "Kuptimi i aktiviteteve mobile dhe kur skanimet krijojnë aktivitete inventari",
+    "warehousesInfoTitle": "Statistikat e Depove vs Lista e Produkteve",
+    "warehousesInfoDesc": "Kuptimi pse statistikat e depove ndryshojnë nga katalogu i produkteve.",
+    "warehousesGuide": "Udhëzuesi i Statistikave të Depove",
+    "warehousesGuideDesc": "Mësoni pse statistikat e depove tregojnë numra të ndryshëm nga lista e produkteve",
+    "warehousesDifference": "Ndryshimi",
+    "productList": "Lista e Produkteve",
+    "productListDesc": "Tregon TË GJITHA produktet në sistem, pavarësisht nga lokacioni i depove.",
+    "warehouseStats": "Statistikat e Depove",
+    "warehouseStatsDesc": "Tregon vetëm produktet që kanë stok në atë depo specifike.",
+    "whyNumbersDiffer": "Pse Numrat Ndryshojnë",
+    "whyNumbersDifferDesc": "Statistikat e depove numërojnë vetëm produktet me stok në atë lokacion. Produktet pa stok nuk do të shfaqen këtu por janë ende në katalog.",
+    "whenProductsAppear": "Kur Shfaqen Produktet",
+    "whenProductsAppearDesc": "Produktet shfaqen në statistikat e depove kur stoku është shtuar në atë depo përmes rregullimit, transferimit ose stokut fillestar.",
     "whatAreMobileActivities": "Çfarë janë Aktivitetet Mobile?",
     "mobileActivitiesDesc1": "Aktivitetet Mobile janë aktivitete inventari ku burimi është 'mobile_scanning'.",
     "mobileActivitiesDesc2": "Këto përfshijnë: Rregullimet e stokut, numërimet dhe transfertat e përfunduara përmes aplikacionit mobil.",
