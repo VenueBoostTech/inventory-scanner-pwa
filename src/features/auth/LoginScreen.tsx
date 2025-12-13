@@ -143,7 +143,7 @@ export function LoginScreen() {
       // Show success message
       toast({
         title: t('auth.login.success'),
-        description: response.data.message || t('auth.login.successDesc'),
+        description: t('auth.login.successDesc'),
       });
 
       // Navigate to dashboard
