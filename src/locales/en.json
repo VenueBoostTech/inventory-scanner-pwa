@@ -24,7 +24,9 @@
     "copiedToClipboard": "copied to clipboard",
     "edit": "Edit",
     "showMore": "Show More",
-    "showLess": "Show Less"
+    "showLess": "Show Less",
+    "active": "Active",
+    "inactive": "Inactive"
   },
   "auth": {
     "login": {
@@ -640,6 +642,19 @@
     "activitiesInfoDesc": "Learn the difference between mobile activities and scan logs.",
     "activitiesGuide": "Activities & Scans Guide",
     "activitiesGuideDesc": "Understanding mobile activities and when scans create inventory activities",
+    "warehousesInfoTitle": "Warehouse Stats vs Product List",
+    "warehousesInfoDesc": "Understanding why warehouse stats differ from the product catalog.",
+    "warehousesGuide": "Warehouse Stats Guide",
+    "warehousesGuideDesc": "Learn why warehouse stats show different numbers than the product list",
+    "warehousesDifference": "The Difference",
+    "productList": "Product List",
+    "productListDesc": "Shows ALL products in the system, regardless of warehouse location.",
+    "warehouseStats": "Warehouse Stats",
+    "warehouseStatsDesc": "Shows only products that have stock in that specific warehouse.",
+    "whyNumbersDiffer": "Why the Numbers Differ",
+    "whyNumbersDifferDesc": "Warehouse stats only count products with stock in that location. Products without stock won't appear here but are still in the catalog.",
+    "whenProductsAppear": "When Products Appear",
+    "whenProductsAppearDesc": "Products appear in warehouse stats when stock has been added to that warehouse via adjustment, transfer, or initial stock.",
     "whatAreMobileActivities": "What are Mobile Activities?",
     "mobileActivitiesDesc1": "Mobile Activities are inventory activities where source is 'mobile_scanning'.",
     "mobileActivitiesDesc2": "These include: Stock adjustments, counts, and transfers completed via the mobile app.",
