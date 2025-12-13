@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -31,6 +31,13 @@ export function ProfileScreen() {
   const [phone] = useState(profile?.phone || '—');
   const [isEditing, setIsEditing] = useState(false);
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
+
+  // Update local state when profile changes
+  useEffect(() => {
+    if (profile?.name) {
+      setName(profile.name);
+    }
+  }, [profile?.name]);
 
   const { mutateAsync: updateProfile, isPending: isUpdatingProfile } = useUpdateProfile();
   const { mutateAsync: logoutApi } = useLogout();

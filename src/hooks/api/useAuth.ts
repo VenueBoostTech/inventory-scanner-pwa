@@ -66,21 +66,37 @@ export function useUpdateProfile() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (updates: UpdateProfileRequest) => {
-      const { data } = await apiClient.put<{ message: string; profile: Profile }>(
+      const { data } = await apiClient.put<{ message?: string; profile?: Profile } | Profile>(
         '/auth/profile',
         updates
       );
       return data;
     },
     onSuccess: (data, variables) => {
-      // Update auth store
-      authStore.getState().setProfile(data.profile);
-      // Sync language if changed (API returns language in preferences)
-      const language = data.profile.preferences?.language || variables.language;
-      if (language) {
-        localStorage.setItem('app-language', language);
+      try {
+        // Handle both response formats: { profile: Profile } or Profile directly
+        const profile = (data as any)?.profile || (data as Profile);
+        
+        if (profile && typeof profile === 'object' && 'id' in profile) {
+          // Update auth store
+          authStore.getState().setProfile(profile as Profile);
+          // Sync language if changed (API returns language in preferences)
+          const language = (profile as Profile).preferences?.language || variables.language;
+          if (language) {
+            // Convert 'al' to 'sq' for frontend
+            const frontendLanguage = language === 'al' ? 'sq' : language;
+            localStorage.setItem('app-language', frontendLanguage);
+          }
+        } else {
+          // If profile structure is missing, refetch it
+          void queryClient.invalidateQueries({ queryKey: ['profile'] });
+        }
+        void queryClient.invalidateQueries({ queryKey: ['profile'] });
+      } catch (error) {
+        // If update fails, still invalidate to refetch
+        console.error('Error updating profile in store:', error);
+        void queryClient.invalidateQueries({ queryKey: ['profile'] });
       }
-      void queryClient.invalidateQueries({ queryKey: ['profile'] });
     },
   });
 }
