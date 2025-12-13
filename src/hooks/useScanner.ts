@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeSupportedFormats, Html5QrcodeScanType } from 'html5-qrcode';
 
 export function useScanner() {
   const [isScanning, setIsScanning] = useState(false);
@@ -29,12 +29,25 @@ export function useScanner() {
       scannerRef.current = scanner;
 
       const rect = target.getBoundingClientRect();
-      const desiredWidth = Math.floor(rect.width * 0.7);
-      const desiredHeight = Math.floor(rect.height * 0.7);
-      const qrbox = {
-        width: Math.max(140, desiredWidth),
-        height: Math.max(100, Math.min(desiredHeight, rect.height - 16)),
-      };
+      // For mobile, use larger scanning area and better aspect ratio
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      
+      let qrbox;
+      if (isMobile) {
+        // On mobile, use almost full width/height for better detection
+        qrbox = {
+          width: Math.floor(rect.width * 0.9),
+          height: Math.floor(rect.height * 0.9),
+        };
+      } else {
+        // Desktop: use smaller focused area
+        const desiredWidth = Math.floor(rect.width * 0.7);
+        const desiredHeight = Math.floor(rect.height * 0.7);
+        qrbox = {
+          width: Math.max(140, desiredWidth),
+          height: Math.max(100, Math.min(desiredHeight, rect.height - 16)),
+        };
+      }
 
       // Try to get available cameras first for better mobile support
       let cameras: Array<{ id: string; label: string }> = [];
@@ -69,15 +82,43 @@ export function useScanner() {
       try {
         alert('[DEBUG] Starting scanner...');
         console.log('[DEBUG] Starting scanner with constraints:', videoConstraints);
+        console.log('[DEBUG] Is mobile:', /iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
+        console.log('[DEBUG] QRBox size:', qrbox);
+        
+        // Mobile-specific configuration for better barcode detection
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        const config = isMobile 
+          ? {
+              fps: 5, // Lower fps for mobile to reduce processing load
+              qrbox,
+              aspectRatio: 1.777778, // 16:9 for better mobile camera support
+              disableFlip: false,
+              supportedScanTypes: [
+                Html5QrcodeScanType.SCAN_TYPE_CAMERA
+              ],
+              formatsToSupport: [
+                Html5QrcodeSupportedFormats.EAN_13,
+                Html5QrcodeSupportedFormats.EAN_8,
+                Html5QrcodeSupportedFormats.UPC_A,
+                Html5QrcodeSupportedFormats.UPC_E,
+                Html5QrcodeSupportedFormats.CODE_128,
+                Html5QrcodeSupportedFormats.CODE_39,
+                Html5QrcodeSupportedFormats.CODE_93,
+                Html5QrcodeSupportedFormats.CODABAR,
+                Html5QrcodeSupportedFormats.ITF,
+                Html5QrcodeSupportedFormats.QR_CODE,
+              ],
+            }
+          : {
+              fps: 10,
+              qrbox,
+              aspectRatio: 1.0,
+              disableFlip: false,
+            };
         
         await scanner.start(
           videoConstraints,
-          { 
-            fps: 10, 
-            qrbox,
-            aspectRatio: 1.0, // Better for mobile
-            disableFlip: false, // Allow rotation
-          },
+          config,
           (decodedText) => {
             alert(`[DEBUG] Scanner detected code: ${decodedText}`);
             console.log('[DEBUG] Scanner callback fired with:', decodedText);
@@ -85,8 +126,10 @@ export function useScanner() {
           },
           (errorMessage) => {
             // Log scanning errors but don't stop scanning
-            console.debug('Scanning error:', errorMessage);
-            alert(`[DEBUG] Scanning error: ${errorMessage}`);
+            // Only show errors that aren't just "no code found" messages
+            if (!errorMessage.includes('No Multi Format Readers')) {
+              console.debug('Scanning error:', errorMessage);
+            }
           },
         );
         
