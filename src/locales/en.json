@@ -179,6 +179,8 @@
     "holdSteady": "Hold steady over a barcode to identify the product and pull stock info.",
     "startScanning": "Start scanning",
     "scannerPlaceholder": "Camera preview will appear here",
+    "scanningInProgress": "Scanning in progress...",
+    "scanningTip": "If it doesn't work, try focusing the camera within the barcode area closer and ensure no other elements are shown.",
     "stop": "Stop",
     "lastScan": "Last scan:",
     "noScansYet": "No scans yet",

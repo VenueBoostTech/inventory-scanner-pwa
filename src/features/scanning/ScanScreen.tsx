@@ -10,7 +10,7 @@ import { useScanBarcode } from '@/hooks/api/useProducts';
 import { useScanHistory } from '@/hooks/api/useScanHistory';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
-import { AlertCircle, CheckCircle2, Plus, XCircle, ArrowRight, Info, Lightbulb } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Plus, XCircle, ArrowRight, Info, Lightbulb, Loader2 } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -159,6 +159,21 @@ export function ScanScreen() {
             )}
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
+          {isScanning && (
+            <div className="mt-3 rounded-lg border border-[#164945]/20 bg-[#164945]/5 p-3">
+              <div className="flex items-start gap-3">
+                <Loader2 className="h-5 w-5 shrink-0 animate-spin text-[#164945] mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground mb-1">
+                    {t('scan.scanningInProgress')}
+                  </p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {t('scan.scanningTip')}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="flex justify-end text-xs text-[#043f3b]">
             <div className="text-right">
               <span className="font-semibold uppercase tracking-wide text-[11px] text-[#043f3b]/80">
