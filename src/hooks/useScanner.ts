@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Html5Qrcode, Html5QrcodeSupportedFormats, Html5QrcodeScanType } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 
 export function useScanner() {
   const [isScanning, setIsScanning] = useState(false);
@@ -80,61 +80,70 @@ export function useScanner() {
         : { facingMode: 'environment' };
 
       try {
-        alert('[DEBUG] Starting scanner...');
-        console.log('[DEBUG] Starting scanner with constraints:', videoConstraints);
-        console.log('[DEBUG] Is mobile:', /iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
-        console.log('[DEBUG] QRBox size:', qrbox);
-        
         // Mobile-specific configuration for better barcode detection
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        const config = isMobile 
-          ? {
-              fps: 5, // Lower fps for mobile to reduce processing load
-              qrbox,
-              aspectRatio: 1.777778, // 16:9 for better mobile camera support
-              disableFlip: false,
-              supportedScanTypes: [
-                Html5QrcodeScanType.SCAN_TYPE_CAMERA
-              ],
-              formatsToSupport: [
-                Html5QrcodeSupportedFormats.EAN_13,
-                Html5QrcodeSupportedFormats.EAN_8,
-                Html5QrcodeSupportedFormats.UPC_A,
-                Html5QrcodeSupportedFormats.UPC_E,
-                Html5QrcodeSupportedFormats.CODE_128,
-                Html5QrcodeSupportedFormats.CODE_39,
-                Html5QrcodeSupportedFormats.CODE_93,
-                Html5QrcodeSupportedFormats.CODABAR,
-                Html5QrcodeSupportedFormats.ITF,
-                Html5QrcodeSupportedFormats.QR_CODE,
-              ],
-            }
-          : {
-              fps: 10,
-              qrbox,
-              aspectRatio: 1.0,
-              disableFlip: false,
-            };
+        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        
+        // For iOS, use full screen scanning with very low fps
+        let config;
+        if (isIOS) {
+          config = {
+            fps: 2,
+            qrbox: {
+              width: Math.floor(rect.width),
+              height: Math.floor(rect.height),
+            },
+            aspectRatio: 1.777778,
+            disableFlip: false,
+          };
+        } else if (isMobile) {
+          config = {
+            fps: 5,
+            qrbox,
+            aspectRatio: 1.777778,
+            disableFlip: false,
+          };
+        } else {
+          config = {
+            fps: 10,
+            qrbox,
+            aspectRatio: 1.0,
+            disableFlip: false,
+          };
+        }
         
         await scanner.start(
           videoConstraints,
           config,
-          (decodedText) => {
-            alert(`[DEBUG] Scanner detected code: ${decodedText}`);
-            console.log('[DEBUG] Scanner callback fired with:', decodedText);
-            onSuccess(decodedText);
-          },
-          (errorMessage) => {
-            // Log scanning errors but don't stop scanning
-            // Only show errors that aren't just "no code found" messages
-            if (!errorMessage.includes('No Multi Format Readers')) {
-              console.debug('Scanning error:', errorMessage);
-            }
+          onSuccess,
+          () => {
+            // Ignore scanning errors - they're just "no code found" messages
           },
         );
-        
-        alert('[DEBUG] Scanner started successfully!');
-        console.log('[DEBUG] Scanner started successfully');
+
+        // For iOS, apply focus mode and zoom after camera starts (critical for barcode detection)
+        if (isIOS) {
+          setTimeout(async () => {
+            try {
+              const capabilities = scanner.getRunningTrackCapabilities() as any;
+              const zoomCapability = capabilities?.zoom?.max && capabilities.zoom.max > 2 ? 2.0 : (capabilities?.zoom?.max || 1);
+              
+              const constraints: any = {
+                focusMode: 'continuous',
+                width: { ideal: 1920 },
+                height: { ideal: 1080 },
+              };
+              
+              if (capabilities?.zoom) {
+                constraints.advanced = [{ zoom: zoomCapability }];
+              }
+              
+              await scanner.applyVideoConstraints(constraints);
+            } catch (constraintError) {
+              console.warn('Failed to apply video constraints:', constraintError);
+            }
+          }, 2000);
+        }
       } catch (startError) {
         // If environment camera fails, try user camera (front) as fallback
         if (!cameraId && videoConstraints.facingMode === 'environment') {
