@@ -129,6 +129,7 @@ export function useActivities(params?: {
   page?: number;
   limit?: number;
   productId?: string;
+  warehouseId?: string;
   activityType?: string;
   dateFrom?: string;
   dateTo?: string;
@@ -145,6 +146,8 @@ export function useActivities(params?: {
 export function useMyActivities(params?: {
   page?: number;
   limit?: number;
+  productId?: string;
+  warehouseId?: string;
   activityType?: string;
   dateFrom?: string;
   dateTo?: string;

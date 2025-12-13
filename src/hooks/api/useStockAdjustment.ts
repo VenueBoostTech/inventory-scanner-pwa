@@ -8,7 +8,8 @@ export interface StockAdjustmentRequest {
   quantity: number;
   reason: string;
   notes?: string;
-  warehouseId?: string;
+  warehouseId?: string; // Single warehouse (backward compatible)
+  warehouseIds?: string[]; // Multiple warehouses
 }
 
 export interface StockAdjustmentResponse {

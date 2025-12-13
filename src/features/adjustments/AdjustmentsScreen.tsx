@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
@@ -35,27 +35,70 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
-import { useMyAdjustments } from '@/hooks/api/useActivities';
+import { useActivities, useMyActivities } from '@/hooks/api/useActivities';
 import { useProducts } from '@/hooks/api/useProducts';
 import { useWarehouses } from '@/hooks/api/useWarehouses';
+import { useProductWarehouses } from '@/hooks/api/useProductWarehouses';
 import { useStockAdjustment } from '@/hooks/api/useStockAdjustment';
-import { Package, Plus, Search, Filter, TrendingUp, TrendingDown, Minus, Eye, AlertTriangle, Coffee } from 'lucide-react';
+import { Package, Plus, Search as SearchIcon, Filter, TrendingUp, TrendingDown, Minus, Eye, AlertTriangle, Coffee, Loader2, AlertCircle, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { authStore } from '@/stores/authStore';
+import { Skeleton } from '@/components/ui/skeleton';
 
-type SortOption = 'recent' | 'type' | 'warehouse';
+const getDateRange = (filter: string) => {
+  const now = new Date();
+  let dateFrom: string | undefined;
+  let dateTo: string | undefined;
+
+  switch (filter) {
+    case 'today':
+      const todayStart = new Date(now);
+      todayStart.setHours(0, 0, 0, 0);
+      dateFrom = todayStart.toISOString();
+      dateTo = now.toISOString();
+      break;
+    case 'yesterday':
+      const yesterday = new Date(now);
+      yesterday.setDate(now.getDate() - 1);
+      yesterday.setHours(0, 0, 0, 0);
+      dateFrom = yesterday.toISOString();
+      const yesterdayEnd = new Date(yesterday);
+      yesterdayEnd.setHours(23, 59, 59, 999);
+      dateTo = yesterdayEnd.toISOString();
+      break;
+    case 'last7':
+      const last7 = new Date(now);
+      last7.setDate(now.getDate() - 7);
+      dateFrom = last7.toISOString();
+      dateTo = now.toISOString();
+      break;
+    case 'last30':
+      const last30 = new Date(now);
+      last30.setDate(now.getDate() - 30);
+      dateFrom = last30.toISOString();
+      dateTo = now.toISOString();
+      break;
+    default:
+      dateFrom = undefined;
+      dateTo = undefined;
+  }
+  return { dateFrom, dateTo };
+};
 
 export function AdjustmentsScreen() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const { toast } = useToast();
   const canAdjustStock = authStore((state) => state.canAdjustStock());
-  const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [showMineOnly, setShowMineOnly] = useState(false);
+  const [productFilter, setProductFilter] = useState<string>('all');
+  const [productFilterSearch, setProductFilterSearch] = useState('');
   const [warehouseFilter, setWarehouseFilter] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<SortOption>('recent');
+  const [dateRangeFilter, setDateRangeFilter] = useState<string>('all');
   
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -63,84 +106,94 @@ export function AdjustmentsScreen() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [adjustmentType, setAdjustmentType] = useState<'increase' | 'decrease' | 'set'>('increase');
   const [quantity, setQuantity] = useState('');
-  const [warehouse, setWarehouse] = useState('');
+  const [enableWarehouse, setEnableWarehouse] = useState(true);
+  const [selectedWarehouses, setSelectedWarehouses] = useState<string[]>([]);
   const [reason, setReason] = useState('');
   const [notes, setNotes] = useState('');
-  const [reference, setReference] = useState('');
 
-  // API hooks
-  const { data: adjustmentsData } = useMyAdjustments({
-    limit: 100,
-  });
-  const { data: products = [] } = useProducts({ limit: 1000 });
+  // Get warehouses and products for filters
   const { data: warehousesData } = useWarehouses({ limit: 100 });
   const warehouses = warehousesData?.data || [];
+  const { data: products = [] } = useProducts({ limit: 1000 });
   const { mutateAsync: adjustStock } = useStockAdjustment();
+  
+  // Fetch warehouses where product has stock when warehouse tracking is enabled
+  const { data: productWarehousesData, isLoading: loadingWarehouses } = useProductWarehouses(
+    enableWarehouse && selectedProduct ? selectedProduct.id : null
+  );
+  const availableWarehouses = productWarehousesData?.warehouses || [];
+
+  // Calculate date range for API
+  const { dateFrom, dateTo } = useMemo(() => getDateRange(dateRangeFilter), [dateRangeFilter]);
+
+  // Determine filters for API
+  const productId = useMemo(() => {
+    if (productFilter === 'all') return undefined;
+    const selectedProduct = products.find((p) => p.id === productFilter || p.title === productFilter);
+    return selectedProduct?.id;
+  }, [productFilter, products]);
+
+  const warehouseId = useMemo(() => {
+    if (warehouseFilter === 'all') return undefined;
+    const selectedWarehouse = warehouses.find((wh) => wh.id === warehouseFilter || wh.name === warehouseFilter);
+    return selectedWarehouse?.id;
+  }, [warehouseFilter, warehouses]);
+
+  // Use appropriate hook based on showMineOnly
+  const { data: adjustmentsData, isLoading } = showMineOnly
+    ? useMyActivities({
+        page: currentPage,
+        limit: 20,
+        activityType: 'adjustment',
+        productId,
+        warehouseId,
+        dateFrom,
+        dateTo,
+      })
+    : useActivities({
+        page: currentPage,
+        limit: 20,
+        activityType: 'adjustment',
+        productId,
+        warehouseId,
+        dateFrom,
+        dateTo,
+      });
 
   const adjustments = adjustmentsData?.data || [];
+  const pagination = adjustmentsData?.pagination || {
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 1,
+  };
 
-  const filteredAndSortedAdjustments = useMemo(() => {
-    let filtered = [...adjustments];
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [showMineOnly, productFilter, warehouseFilter, dateRangeFilter]);
 
-    // Apply search (client-side)
-    if (search) {
-      const searchLower = search.toLowerCase();
-      filtered = filtered.filter(
-        (adj) =>
-          adj.product.title.toLowerCase().includes(searchLower) ||
-          adj.product.sku.toLowerCase().includes(searchLower) ||
-          (adj.reference?.id && adj.reference.id.toLowerCase().includes(searchLower))
-      );
-    }
-
-    // Apply type filter (client-side, API may not support this filter)
-    if (typeFilter !== 'all') {
-      // Map adjustment types from API to filter values
-      // API returns quantity, we need to infer type from quantity
-      filtered = filtered.filter((adj) => {
-        if (typeFilter === 'increase' && adj.quantity > 0) return true;
-        if (typeFilter === 'decrease' && adj.quantity < 0) return true;
-        if (typeFilter === 'set') {
-          // Set type might need special handling - check if quantity matches stockAfter exactly
-          return adj.stockAfter === adj.quantity;
-        }
-        return false;
-      });
-    }
-
-    // Apply warehouse filter (client-side)
-    if (warehouseFilter !== 'all') {
-      filtered = filtered.filter(() => {
-        // Activities may not have warehouse directly, need to check reference or other fields
-        // For now, skip warehouse filtering if warehouse data not available
-        return true;
-      });
-    }
-
-    // Apply sorting
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'recent':
-          const aDate = a.createdAt?.date ? new Date(a.createdAt.date).getTime() : 0;
-          const bDate = b.createdAt?.date ? new Date(b.createdAt.date).getTime() : 0;
-          return bDate - aDate;
-        case 'type':
-          const aType = a.quantity > 0 ? 'increase' : a.quantity < 0 ? 'decrease' : 'set';
-          const bType = b.quantity > 0 ? 'increase' : b.quantity < 0 ? 'decrease' : 'set';
-          return aType.localeCompare(bType);
-        case 'warehouse':
-          // Skip warehouse sorting if not available
-          return 0;
-        default:
-          return 0;
+  // Populate product filter search when sidebar opens with a selected product
+  useEffect(() => {
+    if (filtersOpen && productFilter !== 'all' && !productFilterSearch) {
+      const selectedProduct = products.find((p) => p.id === productFilter);
+      if (selectedProduct) {
+        setProductFilterSearch(selectedProduct.title);
       }
-    });
+    }
+  }, [filtersOpen, productFilter, products, productFilterSearch]);
 
-    return filtered;
-  }, [search, typeFilter, warehouseFilter, sortBy]);
+  // Auto-pre-select warehouses when they're loaded
+  useEffect(() => {
+    if (enableWarehouse && availableWarehouses.length > 0 && selectedWarehouses.length === 0) {
+      const warehouseIds = availableWarehouses
+        .filter(wh => wh.currentStock >= 1)
+        .map(wh => wh.id);
+      setSelectedWarehouses(warehouseIds);
+    }
+  }, [enableWarehouse, availableWarehouses, selectedWarehouses.length, selectedProduct]);
 
   const getQuantityDisplay = (adjustment: any) => {
-    // Infer adjustment type from quantity and stock values
     const isSet = adjustment.stockAfter === adjustment.quantity && adjustment.stockBefore !== adjustment.quantity;
     if (isSet) {
       return `=${adjustment.quantity}`;
@@ -149,7 +202,6 @@ export function AdjustmentsScreen() {
   };
 
   const getQuantityColor = (adjustment: any) => {
-    // Infer adjustment type from quantity and stock values
     const isSet = adjustment.stockAfter === adjustment.quantity && adjustment.stockBefore !== adjustment.quantity;
     if (isSet) {
       return 'text-blue-600';
@@ -158,7 +210,6 @@ export function AdjustmentsScreen() {
   };
 
   const getAdjustmentType = (adjustment: any) => {
-    // Infer adjustment type from quantity and stock values
     const isSet = adjustment.stockAfter === adjustment.quantity && adjustment.stockBefore !== adjustment.quantity;
     if (isSet) return 'set';
     return adjustment.quantity > 0 ? 'increase' : 'decrease';
@@ -183,15 +234,14 @@ export function AdjustmentsScreen() {
 
   const handleCloseModal = () => {
     setModalOpen(false);
-    // Reset form
     setProductSearch('');
     setSelectedProduct(null);
     setAdjustmentType('increase');
     setQuantity('');
-    setWarehouse('');
+    setEnableWarehouse(false);
+    setSelectedWarehouses([]);
     setReason('');
     setNotes('');
-    setReference('');
   };
 
   const filteredProducts = useMemo(() => {
@@ -205,9 +255,29 @@ export function AdjustmentsScreen() {
     );
   }, [productSearch, products]);
 
+  const filteredProductsForFilter = useMemo(() => {
+    if (!productFilterSearch) return products.slice(0, 50); // Show first 50 when no search
+    const searchLower = productFilterSearch.toLowerCase();
+    return products.filter(
+      (p) =>
+        p.title.toLowerCase().includes(searchLower) ||
+        p.sku.toLowerCase().includes(searchLower) ||
+        (p.barcode && p.barcode.toLowerCase().includes(searchLower))
+    ).slice(0, 100); // Limit to 100 results
+  }, [productFilterSearch, products]);
+
   const handleProductSelect = (product: any) => {
     setSelectedProduct(product);
     setProductSearch(product.title);
+    setSelectedWarehouses([]);
+  };
+
+  const toggleWarehouse = (warehouseId: string) => {
+    setSelectedWarehouses(prev =>
+      prev.includes(warehouseId)
+        ? prev.filter(id => id !== warehouseId)
+        : [...prev, warehouseId]
+    );
   };
 
   const calculatePreview = () => {
@@ -215,17 +285,18 @@ export function AdjustmentsScreen() {
     const qty = parseFloat(quantity);
     if (isNaN(qty)) return null;
 
-    let stockAfter = selectedProduct.currentStock;
+    const currentStock = selectedProduct.stockQuantity || 0;
+    let stockAfter = currentStock;
     if (adjustmentType === 'increase') {
-      stockAfter = selectedProduct.currentStock + qty;
+      stockAfter = currentStock + qty;
     } else if (adjustmentType === 'decrease') {
-      stockAfter = Math.max(0, selectedProduct.currentStock - qty);
+      stockAfter = Math.max(0, currentStock - qty);
     } else if (adjustmentType === 'set') {
       stockAfter = qty;
     }
 
     return {
-      before: selectedProduct.currentStock,
+      before: currentStock,
       after: stockAfter,
       change: adjustmentType === 'set' ? `=${qty}` : adjustmentType === 'increase' ? `+${qty}` : `-${qty}`,
     };
@@ -234,7 +305,7 @@ export function AdjustmentsScreen() {
   const preview = calculatePreview();
 
   const handleSave = async () => {
-    if (!selectedProduct || !quantity || !reason || !warehouse) {
+    if (!selectedProduct || !quantity || !reason) {
       toast({
         title: t('common.error'),
         description: t('operations.fillRequiredFields'),
@@ -262,14 +333,19 @@ export function AdjustmentsScreen() {
         adjustmentQuantity = qty - currentStock;
       }
 
-      await adjustStock({
+      const payload: any = {
         productId: selectedProduct.id,
         adjustmentType: adjustmentType,
         quantity: adjustmentType === 'set' ? qty : Math.abs(adjustmentQuantity),
         reason,
         notes: notes || undefined,
-        warehouseId: warehouse,
-      });
+      };
+
+      if (enableWarehouse && selectedWarehouses.length > 0) {
+        payload.warehouseIds = selectedWarehouses;
+      }
+
+      await adjustStock(payload);
       toast({
         title: t('operations.adjustmentCreated'),
         description: t('operations.adjustmentCreatedDesc'),
@@ -278,7 +354,7 @@ export function AdjustmentsScreen() {
     } catch (error: any) {
       toast({
         title: t('common.error'),
-        description: error?.response?.data?.message || t('operations.adjustmentCreatedDesc'),
+        description: error?.response?.data?.message || t('operations.adjustmentError'),
         variant: 'destructive',
       });
     }
@@ -300,15 +376,51 @@ export function AdjustmentsScreen() {
   };
 
   const clearFilters = () => {
-    setTypeFilter('all');
+    setProductFilter('all');
+    setProductFilterSearch('');
     setWarehouseFilter('all');
+    setDateRangeFilter('all');
   };
+
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (productFilter !== 'all') count++;
+    if (warehouseFilter !== 'all') count++;
+    if (dateRangeFilter !== 'all') count++;
+    return count;
+  }, [productFilter, warehouseFilter, dateRangeFilter]);
+
+  const getActiveFilterLabel = (filterType: string, value: string) => {
+    if (value === 'all') return '';
+    switch (filterType) {
+      case 'product':
+        const product = products.find((p) => p.id === value || p.title === value);
+        return product?.title || value;
+      case 'warehouse':
+        const warehouse = warehouses.find((wh) => wh.id === value || wh.name === value);
+        return warehouse?.name || value;
+      case 'dateRange':
+        const labels: Record<string, string> = {
+          today: t('operations.today'),
+          yesterday: t('operations.yesterday'),
+          last7: t('operations.last7Days'),
+          last30: t('operations.last30Days'),
+        };
+        return labels[value] || value;
+      default:
+        return value;
+    }
+  };
+
+  // Calculate pagination display
+  const startItem = (pagination.page - 1) * pagination.limit + 1;
+  const endItem = Math.min(pagination.page * pagination.limit, pagination.total);
 
   return (
     <div className="min-h-screen bg-background pb-20">
       <ScreenHeader title={t('operations.stockAdjustments')} showBack />
       <div className="space-y-4 px-4 py-4">
-        {/* Title and Subtitle with Create Button */}
+        {/* Title and Create Button */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-semibold text-foreground">{t('operations.stockAdjustments')}</h1>
@@ -325,193 +437,389 @@ export function AdjustmentsScreen() {
           )}
         </div>
 
-        {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder={t('common.search')}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-
-        {/* Filters and Sort Bar */}
-        <div className="flex items-center justify-between gap-2">
-          <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
-                <Filter className="h-4 w-4" />
-                {t('common.filter')}
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-[300px] sm:w-[400px]">
-              <SheetHeader className="text-left space-y-1">
-                <SheetTitle className="text-left">{t('common.filter')}</SheetTitle>
-                <SheetDescription className="text-left">{t('operations.filterAdjustments')}</SheetDescription>
-              </SheetHeader>
-              <div className="mt-4 space-y-4">
-                {/* Type Filter */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-left">{t('operations.adjustmentType')}</label>
+        {/* Filters and Toggle */}
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Filter className="h-4 w-4" />
+                  {t('common.filter')}
+                  {activeFiltersCount > 0 && (
+                    <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1.5 text-xs">
+                      {activeFiltersCount}
+                    </Badge>
+                  )}
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[300px] sm:w-[400px] flex flex-col">
+                <SheetHeader className="shrink-0">
+                  <SheetTitle className="text-left">{t('common.filter')}</SheetTitle>
+                  <SheetDescription className="text-left">{t('operations.filterAdjustments')}</SheetDescription>
+                </SheetHeader>
+                <div className="flex-1 overflow-y-auto scrollbar-hide pr-2 mt-4 space-y-4">
+                  {/* Product Filter */}
                   <div className="space-y-2">
-                    {[
-                      { value: 'all', label: t('operations.all') },
-                      { value: 'increase', label: t('operations.increase') },
-                      { value: 'decrease', label: t('operations.decrease') },
-                      { value: 'set', label: t('operations.set') },
-                    ].map((option) => (
-                      <label key={option.value} className="flex items-center gap-2">
-                        <input
-                          type="radio"
-                          name="type"
-                          value={option.value}
-                          checked={typeFilter === option.value}
-                          onChange={(e) => setTypeFilter(e.target.value)}
-                          className="h-4 w-4"
-                        />
-                        <span className="text-sm">{option.label}</span>
-                      </label>
-                    ))}
+                    <label className="text-sm font-medium text-left">{t('operations.product')}</label>
+                    <div className="relative">
+                      <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        placeholder={t('operations.searchProductPlaceholder')}
+                        value={productFilterSearch}
+                        onChange={(e) => {
+                          setProductFilterSearch(e.target.value);
+                          if (!e.target.value) setProductFilter('all');
+                        }}
+                        className="pl-9"
+                      />
+                    </div>
+                    {productFilterSearch && (
+                      <div className="border border-border rounded-md bg-white shadow-sm max-h-64 overflow-y-auto">
+                        <button
+                          onClick={() => {
+                            setProductFilter('all');
+                            setProductFilterSearch('');
+                          }}
+                          className={`w-full px-3 py-2 text-left hover:bg-muted transition-colors border-b border-border ${
+                            productFilter === 'all' ? 'bg-muted' : ''
+                          }`}
+                        >
+                          <div className="font-medium text-sm">{t('operations.all')}</div>
+                        </button>
+                        {filteredProductsForFilter.map((product) => (
+                          <button
+                            key={product.id}
+                            onClick={() => {
+                              setProductFilter(product.id);
+                              setProductFilterSearch(product.title);
+                            }}
+                            className={`w-full px-3 py-2 text-left hover:bg-muted transition-colors border-b border-border last:border-b-0 ${
+                              productFilter === product.id ? 'bg-muted' : ''
+                            }`}
+                          >
+                            <div className="font-medium text-sm">{product.title}</div>
+                            <div className="text-xs text-muted-foreground">{product.sku}</div>
+                          </button>
+                        ))}
+                        {filteredProductsForFilter.length === 0 && (
+                          <div className="px-3 py-2 text-sm text-muted-foreground text-center">
+                            {t('common.noData')}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {productFilter !== 'all' && !productFilterSearch && (
+                      <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-md">
+                        <span className="text-sm flex-1 truncate">
+                          {products.find(p => p.id === productFilter)?.title || ''}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setProductFilter('all');
+                            setProductFilterSearch('');
+                          }}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Warehouse Filter */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-left">{t('operations.warehouse')}</label>
+                    <Select value={warehouseFilter} onValueChange={setWarehouseFilter}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('operations.allWarehouses')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{t('operations.all')}</SelectItem>
+                        {warehouses.map((wh) => (
+                          <SelectItem key={wh.id} value={wh.id}>
+                            {wh.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Date Range Filter */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-left">{t('operations.dateRange')}</label>
+                    <Select value={dateRangeFilter} onValueChange={setDateRangeFilter}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('operations.allDates')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{t('operations.all')}</SelectItem>
+                        <SelectItem value="today">{t('operations.today')}</SelectItem>
+                        <SelectItem value="yesterday">{t('operations.yesterday')}</SelectItem>
+                        <SelectItem value="last7">{t('operations.last7Days')}</SelectItem>
+                        <SelectItem value="last30">{t('operations.last30Days')}</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
+                <SheetFooter className="border-t pt-4 shrink-0 gap-2">
+                  <Button variant="outline" onClick={clearFilters} className="w-full sm:w-auto">
+                    {t('products.clearFilters')}
+                  </Button>
+                  <Button
+                    onClick={() => setFiltersOpen(false)}
+                    className="w-full sm:w-auto border-none bg-[#164945] text-white hover:bg-[#123b37]"
+                  >
+                    {t('common.apply')}
+                  </Button>
+                </SheetFooter>
+              </SheetContent>
+            </Sheet>
 
-                {/* Warehouse Filter */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-left">{t('operations.warehouse')}</label>
-                  <div className="space-y-2">
-                    {[
-                      { value: 'all', label: t('operations.all') },
-                      ...warehouses.map((wh) => ({ value: wh.id, label: wh.name })),
-                    ].map((option) => (
-                      <label key={option.value} className="flex items-center gap-2">
-                        <input
-                          type="radio"
-                          name="warehouse"
-                          value={option.value}
-                          checked={warehouseFilter === option.value}
-                          onChange={(e) => setWarehouseFilter(e.target.value)}
-                          className="h-4 w-4"
-                        />
-                        <span className="text-sm">{option.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
+            {/* Active Filters */}
+            {activeFiltersCount > 0 && (
+              <div className="flex items-center gap-2 flex-wrap">
+                {productFilter !== 'all' && (
+                  <Badge variant="secondary" className="gap-1">
+                    {t('operations.product')}: {getActiveFilterLabel('product', productFilter)}
+                    <button
+                      onClick={() => {
+                        setProductFilter('all');
+                        setProductFilterSearch('');
+                      }}
+                      className="ml-1 hover:bg-muted rounded-full p-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                )}
+                {warehouseFilter !== 'all' && (
+                  <Badge variant="secondary" className="gap-1">
+                    {t('operations.warehouse')}: {getActiveFilterLabel('warehouse', warehouseFilter)}
+                    <button
+                      onClick={() => setWarehouseFilter('all')}
+                      className="ml-1 hover:bg-muted rounded-full p-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                )}
+                {dateRangeFilter !== 'all' && (
+                  <Badge variant="secondary" className="gap-1">
+                    {t('operations.dateRange')}: {getActiveFilterLabel('dateRange', dateRangeFilter)}
+                    <button
+                      onClick={() => setDateRangeFilter('all')}
+                      className="ml-1 hover:bg-muted rounded-full p-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                )}
               </div>
-              <SheetFooter className="mt-4 gap-2">
-                <Button variant="outline" onClick={clearFilters} className="w-full">
-                  {t('products.clearFilters')}
-                </Button>
-                <Button
-                  onClick={() => setFiltersOpen(false)}
-                  className="w-full border-none bg-[#164945] text-white hover:bg-[#123b37]"
-                >
-                  {t('common.apply')}
-                </Button>
-              </SheetFooter>
-            </SheetContent>
-          </Sheet>
+            )}
+          </div>
 
-          <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-            <SelectTrigger className="h-10 w-[140px]">
-              <SelectValue placeholder={t('common.sort')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="recent">{t('products.sortRecent')}</SelectItem>
-              <SelectItem value="type">{t('operations.adjustmentType')}</SelectItem>
-              <SelectItem value="warehouse">{t('operations.warehouse')}</SelectItem>
-            </SelectContent>
-          </Select>
+          {/* Show Mine Only Toggle */}
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showMineOnly}
+              onChange={(e) => setShowMineOnly(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-[#164945] focus:ring-[#164945]"
+            />
+            <span className="text-sm font-medium whitespace-nowrap">
+              {t('operations.showOnlyMine')}
+            </span>
+          </label>
         </div>
 
         {/* Adjustments Table */}
         <Card className="border border-border bg-white shadow-none">
           <CardContent className="p-0">
-            <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="min-w-[100px]">ID</TableHead>
-                    <TableHead className="min-w-[150px]">{t('operations.product')}</TableHead>
-                    <TableHead className="min-w-[120px]">{t('operations.adjustmentType')}</TableHead>
-                    <TableHead className="min-w-[80px]">{t('operations.quantity')}</TableHead>
-                    <TableHead className="min-w-[140px]">{t('operations.stock')}</TableHead>
-                    <TableHead className="min-w-[120px]">{t('operations.reason')}</TableHead>
-                    <TableHead className="min-w-[100px]">{t('operations.date')}</TableHead>
-                    <TableHead className="min-w-[80px] text-right">{t('common.actions')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAndSortedAdjustments.length === 0 ? (
+            {isLoading ? (
+              <div className="p-4 space-y-3">
+                {[...Array(5)].map((_, i) => (
+                  <Skeleton key={i} className="h-16 w-full" />
+                ))}
+              </div>
+            ) : (
+              <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-sm text-muted-foreground">
-                        {t('operations.noAdjustments')}
-                      </TableCell>
+                      <TableHead className="min-w-[120px]">{t('operations.product')}</TableHead>
+                      <TableHead className="min-w-[140px] sm:min-w-[160px]">{t('operations.adjustmentType')}</TableHead>
+                      <TableHead className="min-w-[70px]">{t('operations.quantity')}</TableHead>
+                      <TableHead className="min-w-[110px] sm:min-w-[140px]">{t('operations.stock')}</TableHead>
+                      <TableHead className="min-w-[100px] sm:min-w-[120px]">{t('operations.reason')}</TableHead>
+                      <TableHead className="min-w-[100px] sm:min-w-[120px]">{t('operations.notes')}</TableHead>
+                      <TableHead className="min-w-[90px] sm:min-w-[100px]">{t('operations.date')}</TableHead>
+                      <TableHead className="min-w-[120px] sm:min-w-[150px]">{t('operations.initiatedBy')}</TableHead>
+                      <TableHead className="min-w-[60px] text-right">{t('common.actions')}</TableHead>
                     </TableRow>
-                  ) : (
-                    filteredAndSortedAdjustments.map((adjustment) => (
-                      <TableRow key={adjustment.id}>
-                        <TableCell className="font-medium">{adjustment.id.slice(0, 8)}</TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{adjustment.product.title}</div>
-                            <div className="text-xs text-muted-foreground">{adjustment.product.sku}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm">{getTypeLabel(getAdjustmentType(adjustment))}</span>
-                        </TableCell>
-                        <TableCell>
-                          <span className={`text-sm font-semibold ${getQuantityColor(adjustment)}`}>
-                            {getQuantityDisplay(adjustment)}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
-                          {adjustment.stockBefore} → {adjustment.stockAfter}
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
-                          {adjustment.notes || '-'}
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
-                          {adjustment.createdAt?.formattedDate || adjustment.createdAt?.date || '—'}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <button
-                            onClick={() => handleViewDetails(adjustment)}
-                            className="p-1 hover:bg-muted rounded"
-                            title={t('operations.viewDetails')}
-                          >
-                            <Eye className="h-4 w-4 text-muted-foreground" />
-                          </button>
+                  </TableHeader>
+                  <TableBody>
+                    {adjustments.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={9} className="text-center py-8 text-sm text-muted-foreground">
+                          {t('operations.noAdjustments')}
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                    ) : (
+                      adjustments.map((adjustment) => {
+                        const adjustmentType = getAdjustmentType(adjustment);
+                        const TypeIcon = adjustmentType === 'increase' ? TrendingUp : adjustmentType === 'decrease' ? TrendingDown : Minus;
+                        const typeColor = adjustmentType === 'increase' ? 'text-emerald-600' : adjustmentType === 'decrease' ? 'text-red-600' : 'text-blue-600';
+                        
+                        return (
+                          <TableRow key={adjustment.id}>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                {adjustment.product.imagePath ? (
+                                  <>
+                                    <img
+                                      src={adjustment.product.imagePath}
+                                      alt={adjustment.product.title}
+                                      className="h-10 w-10 rounded object-cover shrink-0"
+                                      loading="lazy"
+                                      decoding="async"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = 'none';
+                                        const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                        if (fallback) fallback.classList.remove('hidden');
+                                      }}
+                                    />
+                                    <Package className="h-10 w-10 rounded bg-muted text-muted-foreground p-2 shrink-0 hidden" />
+                                  </>
+                                ) : (
+                                  <div className="h-10 w-10 rounded bg-muted flex items-center justify-center shrink-0">
+                                    <Package className="h-5 w-5 text-muted-foreground" />
+                                  </div>
+                                )}
+                                <div className="min-w-0 flex-1">
+                                  <div className="font-medium text-sm truncate">{adjustment.product.title}</div>
+                                  <div className="text-xs text-muted-foreground truncate">{adjustment.product.sku}</div>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <TypeIcon className={`h-4 w-4 ${typeColor} shrink-0`} />
+                                <span className="text-sm">{getTypeLabel(adjustmentType)}</span>
+                              </div>
+                            </TableCell>
+                          <TableCell>
+                            <span className={`text-sm font-semibold ${getQuantityColor(adjustment)}`}>
+                              {getQuantityDisplay(adjustment)}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {adjustment.stockBefore ?? '—'} → {adjustment.stockAfter ?? '—'}
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            <div className="max-w-[120px] sm:max-w-[150px] truncate" title={adjustment.reason || '—'}>
+                              {adjustment.reason || '—'}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            <div className="max-w-[120px] sm:max-w-[150px] truncate" title={adjustment.notes || '—'}>
+                              {adjustment.notes || '—'}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {adjustment.createdAt?.formattedDateTime || adjustment.createdAt?.date || '—'}
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {adjustment.staff ? (
+                              <div className="font-medium text-foreground truncate" title={adjustment.staff.name}>
+                                {adjustment.staff.name}
+                              </div>
+                            ) : (
+                              <span>{t('operations.system')}</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <button
+                              onClick={() => handleViewDetails(adjustment)}
+                              className="p-1 hover:bg-muted rounded"
+                              title={t('operations.viewDetails')}
+                            >
+                              <Eye className="h-4 w-4 text-muted-foreground" />
+                            </button>
+                          </TableCell>
+                        </TableRow>
+                        );
+                      })
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </CardContent>
         </Card>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>{t('operations.showing')} 1-10 {t('operations.of')} 320</span>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" disabled>
-              {t('operations.prev')}
-            </Button>
-            <Button variant="outline" size="sm" className="bg-[#164945] text-white hover:bg-[#123b37]">
-              1
-            </Button>
-            <Button variant="outline" size="sm">
-              2
-            </Button>
-            <Button variant="outline" size="sm">
-              {t('operations.next')}
-            </Button>
+        {pagination.totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+            <div className="text-sm text-muted-foreground">
+              {t('operations.showing')} {startItem}-{endItem} {t('operations.of')} {pagination.total}
+            </div>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="h-9 px-3"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                <span className="hidden sm:inline ml-1">{t('operations.prev')}</span>
+              </Button>
+              
+              {/* Page Numbers */}
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                  let pageNum: number;
+                  if (pagination.totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= pagination.totalPages - 2) {
+                    pageNum = pagination.totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`h-9 min-w-9 ${
+                        currentPage === pageNum
+                          ? 'bg-[#164945] text-white hover:bg-[#123b37]'
+                          : ''
+                      }`}
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.min(pagination.totalPages, p + 1))}
+                disabled={currentPage === pagination.totalPages}
+                className="h-9 px-3"
+              >
+                <span className="hidden sm:inline mr-1">{t('operations.next')}</span>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Info Section */}
         <Card className="border border-amber-200 bg-amber-50/50 shadow-none">
@@ -545,7 +853,7 @@ export function AdjustmentsScreen() {
                 {t('operations.product')} <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder={t('operations.searchProductPlaceholder')}
                   value={productSearch}
@@ -577,7 +885,23 @@ export function AdjustmentsScreen() {
               <Card className="border border-border bg-muted/50 shadow-none">
                 <CardContent className="px-3 py-3">
                   <div className="flex items-start gap-3">
-                    <Coffee className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                    {selectedProduct.imagePath ? (
+                      <img
+                        src={selectedProduct.imagePath}
+                        alt={selectedProduct.title}
+                        className="h-16 w-16 rounded object-cover shrink-0"
+                        loading="lazy"
+                        decoding="async"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                          if (fallback) fallback.classList.remove('hidden');
+                        }}
+                      />
+                    ) : null}
+                    <div className={`h-16 w-16 rounded bg-muted flex items-center justify-center shrink-0 ${selectedProduct.imagePath ? 'hidden' : ''}`}>
+                      <Package className="h-8 w-8 text-muted-foreground" />
+                    </div>
                     <div className="flex-1 min-w-0 space-y-1">
                       <p className="text-sm font-medium">{selectedProduct.title}</p>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 text-xs text-muted-foreground">
@@ -585,10 +909,10 @@ export function AdjustmentsScreen() {
                           <span className="font-medium">SKU:</span> {selectedProduct.sku}
                         </div>
                         <div>
-                          <span className="font-medium">{t('operations.currentStock')}:</span> {selectedProduct.currentStock} {t('operations.units')}
+                          <span className="font-medium">{t('operations.currentStock')}:</span> {selectedProduct.stockQuantity || 0} {t('operations.units')}
                         </div>
                         <div>
-                          <span className="font-medium">{t('operations.lowThreshold')}:</span> {selectedProduct.lowThreshold}
+                          <span className="font-medium">{t('operations.lowThreshold')}:</span> {selectedProduct.lowQuantity || 0}
                         </div>
                       </div>
                     </div>
@@ -651,36 +975,17 @@ export function AdjustmentsScreen() {
               </div>
             </div>
 
-            {/* Quantity and Warehouse */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  {t('operations.quantity')} <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  type="number"
-                  placeholder="50"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  {t('operations.warehouse')} ({t('operations.optional')})
-                </label>
-                <Select value={warehouse} onValueChange={setWarehouse}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('operations.selectWarehouse')} />
-                  </SelectTrigger>
-                <SelectContent>
-                  {warehouses.map((wh) => (
-                    <SelectItem key={wh.id} value={wh.id}>
-                      {wh.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-                </Select>
-              </div>
+            {/* Quantity */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                {t('operations.quantity')} <span className="text-red-500">*</span>
+              </label>
+              <Input
+                type="number"
+                placeholder="50"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+              />
             </div>
 
             {/* Preview */}
@@ -690,6 +995,112 @@ export function AdjustmentsScreen() {
                 <span className="text-sm text-muted-foreground">
                   {t('operations.preview')}: {preview.before} → {preview.after} {t('operations.units')} ({preview.change})
                 </span>
+              </div>
+            )}
+
+            {/* Warehouse Tracking Toggle */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={enableWarehouse}
+                  onChange={(e) => {
+                    setEnableWarehouse(e.target.checked);
+                    if (!e.target.checked) {
+                      setSelectedWarehouses([]);
+                    }
+                  }}
+                  className="h-4 w-4 rounded border-gray-300 text-[#164945] focus:ring-[#164945]"
+                />
+                <span className="text-sm font-medium">
+                  {t('products.trackByWarehouse')}
+                </span>
+              </label>
+              <p className="text-xs text-muted-foreground">
+                {t('products.trackByWarehouseDesc')}
+              </p>
+            </div>
+
+            {/* Warehouse Multi-Select */}
+            {enableWarehouse && selectedProduct && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  {t('products.warehouses')} ({t('products.optional')})
+                </label>
+                {loadingWarehouses ? (
+                  <div className="flex items-center gap-2 p-3 rounded-md border border-border bg-muted/50">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">
+                      {t('products.loadingWarehouses')}
+                    </span>
+                  </div>
+                ) : availableWarehouses.length > 0 ? (
+                  <div className="space-y-2 max-h-48 overflow-y-auto rounded-md border border-border bg-white p-3">
+                    {availableWarehouses.map((wh) => {
+                      const isSelected = selectedWarehouses.includes(wh.id);
+                      const hasStock = wh.currentStock >= 1;
+                      return (
+                        <label
+                          key={wh.id}
+                          className={`flex items-start gap-2 p-2 rounded-md border cursor-pointer transition-colors ${
+                            isSelected
+                              ? 'border-[#164945] bg-[#164945]/10'
+                              : 'border-border hover:bg-muted/50'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleWarehouse(wh.id)}
+                            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#164945] focus:ring-[#164945]"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium">{wh.name}</span>
+                              {wh.code && (
+                                <span className="text-xs text-muted-foreground">
+                                  ({wh.code})
+                                </span>
+                              )}
+                              {hasStock && (
+                                <span className="text-xs px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700">
+                                  {wh.currentStock} {t('products.units')}
+                                </span>
+                              )}
+                            </div>
+                            {!hasStock && (
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {t('products.noStock')}
+                              </p>
+                            )}
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-md border border-amber-200 bg-amber-50/50">
+                    <p className="text-sm text-amber-900">
+                      {t('products.noWarehousesWithStock')}
+                    </p>
+                    <p className="text-xs text-amber-800 mt-1">
+                      {t('products.adjustmentWillUpdateTotalOnly')}
+                    </p>
+                  </div>
+                )}
+                {selectedWarehouses.length === 0 && enableWarehouse && (
+                  <div className="flex items-start gap-2 p-2 rounded-md border border-amber-200 bg-amber-50/50">
+                    <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                    <p className="text-xs text-amber-800">
+                      {t('products.noWarehousesSelected')}
+                    </p>
+                  </div>
+                )}
+                {selectedWarehouses.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {t('products.adjustmentWillBeDistributed')}
+                  </p>
+                )}
               </div>
             )}
 
@@ -710,14 +1121,6 @@ export function AdjustmentsScreen() {
                   ))}
                 </SelectContent>
               </Select>
-              <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground px-1">
-                {commonReasons.slice(0, 4).map((r) => (
-                  <div key={r.value}>• {r.label}</div>
-                ))}
-                {commonReasons.slice(4).map((r) => (
-                  <div key={r.value}>• {r.label}</div>
-                ))}
-              </div>
             </div>
 
             {/* Notes */}
@@ -730,18 +1133,6 @@ export function AdjustmentsScreen() {
                 placeholder={t('operations.notesPlaceholder')}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-              />
-            </div>
-
-            {/* Reference */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                {t('operations.reference')} ({t('operations.optional')})
-              </label>
-              <Input
-                placeholder="PO-12345"
-                value={reference}
-                onChange={(e) => setReference(e.target.value)}
               />
             </div>
           </div>
