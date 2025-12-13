@@ -28,6 +28,7 @@ import { useWarehouses } from '@/hooks/api/useWarehouses';
 import { useProducts } from '@/hooks/api/useProducts';
 import { Truck, Plus, CheckCircle2, XCircle, AlertCircle, Search, Camera, Trash2, ArrowRight } from 'lucide-react';
 import { format, isToday } from 'date-fns';
+import { authStore } from '@/stores/authStore';
 
 type TransferStatus = 'all' | 'pending' | 'in_transit' | 'completed' | 'cancelled';
 type CreateStep = 'basic' | 'products' | 'confirmation';
@@ -36,6 +37,7 @@ export function TransfersScreen() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const canInitiateTransfer = authStore((state) => state.canInitiateTransfer());
   const [statusFilter, setStatusFilter] = useState<TransferStatus>('all');
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [createStep, setCreateStep] = useState<CreateStep>('basic');
@@ -305,13 +307,15 @@ export function TransfersScreen() {
             <h1 className="text-xl font-semibold text-foreground">{t('operations.stockTransfers')}</h1>
             <p className="text-sm text-muted-foreground">{t('operations.transfersSubtitle')}</p>
           </div>
-          <button
-            onClick={handleCreate}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#164945] text-white hover:bg-[#123b37] transition-colors"
-            title={t('operations.newTransfer')}
-          >
-            <Plus className="h-5 w-5 fill-current" />
-          </button>
+          {canInitiateTransfer && (
+            <button
+              onClick={handleCreate}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#164945] text-white hover:bg-[#123b37] transition-colors"
+              title={t('operations.newTransfer')}
+            >
+              <Plus className="h-5 w-5 fill-current" />
+            </button>
+          )}
         </div>
 
         {/* Status Tabs */}
@@ -347,13 +351,15 @@ export function TransfersScreen() {
                       {t('transfers.noTransfersDesc')}
                     </p>
                   </div>
-                  <Button
-                    onClick={() => setCreateModalOpen(true)}
-                    className="mt-2 border-none bg-[#164945] text-white hover:bg-[#123b37]"
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    {t('transfers.createTransfer')}
-                  </Button>
+                  {canInitiateTransfer && (
+                    <Button
+                      onClick={() => setCreateModalOpen(true)}
+                      className="mt-2 border-none bg-[#164945] text-white hover:bg-[#123b37]"
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      {t('transfers.createTransfer')}
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>

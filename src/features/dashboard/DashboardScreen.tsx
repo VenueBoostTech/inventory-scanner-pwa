@@ -35,12 +35,16 @@ import {
 import { format } from 'date-fns';
 import { useDashboard, type DateFilter } from '@/hooks/api/useDashboard';
 import { useEffect } from 'react';
+import { authStore } from '@/stores/authStore';
 
 export function DashboardScreen() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const [dateFilter, setDateFilter] = useState<DateFilter>('today');
   const { data: dashboardData, isLoading, refetch } = useDashboard(dateFilter);
+  const canScan = authStore((state) => state.canScan());
+  const canAdjustStock = authStore((state) => state.canAdjustStock());
+  const canPerformStockCount = authStore((state) => state.canPerformStockCount());
 
   // Explicitly refetch when dateFilter changes
   useEffect(() => {
@@ -250,30 +254,36 @@ export function DashboardScreen() {
           </CardHeader>
           <CardContent className="px-3 pb-3">
             <div className="grid grid-cols-3 gap-2">
-              <Button
-                variant="outline"
-                className="h-20 flex-col gap-2 border-border bg-white hover:bg-[#164945]/5"
-                onClick={() => navigate('/scan')}
-              >
-                <Scan className="h-6 w-6 text-[#164945]" />
-                <span className="text-xs font-semibold text-foreground">{t('dashboard.scan')}</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="h-20 flex-col gap-2 border-border bg-white hover:bg-[#164945]/5"
-                onClick={() => navigate('/operations/adjustments')}
-              >
-                <Package className="h-6 w-6 text-[#164945]" />
-                <span className="text-xs font-semibold text-foreground">{t('dashboard.adjust')}</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="h-20 flex-col gap-2 border-border bg-white hover:bg-[#164945]/5"
-                onClick={() => navigate('/operations/counts')}
-              >
-                <ClipboardList className="h-6 w-6 text-[#164945]" />
-                <span className="text-xs font-semibold text-foreground">{t('dashboard.count')}</span>
-              </Button>
+              {canScan && (
+                <Button
+                  variant="outline"
+                  className="h-20 flex-col gap-2 border-border bg-white hover:bg-[#164945]/5"
+                  onClick={() => navigate('/scan')}
+                >
+                  <Scan className="h-6 w-6 text-[#164945]" />
+                  <span className="text-xs font-semibold text-foreground">{t('dashboard.scan')}</span>
+                </Button>
+              )}
+              {canAdjustStock && (
+                <Button
+                  variant="outline"
+                  className="h-20 flex-col gap-2 border-border bg-white hover:bg-[#164945]/5"
+                  onClick={() => navigate('/operations/adjustments')}
+                >
+                  <Package className="h-6 w-6 text-[#164945]" />
+                  <span className="text-xs font-semibold text-foreground">{t('dashboard.adjust')}</span>
+                </Button>
+              )}
+              {canPerformStockCount && (
+                <Button
+                  variant="outline"
+                  className="h-20 flex-col gap-2 border-border bg-white hover:bg-[#164945]/5"
+                  onClick={() => navigate('/operations/counts')}
+                >
+                  <ClipboardList className="h-6 w-6 text-[#164945]" />
+                  <span className="text-xs font-semibold text-foreground">{t('dashboard.count')}</span>
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>

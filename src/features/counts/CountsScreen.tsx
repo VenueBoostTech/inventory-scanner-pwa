@@ -51,11 +51,13 @@ import {
   FileText,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { authStore } from '@/stores/authStore';
 
 export function CountsScreen() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const canPerformStockCount = authStore((state) => state.canPerformStockCount());
   const [search, setSearch] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -172,13 +174,15 @@ export function CountsScreen() {
             <h1 className="text-xl font-semibold text-foreground">{t('operations.stockCounts')}</h1>
             <p className="text-sm text-muted-foreground">{t('operations.countsSubtitle')}</p>
           </div>
-          <button
-            onClick={handleStart}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#164945] text-white hover:bg-[#123b37] transition-colors"
-            title={t('operations.startCount')}
-          >
-            <Plus className="h-5 w-5 fill-current" />
-          </button>
+          {canPerformStockCount && (
+            <button
+              onClick={handleStart}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#164945] text-white hover:bg-[#123b37] transition-colors"
+              title={t('operations.startCount')}
+            >
+              <Plus className="h-5 w-5 fill-current" />
+            </button>
+          )}
         </div>
 
         {/* Search Bar */}

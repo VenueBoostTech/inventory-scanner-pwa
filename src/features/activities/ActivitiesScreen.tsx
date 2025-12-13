@@ -169,6 +169,8 @@ export function ActivitiesScreen() {
   }, [activities]);
 
   const getActivityIcon = (type: string) => {
+    if (!type) return Package;
+    
     // Handle uppercase filter values
     switch (type.toUpperCase()) {
       case 'ADJUSTMENT':
@@ -207,6 +209,8 @@ export function ActivitiesScreen() {
   };
 
   const getActivityTypeLabel = (type: string) => {
+    if (!type) return '—';
+    
     // Handle uppercase filter values
     switch (type.toUpperCase()) {
       case 'ADJUSTMENT':
