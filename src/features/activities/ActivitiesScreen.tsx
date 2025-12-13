@@ -130,7 +130,8 @@ export function ActivitiesScreen() {
   });
 
   const { data: summaryData, isLoading: summaryLoading } = useActivitySummary();
-  const { data: warehouses = [] } = useWarehouses({ limit: 100 });
+  const { data: warehousesData } = useWarehouses({ limit: 100 });
+  const warehouses = warehousesData?.data || [];
   const { data: activityDetails } = useActivity(
     displayActivity?.id || ''
   );
