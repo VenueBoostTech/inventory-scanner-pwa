@@ -212,16 +212,16 @@ export function ProductsScreen() {
         {/* Quick Filter Tabs */}
         <Tabs value={quickFilter} onValueChange={(v) => setQuickFilter(v as QuickFilter)}>
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="all" className="text-xs">
+            <TabsTrigger value="all" className="text-sm">
               {t('products.all')} ({counts.all})
             </TabsTrigger>
-            <TabsTrigger value="low_stock" className="text-xs">
+            <TabsTrigger value="low_stock" className="text-sm">
               {t('products.lowStock')} ({counts.low_stock})
             </TabsTrigger>
-            <TabsTrigger value="out_of_stock" className="text-xs">
+            <TabsTrigger value="out_of_stock" className="text-sm">
               {t('products.outStock')} ({counts.out_of_stock})
             </TabsTrigger>
-            <TabsTrigger value="no_barcode" className="text-xs">
+            <TabsTrigger value="no_barcode" className="text-sm">
               {t('products.noBarcode')} ({counts.no_barcode})
             </TabsTrigger>
           </TabsList>

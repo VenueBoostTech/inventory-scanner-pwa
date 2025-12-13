@@ -321,16 +321,16 @@ export function TransfersScreen() {
         {/* Status Tabs */}
         <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as TransferStatus)}>
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="all" className="text-xs">
+            <TabsTrigger value="all" className="text-sm">
               {t('operations.all')}
             </TabsTrigger>
-            <TabsTrigger value="pending" className="text-xs">
+            <TabsTrigger value="pending" className="text-sm">
               {t('operations.pending')}
             </TabsTrigger>
-            <TabsTrigger value="in_transit" className="text-xs">
+            <TabsTrigger value="in_transit" className="text-sm">
               {t('operations.inTransit')}
             </TabsTrigger>
-            <TabsTrigger value="completed" className="text-xs">
+            <TabsTrigger value="completed" className="text-sm">
               {t('operations.completed')}
             </TabsTrigger>
           </TabsList>
