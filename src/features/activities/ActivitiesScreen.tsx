@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Button } from '@/components/ui/button';
@@ -66,12 +66,15 @@ export function ActivitiesScreen() {
   const { t } = useI18n();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const urlProductId = searchParams.get('productId');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [sourceFilter, setSourceFilter] = useState<string>('all');
   const [warehouseFilter, setWarehouseFilter] = useState<string>('all');
   const [staffFilter, setStaffFilter] = useState<string>('all');
   const [dateRangeFilter, setDateRangeFilter] = useState<string>('all');
+  const [productFilter, setProductFilter] = useState<string>(urlProductId || 'all');
   const [displayActivity, setSelectedActivity] = useState<any>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -119,13 +122,21 @@ export function ActivitiesScreen() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [typeFilter, sourceFilter, warehouseFilter, staffFilter, dateRangeFilter]);
+  }, [typeFilter, sourceFilter, warehouseFilter, staffFilter, dateRangeFilter, productFilter]);
+
+  // Set product filter from URL on mount
+  useEffect(() => {
+    if (urlProductId) {
+      setProductFilter(urlProductId);
+    }
+  }, [urlProductId]);
 
   // API hooks
   const { data: activitiesData, isLoading: activitiesLoading } = useActivities({
     page: currentPage,
     limit: 20,
     activityType: typeFilter !== 'all' ? typeFilter : undefined,
+    productId: productFilter !== 'all' ? productFilter : undefined,
     dateFrom,
     dateTo,
   });

@@ -21,7 +21,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useStockAdjustment } from '@/hooks/api/useStockAdjustment';
 import { useProductWarehouses } from '@/hooks/api/useProductWarehouses';
 import { authStore } from '@/stores/authStore';
-import { TrendingUp, TrendingDown, Minus, Loader2, AlertCircle } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Loader2, AlertCircle, Package } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface AdjustStockModalProps {
   open: boolean;
@@ -30,18 +31,6 @@ interface AdjustStockModalProps {
 }
 
 type AdjustmentType = 'increase' | 'decrease' | 'set';
-
-const commonReasons = [
-  { value: 'received_shipment', label: 'Received shipment' },
-  { value: 'return_from_customer', label: 'Return from customer' },
-  { value: 'found_during_count', label: 'Found during count' },
-  { value: 'damaged_items', label: 'Damaged items' },
-  { value: 'expired_items', label: 'Expired items' },
-  { value: 'theft_loss', label: 'Theft/Loss' },
-  { value: 'inventory_correction', label: 'Inventory correction' },
-  { value: 'sample_giveaway', label: 'Sample/Giveaway' },
-  { value: 'other', label: 'Other' },
-];
 
 export function AdjustStockModal({ open, onOpenChange, product }: AdjustStockModalProps) {
   const { t } = useI18n();
@@ -52,12 +41,23 @@ export function AdjustStockModal({ open, onOpenChange, product }: AdjustStockMod
   const [quantity, setQuantity] = useState('');
   const [reason, setReason] = useState('');
   const [notes, setNotes] = useState('');
-  const [enableWarehouse, setEnableWarehouse] = useState(false);
+  const [enableWarehouse, setEnableWarehouse] = useState(true);
   const [selectedWarehouses, setSelectedWarehouses] = useState<string[]>([]);
+
+  const commonReasons = [
+    { value: 'received_shipment', label: t('operations.receivedShipment') },
+    { value: 'return_customer', label: t('operations.returnCustomer') },
+    { value: 'found_during_count', label: t('operations.foundDuringCount') },
+    { value: 'damaged_items', label: t('operations.damagedItems') },
+    { value: 'expired_items', label: t('operations.expiredItems') },
+    { value: 'theft_loss', label: t('operations.theftLoss') },
+    { value: 'inventory_correction', label: t('operations.inventoryCorrection') },
+    { value: 'other', label: t('common.other') },
+  ];
   
   // Fetch warehouses where product has stock when warehouse tracking is enabled
   const { data: productWarehousesData, isLoading: loadingWarehouses } = useProductWarehouses(
-    enableWarehouse ? product?.id : null
+    enableWarehouse && product?.id ? product.id : null
   );
   const availableWarehouses = productWarehousesData?.warehouses || [];
 
@@ -157,7 +157,7 @@ export function AdjustStockModal({ open, onOpenChange, product }: AdjustStockMod
       setQuantity('');
       setReason('');
       setNotes('');
-      setEnableWarehouse(false);
+      setEnableWarehouse(true);
       setSelectedWarehouses([]);
       onOpenChange(false);
     } catch (error: any) {
@@ -173,7 +173,7 @@ export function AdjustStockModal({ open, onOpenChange, product }: AdjustStockMod
     setQuantity('');
     setReason('');
     setNotes('');
-    setEnableWarehouse(false);
+    setEnableWarehouse(true);
     setSelectedWarehouses([]);
     setAdjustmentType('increase');
     onOpenChange(false);
@@ -191,17 +191,56 @@ export function AdjustStockModal({ open, onOpenChange, product }: AdjustStockMod
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <DialogHeader>
-          <DialogTitle>{t('products.adjustStock')}</DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground">
-            {product.title}
-            <br />
-            {t('products.sku')}: {product.sku}
-            <br />
-            {t('products.currentStock')}: {product.stockQuantity} {product.unitMeasure}
-          </DialogDescription>
+          <DialogTitle>{t('operations.newAdjustment')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Selected Product Info */}
+          {product && (
+            <Card className="border border-border bg-muted/50 shadow-none">
+              <CardContent className="px-3 py-3">
+                <div className="flex items-start gap-3">
+                  {product.imagePath ? (
+                    <>
+                      <img
+                        src={product.imagePath}
+                        alt={product.title}
+                        className="h-16 w-16 rounded object-cover shrink-0"
+                        loading="lazy"
+                        decoding="async"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                          if (fallback) fallback.classList.remove('hidden');
+                        }}
+                      />
+                      <div className="h-16 w-16 rounded bg-muted flex items-center justify-center shrink-0 hidden">
+                        <Package className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="h-16 w-16 rounded bg-muted flex items-center justify-center shrink-0">
+                      <Package className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <p className="text-sm font-medium">{product.title}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 text-xs text-muted-foreground">
+                      <div>
+                        <span className="font-medium">SKU:</span> {product.sku}
+                      </div>
+                      <div>
+                        <span className="font-medium">{t('operations.currentStock')}:</span> {product.stockQuantity || 0} {t('operations.units')}
+                      </div>
+                      <div>
+                        <span className="font-medium">{t('operations.lowThreshold')}:</span> {product.lowQuantity || 0}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
           {/* Adjustment Type */}
           <div className="space-y-2">
             <label className="text-sm font-medium">{t('products.adjustmentType')}</label>
@@ -217,8 +256,9 @@ export function AdjustStockModal({ open, onOpenChange, product }: AdjustStockMod
               >
                 <TrendingUp className={`h-5 w-5 ${adjustmentType === 'increase' ? 'text-[#164945]' : 'text-muted-foreground'}`} />
                 <span className={`text-xs font-medium ${adjustmentType === 'increase' ? 'text-[#164945]' : 'text-muted-foreground'}`}>
-                  ➕ {t('products.add')}
+                  {t('operations.increase')}
                 </span>
+                <span className="text-[10px] text-muted-foreground">{t('operations.addStock')}</span>
               </button>
               <button
                 type="button"
@@ -231,8 +271,9 @@ export function AdjustStockModal({ open, onOpenChange, product }: AdjustStockMod
               >
                 <TrendingDown className={`h-5 w-5 ${adjustmentType === 'decrease' ? 'text-[#164945]' : 'text-muted-foreground'}`} />
                 <span className={`text-xs font-medium ${adjustmentType === 'decrease' ? 'text-[#164945]' : 'text-muted-foreground'}`}>
-                  ➖ {t('products.remove')}
+                  {t('operations.decrease')}
                 </span>
+                <span className="text-[10px] text-muted-foreground">{t('operations.removeStock')}</span>
               </button>
               <button
                 type="button"
@@ -245,8 +286,9 @@ export function AdjustStockModal({ open, onOpenChange, product }: AdjustStockMod
               >
                 <Minus className={`h-5 w-5 ${adjustmentType === 'set' ? 'text-[#164945]' : 'text-muted-foreground'}`} />
                 <span className={`text-xs font-medium ${adjustmentType === 'set' ? 'text-[#164945]' : 'text-muted-foreground'}`}>
-                  ⚡ {t('products.set')}
+                  {t('operations.set')}
                 </span>
+                <span className="text-[10px] text-muted-foreground">{t('operations.setToValue')}</span>
               </button>
             </div>
           </div>
@@ -266,21 +308,22 @@ export function AdjustStockModal({ open, onOpenChange, product }: AdjustStockMod
 
           {/* Preview */}
           {preview && (
-            <div className="p-3 bg-muted/50 rounded-md">
-              <p className="text-sm font-medium">
-                📊 {t('products.preview')}: {preview.before} → {preview.after} {product.unitMeasure} ({preview.change})
-              </p>
+            <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-md">
+              <Package className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">
+                {t('operations.preview')}: {preview.before} → {preview.after} {t('operations.units')} ({preview.change})
+              </span>
             </div>
           )}
 
           {/* Reason */}
           <div className="space-y-2">
             <label className="text-sm font-medium">
-              {t('products.reason')} <span className="text-red-500">*</span>
+              {t('operations.reason')} <span className="text-red-500">*</span>
             </label>
             <Select value={reason} onValueChange={setReason}>
               <SelectTrigger>
-                <SelectValue placeholder={t('products.selectReason')} />
+                <SelectValue placeholder={t('operations.selectReason')} />
               </SelectTrigger>
               <SelectContent>
                 {commonReasons.map((r) => (

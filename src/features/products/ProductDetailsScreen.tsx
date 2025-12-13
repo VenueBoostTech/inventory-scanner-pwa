@@ -29,6 +29,11 @@ import {
   Tag,
   ChevronDown,
   ChevronUp,
+  Smartphone,
+  Monitor,
+  Store,
+  Link as LinkIcon,
+  ShoppingCart,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ProductGallery } from './ProductGallery';
@@ -110,28 +115,61 @@ export function ProductDetailsScreen() {
   };
 
   const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'STOCK_ADJUSTMENT':
-        return <Package className="h-4 w-4" />;
-      case 'SCAN':
-        return <ClipboardList className="h-4 w-4" />;
-      case 'TRANSFER':
-        return <Truck className="h-4 w-4" />;
+    switch (type?.toLowerCase()) {
+      case 'adjustment':
+        return Package;
+      case 'transfer':
+        return Truck;
+      case 'count':
+        return ClipboardList;
+      case 'scan':
+        return ClipboardList;
+      case 'order_created':
+      case 'order_cancelled':
+      case 'order_returned':
+      case 'order_refunded':
+        return ShoppingCart;
       default:
-        return <Package className="h-4 w-4" />;
+        return Package;
     }
   };
 
-  const getActivityLabel = (type: string) => {
-    switch (type) {
-      case 'STOCK_ADJUSTMENT':
-        return t('products.stockAdjustment');
-      case 'SCAN':
-        return t('products.scan');
-      case 'TRANSFER':
-        return t('products.transfer');
+  const getActivityTypeLabel = (type: string) => {
+    if (!type) return '—';
+    switch (type.toLowerCase()) {
+      case 'adjustment':
+        return t('operations.adjustment');
+      case 'transfer':
+        return t('operations.transfer');
+      case 'count':
+        return t('operations.count');
+      case 'order_created':
+        return t('operations.orderCreated');
+      case 'order_cancelled':
+        return t('operations.orderCancelled');
+      case 'order_returned':
+        return t('operations.orderReturned');
+      case 'order_refunded':
+        return t('operations.orderRefunded');
       default:
         return type;
+    }
+  };
+
+  const getSourceIcon = (source: string) => {
+    const normalizedSource = source?.toUpperCase();
+    switch (normalizedSource) {
+      case 'MOBILE_SCANNING':
+        return Smartphone;
+      case 'PANDACOMET':
+        return Monitor;
+      case 'ORDER':
+        return Store;
+      case 'WOOCOMMERCE':
+      case 'WEBHOOK':
+        return LinkIcon;
+      default:
+        return Monitor;
     }
   };
 
@@ -163,7 +201,7 @@ export function ProductDetailsScreen() {
     navigate(`/products/${product.id}/edit`);
   };
 
-  const displayTitle = language === 'sq' && product.titleAl ? product.titleAl : product.title;
+  const displayTitle = product.titleAl || product.title || '—';
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -176,12 +214,14 @@ export function ProductDetailsScreen() {
         {/* Title and Actions */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-semibold text-foreground">{displayTitle}</h1>
-            {product.titleAl && language === 'en' && (
-              <p className="text-sm text-muted-foreground">{product.titleAl}</p>
+            <h1 className="text-xl font-semibold text-foreground">
+              {product.titleAl || product.title || '—'}
+            </h1>
+            {product.titleAl && product.title && product.titleAl !== product.title && (
+              <p className="text-sm text-muted-foreground mt-1">{product.title}</p>
             )}
-            {product.title && language === 'sq' && (
-              <p className="text-sm text-muted-foreground">{product.title}</p>
+            {!product.titleAl && product.title && (
+              <p className="text-sm text-muted-foreground mt-1">{product.title}</p>
             )}
             <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
               {product.category && <span>{t('products.category')}: {product.category.name}</span>}
@@ -358,17 +398,39 @@ export function ProductDetailsScreen() {
         </Card>
 
         {/* Pricing */}
-        <Card className="border border-border bg-white shadow-none">
-          <CardContent className="px-3 py-3">
-            <h3 className="text-sm font-semibold mb-3">{t('products.pricing')}</h3>
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">{t('products.price')}</p>
-              <p className="text-lg font-semibold">
-                €{product.pricing?.priceEur?.toFixed(2) || product.pricing?.price?.toFixed(2) || '0.00'} / {product.pricing?.priceAl?.toLocaleString() || '0'} L
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        {product.pricing && (
+          <Card className="border border-border bg-white shadow-none">
+            <CardContent className="px-3 py-3">
+              <h3 className="text-sm font-semibold mb-3">{t('products.pricing')}</h3>
+              <div className="space-y-3">
+                {product.pricing.priceAl && (
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-1">Price (ALL)</p>
+                    <p className="text-lg font-semibold text-foreground">
+                      {product.pricing.priceAl.formatted || `${product.pricing.priceAl.amount} ${product.pricing.priceAl.currencySymbol || 'L'}`}
+                    </p>
+                  </div>
+                )}
+                {product.pricing.price && (
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-1">Price (ALL)</p>
+                    <p className="text-lg font-semibold text-foreground">
+                      {product.pricing.price.formatted || `${product.pricing.price.amount} ${product.pricing.price.currencySymbol || 'L'}`}
+                    </p>
+                  </div>
+                )}
+                {product.pricing.priceEur && (
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-1">Price (EUR)</p>
+                    <p className="text-lg font-semibold text-foreground">
+                      {product.pricing.priceEur.formatted || `${product.pricing.priceEur.currencySymbol || '€'}${product.pricing.priceEur.amount.toFixed(2)}`}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Sale Info */}
         {product.saleInfo?.isOnSale && (
@@ -431,12 +493,22 @@ export function ProductDetailsScreen() {
                   <p className="text-xs text-muted-foreground">{t('products.transfer')}</p>
                 </div>
               </div>
-              <div className="space-y-1 text-xs text-muted-foreground">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-border">
                 {product.stats?.firstActivityAt && (
-                  <p>{t('products.first')}: {format(new Date(product.stats.firstActivityAt), 'MMM d, yyyy')}</p>
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground">{t('products.first')}</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {product.stats.firstActivityAt.formattedDateTime || product.stats.firstActivityAt.date || '—'}
+                    </p>
+                  </div>
                 )}
                 {product.stats?.lastActivityAt && (
-                  <p>{t('products.last')}: {format(new Date(product.stats.lastActivityAt), 'MMM d, yyyy')}</p>
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground">{t('products.last')}</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {product.stats.lastActivityAt.formattedDateTime || product.stats.lastActivityAt.date || '—'}
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
@@ -446,54 +518,89 @@ export function ProductDetailsScreen() {
         {/* Recent Activity */}
         <Card className="border border-border bg-white shadow-none">
           <CardContent className="px-3 py-3">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold flex-1 min-w-0">{t('products.recentActivity')}</h3>
+            <h3 className="text-sm font-semibold mb-3">{t('products.recentActivity')}</h3>
+            <div className="space-y-3">
+              {product.stats?.recentActivities?.map((activity: any) => {
+                const TypeIcon = getActivityIcon(activity.activityType);
+                const SourceIconComponent = getSourceIcon(activity.source);
+                return (
+                  <div key={activity.id} className="space-y-2 pb-3 border-b border-border last:border-b-0 last:pb-0">
+                    <div className="flex items-center gap-2">
+                      <TypeIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <span className="text-xs font-medium">{getActivityTypeLabel(activity.activityType)}</span>
+                      {activity.quantity !== 0 && (
+                        <span className={`text-sm font-semibold ${activity.quantity > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                          {activity.quantity > 0 ? '+' : ''}{activity.quantity}
+                        </span>
+                      )}
+                    </div>
+                    {(activity.stockBefore != null && activity.stockAfter != null) && (
+                      <div className="text-xs text-muted-foreground pl-6">
+                        {activity.stockBefore} → {activity.stockAfter}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-3 pl-6">
+                      <div className="flex items-center gap-1">
+                        <SourceIconComponent className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">
+                          {activity.createdAt?.formattedDateTime || activity.createdAt?.date || format(new Date(activity.createdAt), 'MMM d, yyyy, h:mm a')}
+                        </span>
+                      </div>
+                      {activity.staff && (
+                        <span className="text-xs text-muted-foreground">
+                          • {activity.staff.name}
+                        </span>
+                      )}
+                      {!activity.staff && (
+                        <span className="text-xs text-muted-foreground">
+                          • {t('operations.system')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-3 pt-3 border-t border-border">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleViewHistory}
-                className="h-8 shrink-0 gap-1 px-2"
+                className="w-full h-8 gap-1"
               >
                 {t('products.viewAll')}
                 <ArrowRight className="h-3 w-3" />
               </Button>
             </div>
-            <div className="space-y-3">
-              {product.stats?.recentActivities?.map((activity: any) => (
-                <div key={activity.id} className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    {getActivityIcon(activity.type)}
-                    <span className="text-sm font-medium">{getActivityLabel(activity.type)}</span>
-                    {activity.quantityChange && (
-                      <span className={`text-sm font-medium ${activity.quantityChange > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                        {activity.quantityChange > 0 ? '+' : ''}{activity.quantityChange} {t('products.units')}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {format(new Date(activity.createdAt), 'MMM d, yyyy, h:mm a')}
-                  </p>
-                  {activity.previousQuantity !== undefined && (
-                    <p className="text-xs text-muted-foreground">
-                      {activity.previousQuantity} → {activity.newQuantity} • "{activity.notes}"
-                    </p>
-                  )}
-                  {activity.createdBy && (
-                    <p className="text-xs text-muted-foreground">
-                      {t('products.by')}: {activity.createdBy.name}
-                    </p>
-                  )}
-                  {activity.toWarehouse && (
-                    <p className="text-xs text-muted-foreground">
-                      {t('products.to')}: {activity.toWarehouse.name}
-                    </p>
-                  )}
-                  <div className="border-t border-border pt-2" />
-                </div>
-              ))}
-            </div>
           </CardContent>
         </Card>
+
+        {/* Short Description */}
+        {(product.shortDescriptionAl || product.shortDescription) && (
+          <Card className="border border-border bg-white shadow-none">
+            <CardContent className="px-3 py-3">
+              <h3 className="text-sm font-semibold mb-3">{t('products.shortDescription')}</h3>
+              <div className="space-y-2">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-1">Albanian</p>
+                  <p className="text-sm text-foreground">
+                    {product.shortDescriptionAl && product.shortDescriptionAl.trim() !== '<p><br></p>' && product.shortDescriptionAl.trim() !== ''
+                      ? product.shortDescriptionAl.replace(/<[^>]*>/g, '').trim() || '—'
+                      : '—'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-1">English</p>
+                  <p className="text-sm text-foreground">
+                    {product.shortDescription && product.shortDescription.trim() !== '<p><br></p>' && product.shortDescription.trim() !== ''
+                      ? product.shortDescription.replace(/<[^>]*>/g, '').trim() || '—'
+                      : '—'}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Description */}
         <Card className="border border-border bg-white shadow-none">
@@ -516,13 +623,21 @@ export function ProductDetailsScreen() {
             {descriptionExpanded && (
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm text-foreground">{product.description}</p>
-                </div>
-                {product.descriptionAl && (
-                  <div>
-                    <p className="text-sm text-foreground">{product.descriptionAl}</p>
+                  <p className="text-xs font-medium text-muted-foreground mb-1">Albanian</p>
+                  <div className="text-sm text-foreground">
+                    {product.descriptionAl && product.descriptionAl.trim() !== '<p><br></p>' && product.descriptionAl.trim() !== ''
+                      ? <div dangerouslySetInnerHTML={{ __html: product.descriptionAl }} />
+                      : <span>—</span>}
                   </div>
-                )}
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-1">English</p>
+                  <div className="text-sm text-foreground">
+                    {product.description && product.description.trim() !== '<p><br></p>' && product.description.trim() !== ''
+                      ? <div dangerouslySetInnerHTML={{ __html: product.description }} />
+                      : <span>—</span>}
+                  </div>
+                </div>
                 {(product.weight || product.dimensions) && (
                   <div className="space-y-1 pt-2 border-t border-border">
                     {product.weight && (
