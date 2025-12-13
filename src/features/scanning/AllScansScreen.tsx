@@ -76,7 +76,6 @@ export function AllScansScreen() {
   const [warehouseFilter, setWarehouseFilter] = useState<string>('all');
   const [dateRangeFilter, setDateRangeFilter] = useState<string>('all');
   const profile = authStore((state) => state.profile);
-  const defaultWarehouseId = profile?.permissions?.warehouseIds?.[0];
 
   // Get warehouses for filter
   const { data: warehouses = [] } = useWarehouses({ limit: 100 });
@@ -84,14 +83,14 @@ export function AllScansScreen() {
   // Calculate date range for API - memoized to prevent infinite loops
   const { dateFrom, dateTo } = useMemo(() => getDateRange(dateRangeFilter), [dateRangeFilter]);
 
-  // Determine warehouseId to use
+  // Determine warehouseId to use - only when filter is not 'all'
   const warehouseId = useMemo(() => {
     if (warehouseFilter === 'all') {
-      return defaultWarehouseId;
+      return undefined; // Don't filter by warehouse when 'all' is selected
     }
     const selectedWarehouse = warehouses.find((wh) => wh.id === warehouseFilter || wh.name === warehouseFilter);
-    return selectedWarehouse?.id || defaultWarehouseId;
-  }, [warehouseFilter, warehouses, defaultWarehouseId]);
+    return selectedWarehouse?.id;
+  }, [warehouseFilter, warehouses]);
 
   const { data: scanHistoryData, isLoading } = useScanHistory({
     page: currentPage,
@@ -355,7 +354,7 @@ export function AllScansScreen() {
                     {scans.map((scan) => (
                       <TableRow key={scan.id}>
                         <TableCell className="text-sm font-semibold text-foreground min-w-[200px] py-2.5">
-                          {scan.product?.title ?? 'Unknown Product'}
+                          {scan.product?.title ?? t('scan.unknownProduct')}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground min-w-[120px] py-2.5">
                           {scan.product?.sku || '-'}

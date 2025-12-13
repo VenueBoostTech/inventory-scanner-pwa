@@ -17,7 +17,6 @@ import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { useScanSearch } from '@/hooks/api/useScanSearch';
 import { apiClient } from '@/lib/api-client';
-import { authStore } from '@/stores/authStore';
 import { Search, Package, Plus, Link2 } from 'lucide-react';
 import { getDeviceInfo } from '@/lib/device';
 
@@ -54,9 +53,6 @@ export function SearchProductsScreen() {
     );
   }
 
-  const profile = authStore((state) => state.profile);
-  const warehouseId = profile?.permissions?.warehouseIds?.[0];
-
   const handleSearch = async (term: string) => {
     if (!term.trim()) {
       setSearchResults([]);
@@ -68,7 +64,6 @@ export function SearchProductsScreen() {
       const result = await searchProducts({
         searchTerm: term,
         originalBarcode: barcode,
-        warehouseId,
         deviceInfo,
       });
 

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { authStore } from '@/stores/authStore';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
@@ -34,13 +33,10 @@ export function ScanScreen() {
   const { toast } = useToast();
   const { mutateAsync, isPending } = useScanBarcode();
   const { isScanning, error, startScanning, stopScanning } = useScanner();
-  const profile = authStore((state) => state.profile);
-  const warehouseId = profile?.permissions?.warehouseIds?.[0];
 
   // API hooks
   const { data: scanHistoryData } = useScanHistory({
     limit: 10,
-    warehouseId,
   });
 
   const recentScans = scanHistoryData?.data || [];
@@ -81,7 +77,7 @@ export function ScanScreen() {
 
   const handleDecoded = async (code: string) => {
     try {
-      const result = await mutateAsync({ barcode: code, warehouseId });
+      const result = await mutateAsync({ barcode: code });
       await stopScanning();
       navigate('/scan/result', { state: { scanResult: result, barcode: code } });
     } catch (error) {
@@ -98,7 +94,7 @@ export function ScanScreen() {
     event.preventDefault();
     if (!manualCode) return;
     try {
-      const result = await mutateAsync({ barcode: manualCode, warehouseId });
+      const result = await mutateAsync({ barcode: manualCode });
       navigate('/scan/result', { state: { scanResult: result, barcode: manualCode } });
       setManualCode('');
     } catch (error) {
@@ -263,7 +259,7 @@ export function ScanScreen() {
                   >
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-foreground">
-                        {scan.product?.title ?? 'Unknown Product'}
+                        {scan.product?.title ?? t('scan.unknownProduct')}
                       </p>
                       <div className="space-y-0.5">
                         <p className="text-xs text-muted-foreground">
