@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -37,12 +37,21 @@ export function ScanScreen() {
   const { mutateAsync } = useScanBarcode();
   const { isScanning, error, startScanning, stopScanning } = useScanner();
 
+  const location = useLocation();
+
   // API hooks
-  const { data: scanHistoryData } = useScanHistory({
+  const { data: scanHistoryData, refetch: refetchScanHistory } = useScanHistory({
     limit: 10,
   });
 
   const recentScans = scanHistoryData?.data || [];
+
+  // Refetch scan history when navigating back to this screen
+  useEffect(() => {
+    if (location.pathname === '/scan') {
+      void refetchScanHistory();
+    }
+  }, [location.pathname, refetchScanHistory]);
 
   const getStatusIcon = (result: string) => {
     switch (result) {
@@ -82,7 +91,7 @@ export function ScanScreen() {
     try {
       const result = await mutateAsync({ barcode: code });
       await stopScanning();
-      navigate('/scan/result', { state: { scanResult: result, barcode: code } });
+      navigate('/scan/result', { state: { scanResult: result, barcode: code, source: 'scan' } });
     } catch (error) {
       await stopScanning();
       toast({
@@ -99,7 +108,7 @@ export function ScanScreen() {
     setIsManualLoading(true);
     try {
       const result = await mutateAsync({ barcode: manualCode });
-      navigate('/scan/result', { state: { scanResult: result, barcode: manualCode } });
+      navigate('/scan/result', { state: { scanResult: result, barcode: manualCode, source: 'scan' } });
       setManualCode('');
     } catch (error) {
       toast({
@@ -120,8 +129,19 @@ export function ScanScreen() {
       const { data: product } = await apiClient.get(`/products/sku/${skuCode}`);
       
       if (product && product.id) {
-        // Product found - navigate to product details
-        navigate(`/products/${product.id}`);
+        // Product found - navigate to scan result screen with context
+        // Create a ScanResult-like object for consistency
+        const scanResult = {
+          result: 'found' as const,
+          product: product,
+        };
+        navigate('/scan/result', { 
+          state: { 
+            scanResult, 
+            barcode: skuCode,
+            source: 'sku_search' // Indicate this came from SKU search, not a scan
+          } 
+        });
         setSkuCode('');
       } else {
         toast({

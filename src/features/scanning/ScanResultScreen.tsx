@@ -17,6 +17,7 @@ import type { ScanResult } from '@/types/api';
 interface LocationState {
   scanResult: ScanResult;
   barcode: string;
+  source?: 'scan' | 'sku_search'; // Indicates if this came from a scan or SKU search
 }
 
 export function ScanResultScreen() {
@@ -25,7 +26,7 @@ export function ScanResultScreen() {
   const location = useLocation();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
-  const { scanResult, barcode } = (location.state as LocationState) || {};
+  const { scanResult, barcode, source = 'scan' } = (location.state as LocationState) || {};
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -130,22 +131,32 @@ export function ScanResultScreen() {
             {t('products.adjustStock')}
           </Button>
 
-          <div className="grid grid-cols-2 gap-3">
+          {source === 'scan' ? (
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant="outline"
+                onClick={() => navigate(`/products/${product.id}`)}
+                className="w-full"
+              >
+                {t('operations.viewDetails')}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate('/scan')}
+                className="w-full"
+              >
+                {t('scan.scanAgain')}
+              </Button>
+            </div>
+          ) : (
             <Button
               variant="outline"
               onClick={() => navigate(`/products/${product.id}`)}
               className="w-full"
             >
-              {t('products.viewDetails')}
+              {t('operations.viewDetails')}
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate('/scan')}
-              className="w-full"
-            >
-              {t('scan.scanAgain')}
-            </Button>
-          </div>
+          )}
         </div>
       </div>
     );
