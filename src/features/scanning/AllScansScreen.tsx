@@ -4,7 +4,6 @@ import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { useI18n } from '@/lib/i18n';
 import { useScanHistory } from '@/hooks/api/useScanHistory';
 import { useWarehouses } from '@/hooks/api/useWarehouses';
-import { authStore } from '@/stores/authStore';
 import {
   Table,
   TableBody,
@@ -75,7 +74,6 @@ export function AllScansScreen() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [warehouseFilter, setWarehouseFilter] = useState<string>('all');
   const [dateRangeFilter, setDateRangeFilter] = useState<string>('all');
-  const profile = authStore((state) => state.profile);
 
   // Get warehouses for filter
   const { data: warehouses = [] } = useWarehouses({ limit: 100 });
