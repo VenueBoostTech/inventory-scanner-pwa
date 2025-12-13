@@ -281,14 +281,6 @@ export function LoginScreen() {
                 >
                   {isLoading ? t('auth.login.button_loading') : t('auth.login.button_login')}
                 </Button>
-                <div className="text-center">
-                  <button
-                    type="button"
-                    className="text-sm text-muted-foreground hover:text-foreground"
-                  >
-                    {t('auth.login.forgot_password')}
-                  </button>
-                </div>
               </form>
             </Form>
           </CardContent>
