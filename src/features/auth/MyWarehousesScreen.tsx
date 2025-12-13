@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Info, Search as SearchIcon, ChevronLeft, ChevronRight, Package, AlertTriangle, XCircle, CheckCircle2 } from 'lucide-react';
+import { MapPin, Info, Search as SearchIcon, ChevronLeft, ChevronRight, XCircle, CheckCircle2 } from 'lucide-react';
 import { authStore } from '@/stores/authStore';
 
 export function MyWarehousesScreen() {

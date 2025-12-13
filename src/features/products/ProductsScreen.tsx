@@ -211,20 +211,22 @@ export function ProductsScreen() {
 
         {/* Quick Filter Tabs */}
         <Tabs value={quickFilter} onValueChange={(v) => setQuickFilter(v as QuickFilter)}>
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="all" className="text-sm">
-              {t('products.all')} ({counts.all})
-            </TabsTrigger>
-            <TabsTrigger value="low_stock" className="text-sm">
-              {t('products.lowStock')} ({counts.low_stock})
-            </TabsTrigger>
-            <TabsTrigger value="out_of_stock" className="text-sm">
-              {t('products.outStock')} ({counts.out_of_stock})
-            </TabsTrigger>
-            <TabsTrigger value="no_barcode" className="text-sm">
-              {t('products.noBarcode')} ({counts.no_barcode})
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
+            <TabsList className="inline-flex w-auto min-w-full sm:min-w-0">
+              <TabsTrigger value="all" className="text-sm whitespace-nowrap shrink-0">
+                {t('products.all')} ({counts.all})
+              </TabsTrigger>
+              <TabsTrigger value="low_stock" className="text-sm whitespace-nowrap shrink-0">
+                {t('products.lowStock')} ({counts.low_stock})
+              </TabsTrigger>
+              <TabsTrigger value="out_of_stock" className="text-sm whitespace-nowrap shrink-0">
+                {t('products.outStock')} ({counts.out_of_stock})
+              </TabsTrigger>
+              <TabsTrigger value="no_barcode" className="text-sm whitespace-nowrap shrink-0">
+                {t('products.noBarcode')} ({counts.no_barcode})
+              </TabsTrigger>
+            </TabsList>
+          </div>
         </Tabs>
 
         {/* Filters and Sort Bar */}
