@@ -63,11 +63,11 @@ export function DashboardScreen() {
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'found':
-        return 'Found';
+        return t('scan.found');
       case 'not_found':
-        return 'Not Found';
+        return t('scan.notFound');
       case 'created':
-        return 'Created';
+        return t('scan.created');
       default:
         return status;
     }
@@ -264,7 +264,7 @@ export function DashboardScreen() {
                 onClick={() => navigate('/operations/adjustments')}
               >
                 <Package className="h-6 w-6 text-[#164945]" />
-                <span className="text-xs font-semibold text-foreground">ADJUST</span>
+                <span className="text-xs font-semibold text-foreground">{t('dashboard.adjust')}</span>
               </Button>
               <Button
                 variant="outline"
