@@ -315,11 +315,6 @@ export function CountingScreen() {
                         <div>
                           <span className="font-medium">SKU:</span> {currentProduct.sku}
                         </div>
-                        {currentProduct.location && (
-                          <div>
-                            <span className="font-medium">{t('operations.location')}:</span> {currentProduct.location}
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>
