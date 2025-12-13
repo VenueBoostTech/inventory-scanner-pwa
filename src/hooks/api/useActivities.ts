@@ -37,6 +37,12 @@ export interface Activity {
     name: string;
   } | null;
   notes?: string | null;
+  reason?: string | null;
+  warehouse?: {
+    id: string;
+    name: string;
+    code?: string;
+  } | null;
   variantId?: string | null;
   createdAt?: FormattedDateTime | null;
 }

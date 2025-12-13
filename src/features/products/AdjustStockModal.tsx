@@ -4,7 +4,6 @@ import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -36,7 +35,6 @@ export function AdjustStockModal({ open, onOpenChange, product }: AdjustStockMod
   const { t } = useI18n();
   const { toast } = useToast();
   const { mutateAsync: adjustStock, isPending } = useStockAdjustment();
-  const profile = authStore((state) => state.profile);
   const [adjustmentType, setAdjustmentType] = useState<AdjustmentType>('increase');
   const [quantity, setQuantity] = useState('');
   const [reason, setReason] = useState('');

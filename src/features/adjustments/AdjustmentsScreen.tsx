@@ -43,7 +43,7 @@ import { useProducts } from '@/hooks/api/useProducts';
 import { useWarehouses } from '@/hooks/api/useWarehouses';
 import { useProductWarehouses } from '@/hooks/api/useProductWarehouses';
 import { useStockAdjustment } from '@/hooks/api/useStockAdjustment';
-import { Package, Plus, Search as SearchIcon, Filter, TrendingUp, TrendingDown, Minus, Eye, AlertTriangle, Coffee, Loader2, AlertCircle, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Package, Plus, Search as SearchIcon, Filter, TrendingUp, TrendingDown, Minus, Eye, AlertTriangle, Loader2, AlertCircle, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { authStore } from '@/stores/authStore';
 import { Skeleton } from '@/components/ui/skeleton';
 

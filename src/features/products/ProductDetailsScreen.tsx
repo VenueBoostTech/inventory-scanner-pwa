@@ -41,7 +41,7 @@ import { AdjustStockModal } from './AdjustStockModal';
 import { authStore } from '@/stores/authStore';
 
 export function ProductDetailsScreen() {
-  const { t, language } = useI18n();
+  const { t } = useI18n();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -422,10 +422,12 @@ export function ProductDetailsScreen() {
                 {product.pricing.price && (
                   <div>
                     <p className="text-sm font-medium text-muted-foreground mb-1">
-                      Price ({product.pricing.price.currency || 'ALL'})
+                      Price (ALL)
                     </p>
                     <p className="text-lg font-semibold text-foreground">
-                      {product.pricing.price.formatted || `${product.pricing.price.amount} ${product.pricing.price.currencySymbol || 'L'}`}
+                      {typeof product.pricing.price === 'object' && product.pricing.price !== null
+                        ? (product.pricing.price as any).formatted || `${(product.pricing.price as any).amount} ${(product.pricing.price as any).currencySymbol || 'L'}`
+                        : `${product.pricing.price} L`}
                     </p>
                   </div>
                 )}
@@ -434,7 +436,9 @@ export function ProductDetailsScreen() {
                   <div>
                     <p className="text-sm font-medium text-muted-foreground mb-1">Price (EUR)</p>
                     <p className="text-lg font-semibold text-foreground">
-                      {product.pricing.priceEur.formatted || `${product.pricing.priceEur.currencySymbol || '€'}${product.pricing.priceEur.amount.toFixed(2)}`}
+                      {typeof product.pricing.priceEur === 'object' && product.pricing.priceEur !== null
+                        ? (product.pricing.priceEur as any).formatted || `${(product.pricing.priceEur as any).currencySymbol || '€'}${(product.pricing.priceEur as any).amount.toFixed(2)}`
+                        : `€${product.pricing.priceEur.toFixed(2)}`}
                     </p>
                   </div>
                 )}
@@ -509,7 +513,9 @@ export function ProductDetailsScreen() {
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-muted-foreground">{t('products.firstActivity')}</p>
                     <p className="text-sm font-medium text-foreground">
-                      {product.stats.firstActivityAt.formattedDateTime || product.stats.firstActivityAt.date || '—'}
+                      {typeof product.stats.firstActivityAt === 'object' && product.stats.firstActivityAt !== null
+                        ? (product.stats.firstActivityAt as any).formattedDateTime || (product.stats.firstActivityAt as any).date || '—'
+                        : product.stats.firstActivityAt || '—'}
                     </p>
                   </div>
                 )}
@@ -517,7 +523,9 @@ export function ProductDetailsScreen() {
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-muted-foreground">{t('products.mostRecentActivity')}</p>
                     <p className="text-sm font-medium text-foreground">
-                      {product.stats.lastActivityAt.formattedDateTime || product.stats.lastActivityAt.date || '—'}
+                      {typeof product.stats.lastActivityAt === 'object' && product.stats.lastActivityAt !== null
+                        ? (product.stats.lastActivityAt as any).formattedDateTime || (product.stats.lastActivityAt as any).date || '—'
+                        : product.stats.lastActivityAt || '—'}
                     </p>
                   </div>
                 )}
