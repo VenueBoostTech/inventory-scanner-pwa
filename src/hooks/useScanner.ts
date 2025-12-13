@@ -67,6 +67,9 @@ export function useScanner() {
         : { facingMode: 'environment' };
 
       try {
+        alert('[DEBUG] Starting scanner...');
+        console.log('[DEBUG] Starting scanner with constraints:', videoConstraints);
+        
         await scanner.start(
           videoConstraints,
           { 
@@ -75,12 +78,20 @@ export function useScanner() {
             aspectRatio: 1.0, // Better for mobile
             disableFlip: false, // Allow rotation
           },
-          onSuccess,
+          (decodedText) => {
+            alert(`[DEBUG] Scanner detected code: ${decodedText}`);
+            console.log('[DEBUG] Scanner callback fired with:', decodedText);
+            onSuccess(decodedText);
+          },
           (errorMessage) => {
             // Log scanning errors but don't stop scanning
             console.debug('Scanning error:', errorMessage);
+            alert(`[DEBUG] Scanning error: ${errorMessage}`);
           },
         );
+        
+        alert('[DEBUG] Scanner started successfully!');
+        console.log('[DEBUG] Scanner started successfully');
       } catch (startError) {
         // If environment camera fails, try user camera (front) as fallback
         if (!cameraId && videoConstraints.facingMode === 'environment') {

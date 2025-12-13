@@ -77,10 +77,24 @@ export function ScanScreen() {
 
   const handleDecoded = async (code: string) => {
     try {
+      alert(`[DEBUG] Barcode detected: ${code}`);
+      console.log('[DEBUG] Barcode detected:', code);
+      
+      alert(`[DEBUG] Calling API with barcode: ${code}`);
+      console.log('[DEBUG] Calling API...');
+      
       const result = await mutateAsync({ barcode: code });
+      
+      alert(`[DEBUG] API response received. Result: ${result.result}, Product: ${result.product?.title || 'none'}`);
+      console.log('[DEBUG] API response:', result);
+      
       await stopScanning();
+      
+      alert(`[DEBUG] Navigating to result screen...`);
       navigate('/scan/result', { state: { scanResult: result, barcode: code } });
     } catch (error) {
+      alert(`[DEBUG] Error occurred: ${error instanceof Error ? error.message : String(error)}`);
+      console.error('[DEBUG] Error:', error);
       await stopScanning();
       toast({
         title: t('common.error'),
@@ -137,7 +151,11 @@ export function ScanScreen() {
               <Button
                 size="sm"
                 className="mt-2 w-full border-none bg-[#164945] text-white hover:bg-[#123b37]"
-                onClick={() => void startScanning(handleDecoded)}
+                onClick={() => {
+                  alert('[DEBUG] Start scanning button clicked');
+                  console.log('[DEBUG] Start scanning button clicked');
+                  void startScanning(handleDecoded);
+                }}
               >
                 {t('scan.startScanning')}
               </Button>
