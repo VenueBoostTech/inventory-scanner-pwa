@@ -42,6 +42,7 @@ import { useProducts } from '@/hooks/api/useProducts';
 import { useWarehouses } from '@/hooks/api/useWarehouses';
 import { useStockAdjustment } from '@/hooks/api/useStockAdjustment';
 import { Package, Plus, Search, Filter, TrendingUp, TrendingDown, Minus, Eye, AlertTriangle, Coffee } from 'lucide-react';
+import { authStore } from '@/stores/authStore';
 
 type SortOption = 'recent' | 'type' | 'warehouse';
 
@@ -49,6 +50,7 @@ export function AdjustmentsScreen() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const canAdjustStock = authStore((state) => state.canAdjustStock());
   const [search, setSearch] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -311,13 +313,15 @@ export function AdjustmentsScreen() {
             <h1 className="text-xl font-semibold text-foreground">{t('operations.stockAdjustments')}</h1>
             <p className="text-sm text-muted-foreground">{t('operations.adjustmentsSubtitle')}</p>
           </div>
-          <button
-            onClick={handleCreate}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#164945] text-white hover:bg-[#123b37] transition-colors"
-            title={t('operations.newAdjustment')}
-          >
-            <Plus className="h-5 w-5 fill-current" />
-          </button>
+          {canAdjustStock && (
+            <button
+              onClick={handleCreate}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#164945] text-white hover:bg-[#123b37] transition-colors"
+              title={t('operations.newAdjustment')}
+            >
+              <Plus className="h-5 w-5 fill-current" />
+            </button>
+          )}
         </div>
 
         {/* Search Bar */}

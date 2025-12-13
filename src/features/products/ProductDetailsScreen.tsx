@@ -33,6 +33,7 @@ import {
 import { format } from 'date-fns';
 import { ProductGallery } from './ProductGallery';
 import { AdjustStockModal } from './AdjustStockModal';
+import { authStore } from '@/stores/authStore';
 
 export function ProductDetailsScreen() {
   const { t, language } = useI18n();
@@ -41,6 +42,9 @@ export function ProductDetailsScreen() {
   const { toast } = useToast();
   const [adjustModalOpen, setAdjustModalOpen] = useState(false);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
+  const canEditProduct = authStore((state) => state.canEditProduct());
+  const canAdjustStock = authStore((state) => state.canAdjustStock());
+  const canInitiateTransfer = authStore((state) => state.canInitiateTransfer());
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -190,15 +194,17 @@ export function ProductDetailsScreen() {
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleEdit}
-              className="h-10 w-10 p-0"
-              title={t('common.edit')}
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
+            {canEditProduct && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleEdit}
+                className="h-10 w-10 p-0"
+                title={t('common.edit')}
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="h-10 w-10 p-0">
@@ -256,16 +262,18 @@ export function ProductDetailsScreen() {
                 </div>
               )}
             </div>
-            <div className="mt-3 pt-3 border-t border-border">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleAdjustStock}
-                className="w-full h-10"
-              >
-                {t('products.adjust')}
-              </Button>
-            </div>
+            {canAdjustStock && (
+              <div className="mt-3 pt-3 border-t border-border">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAdjustStock}
+                  className="w-full h-10"
+                >
+                  {t('products.adjust')}
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -313,15 +321,17 @@ export function ProductDetailsScreen() {
                       <p className="text-sm font-medium">{t('products.notLinked')}</p>
                     </div>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleLinkBarcode}
-                    className="h-10 gap-2"
-                  >
-                    <Tag className="h-4 w-4" />
-                    {t('products.link')}
-                  </Button>
+                  {canEditProduct && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleLinkBarcode}
+                      className="h-10 gap-2"
+                    >
+                      <Tag className="h-4 w-4" />
+                      {t('products.link')}
+                    </Button>
+                  )}
                 </div>
               )}
               {product.articleNo && (
@@ -537,24 +547,28 @@ export function ProductDetailsScreen() {
           <CardContent className="px-3 py-3">
             <h3 className="text-sm font-semibold mb-3">{t('products.quickActions')}</h3>
             <div className="grid grid-cols-2 gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleAdjustStock}
-                className="h-10 gap-2"
-              >
-                <Package className="h-4 w-4" />
-                {t('products.adjustStock')}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleTransfer}
-                className="h-10 gap-2"
-              >
-                <Truck className="h-4 w-4" />
-                {t('products.transfer')}
-              </Button>
+              {canAdjustStock && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAdjustStock}
+                  className="h-10 gap-2"
+                >
+                  <Package className="h-4 w-4" />
+                  {t('products.adjustStock')}
+                </Button>
+              )}
+              {canInitiateTransfer && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleTransfer}
+                  className="h-10 gap-2"
+                >
+                  <Truck className="h-4 w-4" />
+                  {t('products.transfer')}
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -564,7 +578,7 @@ export function ProductDetailsScreen() {
                 <ClipboardList className="h-4 w-4" />
                 {t('products.fullHistory')}
               </Button>
-              {!product.hasBarcode && (
+              {!product.hasBarcode && canEditProduct && (
                 <Button
                   variant="outline"
                   size="sm"
