@@ -572,12 +572,12 @@ export function ActivitiesScreen() {
                   )}
                 </Button>
               </SheetTrigger>
-            <SheetContent side="left" className="w-[300px] sm:w-[400px]">
-              <SheetHeader className="text-left space-y-1">
+            <SheetContent side="left" className="w-[300px] sm:w-[400px] flex flex-col">
+              <SheetHeader className="text-left space-y-1 shrink-0">
                 <SheetTitle className="text-left">{t('common.filter')}</SheetTitle>
                 <SheetDescription className="text-left">{t('operations.filterActivities')}</SheetDescription>
               </SheetHeader>
-              <div className="mt-4 space-y-4">
+              <div className="mt-4 space-y-4 flex-1 overflow-y-auto scrollbar-hide pr-2">
                 {/* Type Filter */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-left">{t('operations.activityType')}</label>
@@ -703,7 +703,7 @@ export function ActivitiesScreen() {
                   </div>
                 </div>
               </div>
-              <SheetFooter className="mt-4 gap-2">
+              <SheetFooter className="mt-4 gap-2 shrink-0 border-t border-border pt-4">
                 <Button variant="outline" onClick={clearFilters} className="w-full">
                   {t('products.clearFilters')}
                 </Button>
