@@ -299,15 +299,23 @@ export function ProductDetailsScreen() {
               <div className="grid grid-cols-3 gap-2">
                 <div className="text-center p-2 bg-muted/50 rounded-md">
                   <p className="text-lg font-semibold">{product.stockQuantity}</p>
-                  <p className="text-sm text-muted-foreground">{t('products.currentStock')}</p>
+                  <p className="text-sm text-muted-foreground">{t('products.stock')}</p>
                 </div>
                 <div className="text-center p-2 bg-muted/50 rounded-md">
-                  <p className="text-lg font-semibold">{product.lowQuantity}</p>
-                  <p className="text-sm text-muted-foreground">{t('products.lowAlertThreshold')}</p>
+                  {product.enableLowStockAlert ? (
+                    <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 mb-1">
+                      {t('products.enabled')}
+                    </Badge>
+                  ) : (
+                    <Badge className="bg-red-50 text-red-700 border-red-200 mb-1">
+                      {t('products.disabled')}
+                    </Badge>
+                  )}
+                  <p className="text-sm text-muted-foreground">{t('products.alertStatus')}</p>
                 </div>
                 <div className="text-center p-2 bg-muted/50 rounded-md">
-                  <p className="text-lg font-semibold">{product.unitMeasure}</p>
-                  <p className="text-sm text-muted-foreground">{t('products.unit')}</p>
+                  <p className="text-lg font-semibold">{product.lowQuantity ?? 0}</p>
+                  <p className="text-sm text-muted-foreground">{t('products.lowQty')}</p>
                 </div>
               </div>
               {product.enableLowStockAlert && (
