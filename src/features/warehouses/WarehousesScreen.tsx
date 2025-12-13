@@ -10,7 +10,8 @@ import { Warehouse, Search } from 'lucide-react';
 export function WarehousesScreen() {
   const { t } = useI18n();
   const [search, setSearch] = useState('');
-  const { data: warehouses = [], isLoading } = useWarehouses({ search, limit: 100 });
+  const { data: warehousesData, isLoading } = useWarehouses({ search, limit: 100 });
+  const warehouses = warehousesData?.data || [];
 
   return (
     <div className="min-h-screen bg-background pb-20">

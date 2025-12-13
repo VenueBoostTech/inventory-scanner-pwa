@@ -57,7 +57,8 @@ export function TransfersScreen() {
     status: statusFilter !== 'all' ? statusFilter : undefined,
     limit: 100,
   });
-  const { data: warehouses = [] } = useWarehouses({ limit: 100 });
+  const { data: warehousesData } = useWarehouses({ limit: 100 });
+  const warehouses = warehousesData?.data || [];
   const { data: products = [] } = useProducts({ limit: 100 });
   const { mutateAsync: createTransfer } = useCreateTransfer();
   const { mutateAsync: completeTransfer } = useCompleteTransfer();

@@ -140,7 +140,8 @@
       "subtitle": "Depot që keni qasje",
       "warehousesICanAccess": "Depot që mund t'i qas:",
       "noWarehouses": "Nuk ka depo të caktuara",
-      "contactAdmin": "Kontaktoni administratorin tuaj për të marrë qasje në më shumë depo."
+      "contactAdmin": "Kontaktoni administratorin tuaj për të marrë qasje në më shumë depo.",
+      "searchByName": "Kërko sipas emrit..."
     }
   },
   "dashboard": {
@@ -561,6 +562,7 @@
     "thisWeek": "Kjo Javë",
     "total": "Total",
     "active": "Aktiv",
+    "inactive": "Jo Aktiv",
     "mobileActivities": "Aktivitetet Mobile",
     "ordersCreated": "Porositë e Krijuara",
     "ordersCancelled": "Porositë e Anuluara",

@@ -73,7 +73,8 @@ export function AdjustmentsScreen() {
     limit: 100,
   });
   const { data: products = [] } = useProducts({ limit: 1000 });
-  const { data: warehouses = [] } = useWarehouses({ limit: 100 });
+  const { data: warehousesData } = useWarehouses({ limit: 100 });
+  const warehouses = warehousesData?.data || [];
   const { mutateAsync: adjustStock } = useStockAdjustment();
 
   const adjustments = adjustmentsData?.data || [];

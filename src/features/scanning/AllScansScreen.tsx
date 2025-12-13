@@ -76,7 +76,8 @@ export function AllScansScreen() {
   const [dateRangeFilter, setDateRangeFilter] = useState<string>('all');
 
   // Get warehouses for filter
-  const { data: warehouses = [] } = useWarehouses({ limit: 100 });
+  const { data: warehousesData } = useWarehouses({ limit: 100 });
+  const warehouses = warehousesData?.data || [];
 
   // Calculate date range for API - memoized to prevent infinite loops
   const { dateFrom, dateTo } = useMemo(() => getDateRange(dateRangeFilter), [dateRangeFilter]);

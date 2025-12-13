@@ -47,7 +47,8 @@ export function AdjustStockModal({ open, onOpenChange, product }: AdjustStockMod
   const { t } = useI18n();
   const { toast } = useToast();
   const { mutateAsync: adjustStock, isPending } = useStockAdjustment();
-  const { data: warehouses = [] } = useWarehouses({ limit: 100 });
+  const { data: warehousesData } = useWarehouses({ limit: 100 });
+  const warehouses = warehousesData?.data || [];
   const profile = authStore((state) => state.profile);
   const [adjustmentType, setAdjustmentType] = useState<AdjustmentType>('increase');
   const [quantity, setQuantity] = useState('');

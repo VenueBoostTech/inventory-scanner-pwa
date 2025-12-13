@@ -74,7 +74,8 @@ export function CountsScreen() {
     warehouseId: warehouseFilter !== 'all' ? warehouseFilter : undefined,
     limit: 100,
   });
-  const { data: warehouses = [] } = useWarehouses({ limit: 100 });
+  const { data: warehousesData } = useWarehouses({ limit: 100 });
+  const warehouses = warehousesData?.data || [];
   const { mutateAsync: createStockCount } = useCreateStockCount();
 
   const counts = countsData?.data || [];

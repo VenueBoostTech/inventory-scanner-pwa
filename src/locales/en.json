@@ -140,7 +140,8 @@
       "subtitle": "Warehouses you have access to",
       "warehousesICanAccess": "Warehouses I can access:",
       "noWarehouses": "No warehouses assigned",
-      "contactAdmin": "Contact your admin to get access to more warehouses."
+      "contactAdmin": "Contact your admin to get access to more warehouses.",
+      "searchByName": "Search by name..."
     }
   },
   "dashboard": {
@@ -561,6 +562,7 @@
     "thisWeek": "This Week",
     "total": "Total",
     "active": "Active",
+    "inactive": "Inactive",
     "mobileActivities": "Mobile Activities",
     "ordersCreated": "Orders Created",
     "ordersCancelled": "Orders Cancelled",

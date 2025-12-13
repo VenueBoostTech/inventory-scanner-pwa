@@ -38,15 +38,25 @@ export interface WarehouseStats {
   totalStockValue: number;
 }
 
+export interface WarehousesResponse {
+  data: Warehouse[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
 export function useWarehouses(params?: { page?: number; limit?: number; search?: string }) {
   return useQuery({
     queryKey: ['warehouses', params],
     queryFn: async () => {
-      const { data } = await apiClient.get<{ data: Warehouse[]; pagination: any }>(
+      const { data } = await apiClient.get<WarehousesResponse>(
         '/warehouses',
         { params }
       );
-      return data.data || data;
+      return data;
     },
   });
 }
