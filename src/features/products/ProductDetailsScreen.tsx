@@ -29,6 +29,11 @@ import {
   Tag,
   ChevronDown,
   ChevronUp,
+  Smartphone,
+  Monitor,
+  Store,
+  Link as LinkIcon,
+  ShoppingCart,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ProductGallery } from './ProductGallery';
@@ -36,12 +41,12 @@ import { AdjustStockModal } from './AdjustStockModal';
 import { authStore } from '@/stores/authStore';
 
 export function ProductDetailsScreen() {
-  const { t, language } = useI18n();
+  const { t } = useI18n();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [adjustModalOpen, setAdjustModalOpen] = useState(false);
-  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
+  const [descriptionExpanded, setDescriptionExpanded] = useState(true);
   const canEditProduct = authStore((state) => state.canEditProduct());
   const canAdjustStock = authStore((state) => state.canAdjustStock());
   const canInitiateTransfer = authStore((state) => state.canInitiateTransfer());
@@ -110,29 +115,77 @@ export function ProductDetailsScreen() {
   };
 
   const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'STOCK_ADJUSTMENT':
-        return <Package className="h-4 w-4" />;
-      case 'SCAN':
-        return <ClipboardList className="h-4 w-4" />;
-      case 'TRANSFER':
-        return <Truck className="h-4 w-4" />;
+    switch (type?.toLowerCase()) {
+      case 'adjustment':
+        return Package;
+      case 'transfer':
+        return Truck;
+      case 'count':
+        return ClipboardList;
+      case 'scan':
+        return ClipboardList;
+      case 'order_created':
+      case 'order_cancelled':
+      case 'order_returned':
+      case 'order_refunded':
+        return ShoppingCart;
       default:
-        return <Package className="h-4 w-4" />;
+        return Package;
     }
   };
 
-  const getActivityLabel = (type: string) => {
-    switch (type) {
-      case 'STOCK_ADJUSTMENT':
-        return t('products.stockAdjustment');
-      case 'SCAN':
-        return t('products.scan');
-      case 'TRANSFER':
-        return t('products.transfer');
+  const getActivityTypeLabel = (type: string) => {
+    if (!type) return '—';
+    switch (type.toLowerCase()) {
+      case 'adjustment':
+        return t('operations.adjustment');
+      case 'transfer':
+        return t('operations.transfer');
+      case 'count':
+        return t('operations.count');
+      case 'order_created':
+        return t('operations.orderCreated');
+      case 'order_cancelled':
+        return t('operations.orderCancelled');
+      case 'order_returned':
+        return t('operations.orderReturned');
+      case 'order_refunded':
+        return t('operations.orderRefunded');
       default:
         return type;
     }
+  };
+
+  const getSourceIcon = (source: string) => {
+    const normalizedSource = source?.toUpperCase();
+    switch (normalizedSource) {
+      case 'MOBILE_SCANNING':
+        return Smartphone;
+      case 'PANDACOMET':
+        return Monitor;
+      case 'ORDER':
+        return Store;
+      case 'WOOCOMMERCE':
+      case 'WEBHOOK':
+        return LinkIcon;
+      default:
+        return Monitor;
+    }
+  };
+
+  const getReasonLabel = (reason: string) => {
+    if (!reason) return '—';
+    const reasonMap: Record<string, string> = {
+      'received_shipment': t('operations.receivedShipment'),
+      'return_customer': t('operations.returnCustomer'),
+      'found_during_count': t('operations.foundDuringCount'),
+      'damaged_items': t('operations.damagedItems'),
+      'expired_items': t('operations.expiredItems'),
+      'theft_loss': t('operations.theftLoss'),
+      'inventory_correction': t('operations.inventoryCorrection'),
+      'other': t('common.other'),
+    };
+    return reasonMap[reason] || reason;
   };
 
   const handleCopy = (text: string, label: string) => {
@@ -163,7 +216,7 @@ export function ProductDetailsScreen() {
     navigate(`/products/${product.id}/edit`);
   };
 
-  const displayTitle = language === 'sq' && product.titleAl ? product.titleAl : product.title;
+  const displayTitle = product.titleAl || product.title || '—';
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -176,12 +229,14 @@ export function ProductDetailsScreen() {
         {/* Title and Actions */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-semibold text-foreground">{displayTitle}</h1>
-            {product.titleAl && language === 'en' && (
-              <p className="text-sm text-muted-foreground">{product.titleAl}</p>
+            <h1 className="text-xl font-semibold text-foreground">
+              {product.titleAl || product.title || '—'}
+            </h1>
+            {product.titleAl && product.title && product.titleAl !== product.title && (
+              <p className="text-sm text-muted-foreground mt-1">{product.title}</p>
             )}
-            {product.title && language === 'sq' && (
-              <p className="text-sm text-muted-foreground">{product.title}</p>
+            {!product.titleAl && product.title && (
+              <p className="text-sm text-muted-foreground mt-1">{product.title}</p>
             )}
             <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
               {product.category && <span>{t('products.category')}: {product.category.name}</span>}
@@ -244,15 +299,23 @@ export function ProductDetailsScreen() {
               <div className="grid grid-cols-3 gap-2">
                 <div className="text-center p-2 bg-muted/50 rounded-md">
                   <p className="text-lg font-semibold">{product.stockQuantity}</p>
-                  <p className="text-xs text-muted-foreground">{t('products.currentStock')}</p>
+                  <p className="text-sm text-muted-foreground">{t('products.stock')}</p>
                 </div>
                 <div className="text-center p-2 bg-muted/50 rounded-md">
-                  <p className="text-lg font-semibold">{product.lowQuantity}</p>
-                  <p className="text-xs text-muted-foreground">{t('products.lowAlertThreshold')}</p>
+                  {product.enableLowStockAlert ? (
+                    <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 mb-1">
+                      {t('products.enabled')}
+                    </Badge>
+                  ) : (
+                    <Badge className="bg-red-50 text-red-700 border-red-200 mb-1">
+                      {t('products.disabled')}
+                    </Badge>
+                  )}
+                  <p className="text-sm text-muted-foreground">{t('products.alertStatus')}</p>
                 </div>
                 <div className="text-center p-2 bg-muted/50 rounded-md">
-                  <p className="text-lg font-semibold">{product.unitMeasure}</p>
-                  <p className="text-xs text-muted-foreground">{t('products.unit')}</p>
+                  <p className="text-lg font-semibold">{product.lowQuantity ?? 0}</p>
+                  <p className="text-sm text-muted-foreground">{t('products.lowQty')}</p>
                 </div>
               </div>
               {product.enableLowStockAlert && (
@@ -284,7 +347,7 @@ export function ProductDetailsScreen() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-muted-foreground">{t('products.sku')}</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t('products.sku')}</p>
                   <p className="text-sm font-medium">{product.sku}</p>
                 </div>
                 <Button
@@ -300,7 +363,7 @@ export function ProductDetailsScreen() {
               {product.hasBarcode ? (
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-muted-foreground">{t('products.barcode')}</p>
+                    <p className="text-sm font-medium text-muted-foreground">{t('products.barcode')}</p>
                     <p className="text-sm font-medium">{product.barcode}</p>
                   </div>
                   <Button
@@ -315,7 +378,7 @@ export function ProductDetailsScreen() {
               ) : (
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-muted-foreground">{t('products.barcode')}</p>
+                    <p className="text-sm font-medium text-muted-foreground">{t('products.barcode')}</p>
                     <div className="flex items-center gap-2">
                       <AlertCircle className="h-4 w-4 text-amber-600" />
                       <p className="text-sm font-medium">{t('products.notLinked')}</p>
@@ -339,7 +402,7 @@ export function ProductDetailsScreen() {
                   <div className="border-t border-border pt-2" />
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-muted-foreground">{t('products.articleNo')}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('products.articleNo')}</p>
                       <p className="text-sm font-medium">{product.articleNo}</p>
                     </div>
                     <Button
@@ -358,17 +421,39 @@ export function ProductDetailsScreen() {
         </Card>
 
         {/* Pricing */}
-        <Card className="border border-border bg-white shadow-none">
-          <CardContent className="px-3 py-3">
-            <h3 className="text-sm font-semibold mb-3">{t('products.pricing')}</h3>
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">{t('products.price')}</p>
-              <p className="text-lg font-semibold">
-                €{product.pricing?.priceEur?.toFixed(2) || product.pricing?.price?.toFixed(2) || '0.00'} / {product.pricing?.priceAl?.toLocaleString() || '0'} L
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        {product.pricing && (
+          <Card className="border border-border bg-white shadow-none">
+            <CardContent className="px-3 py-3">
+              <h3 className="text-sm font-semibold mb-3">{t('products.pricing')}</h3>
+              <div className="space-y-3">
+                {/* Main currency (price is the final version) */}
+                {product.pricing.price && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">
+                      Price (ALL)
+                    </p>
+                    <p className="text-lg font-semibold text-foreground">
+                      {typeof product.pricing.price === 'object' && product.pricing.price !== null
+                        ? (product.pricing.price as any).formatted || `${(product.pricing.price as any).amount} ${(product.pricing.price as any).currencySymbol || 'L'}`
+                        : `${product.pricing.price} L`}
+                    </p>
+                  </div>
+                )}
+                {/* EUR price */}
+                {product.pricing.priceEur && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">Price (EUR)</p>
+                    <p className="text-lg font-semibold text-foreground">
+                      {typeof product.pricing.priceEur === 'object' && product.pricing.priceEur !== null
+                        ? (product.pricing.priceEur as any).formatted || `${(product.pricing.priceEur as any).currencySymbol || '€'}${(product.pricing.priceEur as any).amount.toFixed(2)}`
+                        : `€${product.pricing.priceEur.toFixed(2)}`}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Sale Info */}
         {product.saleInfo?.isOnSale && (
@@ -420,23 +505,37 @@ export function ProductDetailsScreen() {
               <div className="grid grid-cols-3 gap-2">
                 <div className="text-center p-2 bg-muted/50 rounded-md">
                   <p className="text-lg font-semibold">{product.stats?.breakdown?.adjustments || 0}</p>
-                  <p className="text-xs text-muted-foreground">{t('products.adjusts')}</p>
+                  <p className="text-sm text-muted-foreground">{t('products.adjusts')}</p>
                 </div>
                 <div className="text-center p-2 bg-muted/50 rounded-md">
                   <p className="text-lg font-semibold">{product.stats?.breakdown?.scans || 0}</p>
-                  <p className="text-xs text-muted-foreground">{t('products.scans')}</p>
+                  <p className="text-sm text-muted-foreground">{t('products.scans')}</p>
                 </div>
                 <div className="text-center p-2 bg-muted/50 rounded-md">
                   <p className="text-lg font-semibold">{product.stats?.breakdown?.transfers || 0}</p>
-                  <p className="text-xs text-muted-foreground">{t('products.transfer')}</p>
+                  <p className="text-sm text-muted-foreground">{t('products.transfer')}</p>
                 </div>
               </div>
-              <div className="space-y-1 text-xs text-muted-foreground">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-border">
                 {product.stats?.firstActivityAt && (
-                  <p>{t('products.first')}: {format(new Date(product.stats.firstActivityAt), 'MMM d, yyyy')}</p>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-muted-foreground">{t('products.firstActivity')}</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {typeof product.stats.firstActivityAt === 'object' && product.stats.firstActivityAt !== null
+                        ? (product.stats.firstActivityAt as any).formattedDateTime || (product.stats.firstActivityAt as any).date || '—'
+                        : product.stats.firstActivityAt || '—'}
+                    </p>
+                  </div>
                 )}
                 {product.stats?.lastActivityAt && (
-                  <p>{t('products.last')}: {format(new Date(product.stats.lastActivityAt), 'MMM d, yyyy')}</p>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-muted-foreground">{t('products.mostRecentActivity')}</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {typeof product.stats.lastActivityAt === 'object' && product.stats.lastActivityAt !== null
+                        ? (product.stats.lastActivityAt as any).formattedDateTime || (product.stats.lastActivityAt as any).date || '—'
+                        : product.stats.lastActivityAt || '—'}
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
@@ -446,54 +545,103 @@ export function ProductDetailsScreen() {
         {/* Recent Activity */}
         <Card className="border border-border bg-white shadow-none">
           <CardContent className="px-3 py-3">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold flex-1 min-w-0">{t('products.recentActivity')}</h3>
+            <h3 className="text-sm font-semibold mb-3">{t('products.recentActivity')}</h3>
+            <div className="space-y-3">
+              {product.stats?.recentActivities?.map((activity: any) => {
+                const TypeIcon = getActivityIcon(activity.activityType);
+                const SourceIconComponent = getSourceIcon(activity.source);
+                return (
+                  <div key={activity.id} className="space-y-2 pb-3 border-b border-border last:border-b-0 last:pb-0">
+                    <div className="flex items-center gap-2">
+                      <TypeIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <span className="text-sm font-medium">{getActivityTypeLabel(activity.activityType)}</span>
+                      {activity.quantity !== 0 && (
+                        <span className={`text-sm font-semibold ${activity.quantity > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                          {activity.quantity > 0 ? '+' : ''}{activity.quantity}
+                        </span>
+                      )}
+                    </div>
+                    {(activity.stockBefore != null && activity.stockAfter != null) && (
+                      <div className="text-sm text-muted-foreground pl-6">
+                        {activity.stockBefore} → {activity.stockAfter}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-3 pl-6">
+                      <div className="flex items-center gap-1.5">
+                        <SourceIconComponent className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">
+                          {activity.createdAt?.formattedDateTime || activity.createdAt?.date || format(new Date(activity.createdAt), 'MMM d, yyyy, h:mm a')}
+                        </span>
+                      </div>
+                      {activity.staff && (
+                        <span className="text-sm text-muted-foreground">
+                          • {activity.staff.name}
+                        </span>
+                      )}
+                      {!activity.staff && (
+                        <span className="text-sm text-muted-foreground">
+                          • {t('operations.system')}
+                        </span>
+                      )}
+                    </div>
+                    {activity.reason && (
+                      <div className="pl-6">
+                        <p className="text-sm text-muted-foreground">
+                          <span className="font-semibold text-foreground">{t('operations.reason')}:</span> <span className="font-medium">{getReasonLabel(activity.reason)}</span>
+                        </p>
+                      </div>
+                    )}
+                    {activity.notes && (
+                      <div className="pl-6">
+                        <p className="text-sm text-muted-foreground">
+                          <span className="font-semibold text-foreground">{t('operations.notes')}:</span> <span className="font-medium">{activity.notes}</span>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-3 pt-3 border-t border-border">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleViewHistory}
-                className="h-8 shrink-0 gap-1 px-2"
+                className="w-full h-8 gap-1"
               >
                 {t('products.viewAll')}
                 <ArrowRight className="h-3 w-3" />
               </Button>
             </div>
-            <div className="space-y-3">
-              {product.stats?.recentActivities?.map((activity: any) => (
-                <div key={activity.id} className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    {getActivityIcon(activity.type)}
-                    <span className="text-sm font-medium">{getActivityLabel(activity.type)}</span>
-                    {activity.quantityChange && (
-                      <span className={`text-sm font-medium ${activity.quantityChange > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                        {activity.quantityChange > 0 ? '+' : ''}{activity.quantityChange} {t('products.units')}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {format(new Date(activity.createdAt), 'MMM d, yyyy, h:mm a')}
-                  </p>
-                  {activity.previousQuantity !== undefined && (
-                    <p className="text-xs text-muted-foreground">
-                      {activity.previousQuantity} → {activity.newQuantity} • "{activity.notes}"
-                    </p>
-                  )}
-                  {activity.createdBy && (
-                    <p className="text-xs text-muted-foreground">
-                      {t('products.by')}: {activity.createdBy.name}
-                    </p>
-                  )}
-                  {activity.toWarehouse && (
-                    <p className="text-xs text-muted-foreground">
-                      {t('products.to')}: {activity.toWarehouse.name}
-                    </p>
-                  )}
-                  <div className="border-t border-border pt-2" />
-                </div>
-              ))}
-            </div>
           </CardContent>
         </Card>
+
+        {/* Short Description */}
+        {(product.shortDescriptionAl || product.shortDescription) && (
+          <Card className="border border-border bg-white shadow-none">
+            <CardContent className="px-3 py-3">
+              <h3 className="text-sm font-semibold mb-3">{t('products.shortDescription')}</h3>
+              <div className="space-y-2">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Albanian</p>
+                  <p className="text-sm text-foreground">
+                    {product.shortDescriptionAl && product.shortDescriptionAl.trim() !== '<p><br></p>' && product.shortDescriptionAl.trim() !== ''
+                      ? product.shortDescriptionAl.replace(/<[^>]*>/g, '').trim() || '—'
+                      : '—'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">English</p>
+                  <p className="text-sm text-foreground">
+                    {product.shortDescription && product.shortDescription.trim() !== '<p><br></p>' && product.shortDescription.trim() !== ''
+                      ? product.shortDescription.replace(/<[^>]*>/g, '').trim() || '—'
+                      : '—'}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Description */}
         <Card className="border border-border bg-white shadow-none">
@@ -516,13 +664,21 @@ export function ProductDetailsScreen() {
             {descriptionExpanded && (
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm text-foreground">{product.description}</p>
-                </div>
-                {product.descriptionAl && (
-                  <div>
-                    <p className="text-sm text-foreground">{product.descriptionAl}</p>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Albanian</p>
+                  <div className="text-sm text-foreground">
+                    {product.descriptionAl && product.descriptionAl.trim() !== '<p><br></p>' && product.descriptionAl.trim() !== ''
+                      ? <div dangerouslySetInnerHTML={{ __html: product.descriptionAl }} />
+                      : <span>—</span>}
                   </div>
-                )}
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">English</p>
+                  <div className="text-sm text-foreground">
+                    {product.description && product.description.trim() !== '<p><br></p>' && product.description.trim() !== ''
+                      ? <div dangerouslySetInnerHTML={{ __html: product.description }} />
+                      : <span>—</span>}
+                  </div>
+                </div>
                 {(product.weight || product.dimensions) && (
                   <div className="space-y-1 pt-2 border-t border-border">
                     {product.weight && (
@@ -569,15 +725,6 @@ export function ProductDetailsScreen() {
                   {t('products.transfer')}
                 </Button>
               )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleViewHistory}
-                className="h-10 gap-2"
-              >
-                <ClipboardList className="h-4 w-4" />
-                {t('products.fullHistory')}
-              </Button>
               {!product.hasBarcode && canEditProduct && (
                 <Button
                   variant="outline"

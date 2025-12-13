@@ -179,12 +179,12 @@ export function AllScansScreen() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <ScreenHeader title={t('scan.recentScans')} showBack />
+      <ScreenHeader title={t('scan.allScans')} showBack />
       <div className="space-y-4 px-4 py-4">
         {/* Title and Subtitle */}
         <div>
-          <h1 className="text-xl font-semibold text-foreground">{t('scan.recentScans')}</h1>
-          <p className="text-sm text-muted-foreground">{t('scan.latestLookups')}</p>
+          <h1 className="text-xl font-semibold text-foreground">{t('scan.allScans')}</h1>
+          <p className="text-sm text-muted-foreground">{t('scan.allScansSubtitle')}</p>
         </div>
 
         {/* Filters Bar */}

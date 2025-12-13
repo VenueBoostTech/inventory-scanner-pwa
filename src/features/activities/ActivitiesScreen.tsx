@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Button } from '@/components/ui/button';
@@ -59,18 +60,22 @@ import {
   Info,
   Lightbulb,
   AlertCircle,
+  Eye,
 } from 'lucide-react';
 
 export function ActivitiesScreen() {
   const { t } = useI18n();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const urlProductId = searchParams.get('productId');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [sourceFilter, setSourceFilter] = useState<string>('all');
   const [warehouseFilter, setWarehouseFilter] = useState<string>('all');
   const [staffFilter, setStaffFilter] = useState<string>('all');
   const [dateRangeFilter, setDateRangeFilter] = useState<string>('all');
+  const [productFilter, setProductFilter] = useState<string>(urlProductId || 'all');
   const [displayActivity, setSelectedActivity] = useState<any>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -118,13 +123,32 @@ export function ActivitiesScreen() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [typeFilter, sourceFilter, warehouseFilter, staffFilter, dateRangeFilter]);
+  }, [typeFilter, sourceFilter, warehouseFilter, staffFilter, dateRangeFilter, productFilter]);
+
+  // Set product filter from URL on mount
+  useEffect(() => {
+    if (urlProductId) {
+      setProductFilter(urlProductId);
+    }
+  }, [urlProductId]);
+
+  // Fetch product name when filtered
+  const { data: filteredProduct } = useQuery({
+    queryKey: ['product', productFilter],
+    queryFn: async () => {
+      if (productFilter === 'all') return null;
+      const { data } = await apiClient.get(`/products/${productFilter}`);
+      return data;
+    },
+    enabled: productFilter !== 'all',
+  });
 
   // API hooks
   const { data: activitiesData, isLoading: activitiesLoading } = useActivities({
     page: currentPage,
     limit: 20,
     activityType: typeFilter !== 'all' ? typeFilter : undefined,
+    productId: productFilter !== 'all' ? productFilter : undefined,
     dateFrom,
     dateTo,
   });
@@ -254,7 +278,8 @@ export function ActivitiesScreen() {
   };
 
   const getSourceIcon = (source: string) => {
-    switch (source) {
+    const normalizedSource = source?.toUpperCase();
+    switch (normalizedSource) {
       case 'MOBILE_SCANNING':
         return Smartphone;
       case 'PANDACOMET':
@@ -267,13 +292,16 @@ export function ActivitiesScreen() {
         return FileDown;
       case 'SYSTEM':
         return Zap;
+      case 'WEBHOOK':
+        return LinkIcon;
       default:
         return Monitor;
     }
   };
 
   const getSourceLabel = (source: string) => {
-    switch (source) {
+    const normalizedSource = source?.toUpperCase();
+    switch (normalizedSource) {
       case 'MOBILE_SCANNING':
         return t('operations.mobileApp');
       case 'PANDACOMET':
@@ -286,6 +314,8 @@ export function ActivitiesScreen() {
         return t('operations.import');
       case 'SYSTEM':
         return t('operations.system');
+      case 'WEBHOOK':
+        return t('operations.orderSystem');
       default:
         return source;
     }
@@ -399,6 +429,15 @@ export function ActivitiesScreen() {
     setWarehouseFilter('all');
     setStaffFilter('all');
     setDateRangeFilter('all');
+    setProductFilter('all');
+    // Remove productId from URL
+    navigate('/operations/activities', { replace: true });
+  };
+
+  const clearProductFilter = () => {
+    setProductFilter('all');
+    // Remove productId from URL
+    navigate('/operations/activities', { replace: true });
   };
 
   // Calculate active filters count
@@ -724,8 +763,20 @@ export function ActivitiesScreen() {
           </div>
 
         {/* Active Filter Tags */}
-        {activeFiltersCount > 0 && (
+        {(activeFiltersCount > 0 || productFilter !== 'all') && (
           <div className="flex flex-wrap items-center gap-2">
+            {productFilter !== 'all' && (
+              <Badge variant="outline" className="gap-1">
+                {t('operations.filteringByProduct')}: {filteredProduct?.title || productFilter}
+                <button
+                  onClick={clearProductFilter}
+                  className="ml-1 hover:bg-muted rounded-full p-0.5"
+                  aria-label="Remove filter"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
             {typeFilter !== 'all' && (
               <Badge variant="outline" className="gap-1">
                 {t('operations.activityType')}: {getActiveFilterLabel('type', typeFilter)}
@@ -813,7 +864,8 @@ export function ActivitiesScreen() {
                     <TableHead className="min-w-[80px]">{t('operations.change')}</TableHead>
                     <TableHead className="min-w-[120px]">{t('operations.stock')}</TableHead>
                     <TableHead className="min-w-[80px]">{t('operations.source')}</TableHead>
-                    <TableHead className="min-w-[80px]">{t('operations.staff')}</TableHead>
+                    <TableHead className="min-w-[80px]">{t('operations.initiatedBy')}</TableHead>
+                    <TableHead className="min-w-[60px] text-right">{t('common.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -828,12 +880,13 @@ export function ActivitiesScreen() {
                           <TableCell><Skeleton className="h-4 w-16" /></TableCell>
                           <TableCell><Skeleton className="h-4 w-12" /></TableCell>
                           <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-12" /></TableCell>
                         </TableRow>
                       ))}
                     </>
                   ) : filteredActivities.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-sm text-muted-foreground">
+                      <TableCell colSpan={8} className="text-center py-8 text-sm text-muted-foreground">
                         {t('operations.noActivities')}
                       </TableCell>
                     </TableRow>
@@ -844,8 +897,7 @@ export function ActivitiesScreen() {
                       return (
                         <TableRow
                           key={activity.id}
-                          className="cursor-pointer hover:bg-muted/50"
-                          onClick={() => handleViewDetails(activity)}
+                          className="hover:bg-muted/50"
                         >
                           <TableCell className="text-xs text-muted-foreground">
                             {activity.createdAt?.formattedDateTime || activity.createdAt?.date || '—'}
@@ -909,7 +961,25 @@ export function ActivitiesScreen() {
                             <SourceIconComponent className="h-4 w-4 text-muted-foreground" />
                           </TableCell>
                           <TableCell className="text-xs text-muted-foreground">
-                            {activity.staff ? activity.staff.name.split(' ').map((n: string) => n[0]).join('.').toUpperCase() : 'Auto'}
+                            {activity.staff ? (
+                              <span className="font-medium text-foreground truncate" title={activity.staff.name}>
+                                {activity.staff.name}
+                              </span>
+                            ) : (
+                              <span>{t('operations.system')}</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewDetails(activity);
+                              }}
+                              className="p-1 hover:bg-muted rounded"
+                              title={t('operations.viewDetails')}
+                            >
+                              <Eye className="h-4 w-4 text-muted-foreground" />
+                            </button>
                           </TableCell>
                         </TableRow>
                       );
@@ -1130,18 +1200,15 @@ export function ActivitiesScreen() {
 
           {currentDisplayActivity && (
             <div className="space-y-4">
-              {/* Type and ID */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {(() => {
-                    const Icon = getActivityIcon(currentDisplayActivity.activityType);
-                    return <Icon className="h-5 w-5 text-muted-foreground" />;
-                  })()}
-                  <span className="text-sm font-semibold">
-                    {getActivityTypeLabel(currentDisplayActivity.activityType)}
-                  </span>
-                </div>
-                <span className="text-xs text-muted-foreground">ID: {currentDisplayActivity.id?.slice(0, 8) || currentDisplayActivity.id || '—'}</span>
+              {/* Type */}
+              <div className="flex items-center gap-2">
+                {(() => {
+                  const Icon = getActivityIcon(currentDisplayActivity.activityType);
+                  return <Icon className="h-5 w-5 text-muted-foreground" />;
+                })()}
+                <span className="text-sm font-semibold">
+                  {getActivityTypeLabel(currentDisplayActivity.activityType)}
+                </span>
               </div>
 
               {/* Product */}
@@ -1246,7 +1313,7 @@ export function ActivitiesScreen() {
                         <span className="text-xs text-muted-foreground">{t('operations.source')}</span>
                         <div className="flex items-center gap-1">
                           <SourceIcon className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{getSourceLabel(currentDisplayActivity.source)} ({currentDisplayActivity.source})</span>
+                          <span className="font-medium">{getSourceLabel(currentDisplayActivity.source)}</span>
                         </div>
                       </div>
                       {currentDisplayActivity.reason && (
@@ -1285,24 +1352,31 @@ export function ActivitiesScreen() {
               {/* Performed By */}
               <Card className="border border-border bg-muted/50 shadow-none">
                 <CardContent className="px-3 py-3">
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <h3 className="text-sm font-semibold">{t('operations.performedBy')}</h3>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-center justify-between">
+                    <div className="space-y-3 text-sm">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
                         <span className="text-xs text-muted-foreground">{t('operations.createdBy')}</span>
-                        <span className="font-medium">
-                          {(() => {
-                            if (currentDisplayActivity.staff?.name) {
-                              return `${currentDisplayActivity.staff.name}${currentDisplayActivity.staff.email ? ` (${currentDisplayActivity.staff.email})` : ''}`;
-                            }
-                            if (currentDisplayActivity.createdBy?.name) {
-                              return currentDisplayActivity.createdBy.name;
-                            }
-                            return t('operations.system');
-                          })()}
-                        </span>
+                        <div className="text-right sm:text-left">
+                          <div className="font-medium">
+                            {(() => {
+                              if (currentDisplayActivity.staff?.name) {
+                                return currentDisplayActivity.staff.name;
+                              }
+                              if (currentDisplayActivity.createdBy?.name) {
+                                return currentDisplayActivity.createdBy.name;
+                              }
+                              return t('operations.system');
+                            })()}
+                          </div>
+                          {currentDisplayActivity.staff?.email && (
+                            <div className="text-xs text-muted-foreground mt-0.5">
+                              {currentDisplayActivity.staff.email}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2 pt-2 border-t border-border">
                         <span className="text-xs text-muted-foreground">{t('operations.dateTime')}</span>
                         <span className="font-medium">
                           {currentDisplayActivity.createdAt?.formattedDateTime || currentDisplayActivity.createdAt?.date || '—'}

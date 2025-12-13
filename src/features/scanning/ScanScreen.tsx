@@ -9,6 +9,7 @@ import { useScanner } from '@/hooks/useScanner';
 import { useScanBarcode } from '@/hooks/api/useProducts';
 import { useScanHistory } from '@/hooks/api/useScanHistory';
 import { useToast } from '@/hooks/use-toast';
+import { apiClient } from '@/lib/api-client';
 import { format } from 'date-fns';
 import { AlertCircle, CheckCircle2, Plus, XCircle, ArrowRight, Info, Lightbulb, Loader2 } from 'lucide-react';
 import {
@@ -25,13 +26,15 @@ export function ScanScreen() {
   const [manualCode, setManualCode] = useState('');
   const [skuCode, setSkuCode] = useState('');
   const [infoOpen, setInfoOpen] = useState(false);
+  const [isManualLoading, setIsManualLoading] = useState(false);
+  const [isSkuLoading, setIsSkuLoading] = useState(false);
   const [lastScan] = useState<{
     code: string;
     productName: string;
     time: Date;
   } | null>(null);
   const { toast } = useToast();
-  const { mutateAsync, isPending } = useScanBarcode();
+  const { mutateAsync } = useScanBarcode();
   const { isScanning, error, startScanning, stopScanning } = useScanner();
 
   // API hooks
@@ -92,7 +95,8 @@ export function ScanScreen() {
 
   const handleManualSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!manualCode) return;
+    if (!manualCode || isManualLoading) return;
+    setIsManualLoading(true);
     try {
       const result = await mutateAsync({ barcode: manualCode });
       navigate('/scan/result', { state: { scanResult: result, barcode: manualCode } });
@@ -103,15 +107,39 @@ export function ScanScreen() {
         description: t('scan.scanError'),
         variant: 'destructive',
       });
+    } finally {
+      setIsManualLoading(false);
     }
   };
 
   const handleSkuSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!skuCode) return;
-    // TODO: Implement SKU search API call
-    toast({ title: 'SKU Search', description: `Searching for SKU: ${skuCode}` });
-    setSkuCode('');
+    if (!skuCode || isSkuLoading) return;
+    setIsSkuLoading(true);
+    try {
+      const { data: product } = await apiClient.get(`/products/sku/${skuCode}`);
+      
+      if (product && product.id) {
+        // Product found - navigate to product details
+        navigate(`/products/${product.id}`);
+        setSkuCode('');
+      } else {
+        toast({
+          title: t('common.error'),
+          description: t('scan.notFound'),
+          variant: 'destructive',
+        });
+      }
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || error?.message || t('scan.notFound');
+      toast({
+        title: t('common.error'),
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSkuLoading(false);
+    }
   };
 
   return (
@@ -207,10 +235,17 @@ export function ScanScreen() {
               />
               <Button
                 type="submit"
-                disabled={!manualCode || isPending}
+                disabled={!manualCode || isManualLoading}
                 className="h-11 border-none bg-[#164945] text-white hover:bg-[#123b37]"
               >
-                {t('common.submit')}
+                {isManualLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {t('common.loading')}
+                  </>
+                ) : (
+                  t('common.submit')
+                )}
               </Button>
             </form>
           </CardContent>
@@ -232,10 +267,17 @@ export function ScanScreen() {
               />
               <Button
                 type="submit"
-                disabled={!skuCode || isPending}
+                disabled={!skuCode || isSkuLoading}
                 className="h-11 border-none bg-[#164945] text-white hover:bg-[#123b37]"
               >
-                {t('common.search')}
+                {isSkuLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {t('common.loading')}
+                  </>
+                ) : (
+                  t('common.search')
+                )}
               </Button>
             </form>
           </CardContent>

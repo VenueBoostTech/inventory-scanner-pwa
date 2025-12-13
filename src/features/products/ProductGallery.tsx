@@ -56,6 +56,8 @@ export function ProductGallery({ mainImage, gallery, title }: ProductGalleryProp
             src={currentImage.imagePath}
             alt={`${title} - Image ${currentIndex + 1}`}
             className="h-full w-full object-cover"
+            loading={currentIndex === 0 ? "eager" : "lazy"}
+            decoding="async"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               target.style.display = 'none';

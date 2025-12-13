@@ -37,6 +37,12 @@ export interface Activity {
     name: string;
   } | null;
   notes?: string | null;
+  reason?: string | null;
+  warehouse?: {
+    id: string;
+    name: string;
+    code?: string;
+  } | null;
   variantId?: string | null;
   createdAt?: FormattedDateTime | null;
 }
@@ -129,6 +135,7 @@ export function useActivities(params?: {
   page?: number;
   limit?: number;
   productId?: string;
+  warehouseId?: string;
   activityType?: string;
   dateFrom?: string;
   dateTo?: string;
@@ -145,6 +152,8 @@ export function useActivities(params?: {
 export function useMyActivities(params?: {
   page?: number;
   limit?: number;
+  productId?: string;
+  warehouseId?: string;
   activityType?: string;
   dateFrom?: string;
   dateTo?: string;
