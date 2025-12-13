@@ -491,49 +491,49 @@ export function ActivitiesScreen() {
                 <Card className="border border-border bg-white shadow-none">
                   <CardContent className="px-2 py-3 text-center">
                     <div className="text-lg font-bold text-foreground">{summary.today || 0}</div>
-                    <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{t('operations.today')}</div>
+                    <div className="text-[12px] text-muted-foreground mt-1 leading-tight">{t('operations.today')}</div>
                   </CardContent>
                 </Card>
                 <Card className="border border-border bg-white shadow-none">
                   <CardContent className="px-2 py-3 text-center">
                     <div className="text-lg font-bold text-foreground">{summary.thisWeek || 0}</div>
-                    <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{t('operations.thisWeek')}</div>
+                    <div className="text-[12px] text-muted-foreground mt-1 leading-tight">{t('operations.thisWeek')}</div>
                   </CardContent>
                 </Card>
                 <Card className={`border border-border bg-white shadow-none ${summaryExpanded ? 'block' : 'hidden'} sm:block`}>
                   <CardContent className="px-2 py-3 text-center">
                     <div className="text-lg font-bold text-foreground">{summary.mobileActivities || 0}</div>
-                    <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{t('operations.mobileActivities')}</div>
+                    <div className="text-[12px] text-muted-foreground mt-1 leading-tight">{t('operations.mobileActivities')}</div>
                   </CardContent>
                 </Card>
                 <Card className={`border border-border bg-white shadow-none ${summaryExpanded ? 'block' : 'hidden'} sm:block`}>
                   <CardContent className="px-2 py-3 text-center">
                     <div className="text-lg font-bold text-foreground">{summary.byType?.adjustment || 0}</div>
-                    <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{t('operations.adjustments')}</div>
+                    <div className="text-[12px] text-muted-foreground mt-1 leading-tight">{t('operations.adjustments')}</div>
                   </CardContent>
                 </Card>
                 <Card className={`border border-border bg-white shadow-none ${summaryExpanded ? 'block' : 'hidden'} sm:block`}>
                   <CardContent className="px-2 py-3 text-center">
                     <div className="text-lg font-bold text-foreground">{summary.byType?.order_created || 0}</div>
-                    <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{t('operations.ordersCreated')}</div>
+                    <div className="text-[12px] text-muted-foreground mt-1 leading-tight">{t('operations.ordersCreated')}</div>
                   </CardContent>
                 </Card>
                 <Card className={`border border-border bg-white shadow-none ${summaryExpanded ? 'block' : 'hidden'} sm:block`}>
                   <CardContent className="px-2 py-3 text-center">
                     <div className="text-lg font-bold text-foreground">{summary.byType?.order_cancelled || 0}</div>
-                    <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{t('operations.ordersCancelled')}</div>
+                    <div className="text-[12px] text-muted-foreground mt-1 leading-tight">{t('operations.ordersCancelled')}</div>
                   </CardContent>
                 </Card>
                 <Card className={`border border-border bg-white shadow-none ${summaryExpanded ? 'block' : 'hidden'} sm:block`}>
                   <CardContent className="px-2 py-3 text-center">
                     <div className="text-lg font-bold text-foreground">{summary.byType?.order_returned || 0}</div>
-                    <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{t('operations.ordersReturned')}</div>
+                    <div className="text-[12px] text-muted-foreground mt-1 leading-tight">{t('operations.ordersReturned')}</div>
                   </CardContent>
                 </Card>
                 <Card className={`border border-border bg-white shadow-none ${summaryExpanded ? 'block' : 'hidden'} sm:block`}>
                   <CardContent className="px-2 py-3 text-center">
                     <div className="text-lg font-bold text-foreground">{summary.byType?.initial_stock || 0}</div>
-                    <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{t('operations.initialStock')}</div>
+                    <div className="text-[12px] text-muted-foreground mt-1 leading-tight">{t('operations.initialStock')}</div>
                   </CardContent>
                 </Card>
               </>
@@ -547,12 +547,12 @@ export function ActivitiesScreen() {
               >
                 {summaryExpanded ? (
                   <>
-                    <span>{t('common.showLess') || 'Show Less'}</span>
+                    <span className="text-[12px]">{t('common.showLess') || 'Show Less'}</span>
                     <ChevronUp className="h-3 w-3" />
                   </>
                 ) : (
                   <>
-                    <span>{t('common.showMore') || 'Show More'}</span>
+                    <span className="text-[12px]">{t('common.showMore') || 'Show More'}</span>
                     <ChevronDown className="h-3 w-3" />
                   </>
                 )}
