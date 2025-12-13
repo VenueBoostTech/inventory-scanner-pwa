@@ -2,6 +2,16 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import type { Product, ScanResult } from '@/types/api';
 
+export interface ProductsResponse {
+  data: Product[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
 export function useProducts(params?: { 
   page?: number; 
   limit?: number; 
@@ -9,12 +19,15 @@ export function useProducts(params?: {
   categoryId?: string;
   stockStatus?: string;
   hasBarcode?: boolean;
+  warehouseId?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }) {
   return useQuery({
     queryKey: ['products', params],
     queryFn: async () => {
-      const { data } = await apiClient.get<{ data: Product[] }>('/products', { params });
-      return data.data || data;
+      const { data } = await apiClient.get<ProductsResponse>('/products', { params });
+      return data;
     },
   });
 }
