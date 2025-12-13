@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Button } from '@/components/ui/button';
@@ -130,6 +131,17 @@ export function ActivitiesScreen() {
       setProductFilter(urlProductId);
     }
   }, [urlProductId]);
+
+  // Fetch product name when filtered
+  const { data: filteredProduct } = useQuery({
+    queryKey: ['product', productFilter],
+    queryFn: async () => {
+      if (productFilter === 'all') return null;
+      const { data } = await apiClient.get(`/products/${productFilter}`);
+      return data;
+    },
+    enabled: productFilter !== 'all',
+  });
 
   // API hooks
   const { data: activitiesData, isLoading: activitiesLoading } = useActivities({
@@ -417,6 +429,15 @@ export function ActivitiesScreen() {
     setWarehouseFilter('all');
     setStaffFilter('all');
     setDateRangeFilter('all');
+    setProductFilter('all');
+    // Remove productId from URL
+    navigate('/operations/activities', { replace: true });
+  };
+
+  const clearProductFilter = () => {
+    setProductFilter('all');
+    // Remove productId from URL
+    navigate('/operations/activities', { replace: true });
   };
 
   // Calculate active filters count
@@ -742,8 +763,20 @@ export function ActivitiesScreen() {
           </div>
 
         {/* Active Filter Tags */}
-        {activeFiltersCount > 0 && (
+        {(activeFiltersCount > 0 || productFilter !== 'all') && (
           <div className="flex flex-wrap items-center gap-2">
+            {productFilter !== 'all' && (
+              <Badge variant="outline" className="gap-1">
+                {t('operations.filteringByProduct')}: {filteredProduct?.title || productFilter}
+                <button
+                  onClick={clearProductFilter}
+                  className="ml-1 hover:bg-muted rounded-full p-0.5"
+                  aria-label="Remove filter"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
             {typeFilter !== 'all' && (
               <Badge variant="outline" className="gap-1">
                 {t('operations.activityType')}: {getActiveFilterLabel('type', typeFilter)}

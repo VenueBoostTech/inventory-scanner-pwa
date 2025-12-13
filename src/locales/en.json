@@ -346,6 +346,8 @@
     "transfer": "Transfer",
     "first": "First",
     "last": "Last",
+    "firstActivity": "First Activity",
+    "mostRecentActivity": "Most Recent Activity",
     "recentActivity": "Recent Activity",
     "viewAll": "View All",
     "description": "Description",
@@ -425,6 +427,7 @@
   },
     "operations": {
     "title": "Operations",
+    "filteringByProduct": "Filtering by product",
     "overview": "Operations Overview",
     "pendingTransfers": "Pending Transfers",
     "activeCounts": "Active Counts",

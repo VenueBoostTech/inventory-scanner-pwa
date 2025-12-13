@@ -46,7 +46,7 @@ export function ProductDetailsScreen() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [adjustModalOpen, setAdjustModalOpen] = useState(false);
-  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
+  const [descriptionExpanded, setDescriptionExpanded] = useState(true);
   const canEditProduct = authStore((state) => state.canEditProduct());
   const canAdjustStock = authStore((state) => state.canAdjustStock());
   const canInitiateTransfer = authStore((state) => state.canInitiateTransfer());
@@ -173,6 +173,21 @@ export function ProductDetailsScreen() {
     }
   };
 
+  const getReasonLabel = (reason: string) => {
+    if (!reason) return '—';
+    const reasonMap: Record<string, string> = {
+      'received_shipment': t('operations.receivedShipment'),
+      'return_customer': t('operations.returnCustomer'),
+      'found_during_count': t('operations.foundDuringCount'),
+      'damaged_items': t('operations.damagedItems'),
+      'expired_items': t('operations.expiredItems'),
+      'theft_loss': t('operations.theftLoss'),
+      'inventory_correction': t('operations.inventoryCorrection'),
+      'other': t('common.other'),
+    };
+    return reasonMap[reason] || reason;
+  };
+
   const handleCopy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     toast({
@@ -284,15 +299,15 @@ export function ProductDetailsScreen() {
               <div className="grid grid-cols-3 gap-2">
                 <div className="text-center p-2 bg-muted/50 rounded-md">
                   <p className="text-lg font-semibold">{product.stockQuantity}</p>
-                  <p className="text-xs text-muted-foreground">{t('products.currentStock')}</p>
+                  <p className="text-sm text-muted-foreground">{t('products.currentStock')}</p>
                 </div>
                 <div className="text-center p-2 bg-muted/50 rounded-md">
                   <p className="text-lg font-semibold">{product.lowQuantity}</p>
-                  <p className="text-xs text-muted-foreground">{t('products.lowAlertThreshold')}</p>
+                  <p className="text-sm text-muted-foreground">{t('products.lowAlertThreshold')}</p>
                 </div>
                 <div className="text-center p-2 bg-muted/50 rounded-md">
                   <p className="text-lg font-semibold">{product.unitMeasure}</p>
-                  <p className="text-xs text-muted-foreground">{t('products.unit')}</p>
+                  <p className="text-sm text-muted-foreground">{t('products.unit')}</p>
                 </div>
               </div>
               {product.enableLowStockAlert && (
@@ -324,7 +339,7 @@ export function ProductDetailsScreen() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-muted-foreground">{t('products.sku')}</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t('products.sku')}</p>
                   <p className="text-sm font-medium">{product.sku}</p>
                 </div>
                 <Button
@@ -340,7 +355,7 @@ export function ProductDetailsScreen() {
               {product.hasBarcode ? (
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-muted-foreground">{t('products.barcode')}</p>
+                    <p className="text-sm font-medium text-muted-foreground">{t('products.barcode')}</p>
                     <p className="text-sm font-medium">{product.barcode}</p>
                   </div>
                   <Button
@@ -355,7 +370,7 @@ export function ProductDetailsScreen() {
               ) : (
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-muted-foreground">{t('products.barcode')}</p>
+                    <p className="text-sm font-medium text-muted-foreground">{t('products.barcode')}</p>
                     <div className="flex items-center gap-2">
                       <AlertCircle className="h-4 w-4 text-amber-600" />
                       <p className="text-sm font-medium">{t('products.notLinked')}</p>
@@ -379,7 +394,7 @@ export function ProductDetailsScreen() {
                   <div className="border-t border-border pt-2" />
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-muted-foreground">{t('products.articleNo')}</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('products.articleNo')}</p>
                       <p className="text-sm font-medium">{product.articleNo}</p>
                     </div>
                     <Button
@@ -403,25 +418,21 @@ export function ProductDetailsScreen() {
             <CardContent className="px-3 py-3">
               <h3 className="text-sm font-semibold mb-3">{t('products.pricing')}</h3>
               <div className="space-y-3">
-                {product.pricing.priceAl && (
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1">Price (ALL)</p>
-                    <p className="text-lg font-semibold text-foreground">
-                      {product.pricing.priceAl.formatted || `${product.pricing.priceAl.amount} ${product.pricing.priceAl.currencySymbol || 'L'}`}
-                    </p>
-                  </div>
-                )}
+                {/* Main currency (price is the final version) */}
                 {product.pricing.price && (
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1">Price (ALL)</p>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">
+                      Price ({product.pricing.price.currency || 'ALL'})
+                    </p>
                     <p className="text-lg font-semibold text-foreground">
                       {product.pricing.price.formatted || `${product.pricing.price.amount} ${product.pricing.price.currencySymbol || 'L'}`}
                     </p>
                   </div>
                 )}
+                {/* EUR price */}
                 {product.pricing.priceEur && (
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1">Price (EUR)</p>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">Price (EUR)</p>
                     <p className="text-lg font-semibold text-foreground">
                       {product.pricing.priceEur.formatted || `${product.pricing.priceEur.currencySymbol || '€'}${product.pricing.priceEur.amount.toFixed(2)}`}
                     </p>
@@ -482,21 +493,21 @@ export function ProductDetailsScreen() {
               <div className="grid grid-cols-3 gap-2">
                 <div className="text-center p-2 bg-muted/50 rounded-md">
                   <p className="text-lg font-semibold">{product.stats?.breakdown?.adjustments || 0}</p>
-                  <p className="text-xs text-muted-foreground">{t('products.adjusts')}</p>
+                  <p className="text-sm text-muted-foreground">{t('products.adjusts')}</p>
                 </div>
                 <div className="text-center p-2 bg-muted/50 rounded-md">
                   <p className="text-lg font-semibold">{product.stats?.breakdown?.scans || 0}</p>
-                  <p className="text-xs text-muted-foreground">{t('products.scans')}</p>
+                  <p className="text-sm text-muted-foreground">{t('products.scans')}</p>
                 </div>
                 <div className="text-center p-2 bg-muted/50 rounded-md">
                   <p className="text-lg font-semibold">{product.stats?.breakdown?.transfers || 0}</p>
-                  <p className="text-xs text-muted-foreground">{t('products.transfer')}</p>
+                  <p className="text-sm text-muted-foreground">{t('products.transfer')}</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-border">
                 {product.stats?.firstActivityAt && (
                   <div className="space-y-1">
-                    <p className="text-xs font-medium text-muted-foreground">{t('products.first')}</p>
+                    <p className="text-sm font-medium text-muted-foreground">{t('products.firstActivity')}</p>
                     <p className="text-sm font-medium text-foreground">
                       {product.stats.firstActivityAt.formattedDateTime || product.stats.firstActivityAt.date || '—'}
                     </p>
@@ -504,7 +515,7 @@ export function ProductDetailsScreen() {
                 )}
                 {product.stats?.lastActivityAt && (
                   <div className="space-y-1">
-                    <p className="text-xs font-medium text-muted-foreground">{t('products.last')}</p>
+                    <p className="text-sm font-medium text-muted-foreground">{t('products.mostRecentActivity')}</p>
                     <p className="text-sm font-medium text-foreground">
                       {product.stats.lastActivityAt.formattedDateTime || product.stats.lastActivityAt.date || '—'}
                     </p>
@@ -527,7 +538,7 @@ export function ProductDetailsScreen() {
                   <div key={activity.id} className="space-y-2 pb-3 border-b border-border last:border-b-0 last:pb-0">
                     <div className="flex items-center gap-2">
                       <TypeIcon className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <span className="text-xs font-medium">{getActivityTypeLabel(activity.activityType)}</span>
+                      <span className="text-sm font-medium">{getActivityTypeLabel(activity.activityType)}</span>
                       {activity.quantity !== 0 && (
                         <span className={`text-sm font-semibold ${activity.quantity > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                           {activity.quantity > 0 ? '+' : ''}{activity.quantity}
@@ -535,28 +546,42 @@ export function ProductDetailsScreen() {
                       )}
                     </div>
                     {(activity.stockBefore != null && activity.stockAfter != null) && (
-                      <div className="text-xs text-muted-foreground pl-6">
+                      <div className="text-sm text-muted-foreground pl-6">
                         {activity.stockBefore} → {activity.stockAfter}
                       </div>
                     )}
                     <div className="flex items-center gap-3 pl-6">
-                      <div className="flex items-center gap-1">
-                        <SourceIconComponent className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1.5">
+                        <SourceIconComponent className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">
                           {activity.createdAt?.formattedDateTime || activity.createdAt?.date || format(new Date(activity.createdAt), 'MMM d, yyyy, h:mm a')}
                         </span>
                       </div>
                       {activity.staff && (
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-sm text-muted-foreground">
                           • {activity.staff.name}
                         </span>
                       )}
                       {!activity.staff && (
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-sm text-muted-foreground">
                           • {t('operations.system')}
                         </span>
                       )}
                     </div>
+                    {activity.reason && (
+                      <div className="pl-6">
+                        <p className="text-sm text-muted-foreground">
+                          <span className="font-semibold text-foreground">{t('operations.reason')}:</span> <span className="font-medium">{getReasonLabel(activity.reason)}</span>
+                        </p>
+                      </div>
+                    )}
+                    {activity.notes && (
+                      <div className="pl-6">
+                        <p className="text-sm text-muted-foreground">
+                          <span className="font-semibold text-foreground">{t('operations.notes')}:</span> <span className="font-medium">{activity.notes}</span>
+                        </p>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -582,7 +607,7 @@ export function ProductDetailsScreen() {
               <h3 className="text-sm font-semibold mb-3">{t('products.shortDescription')}</h3>
               <div className="space-y-2">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Albanian</p>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Albanian</p>
                   <p className="text-sm text-foreground">
                     {product.shortDescriptionAl && product.shortDescriptionAl.trim() !== '<p><br></p>' && product.shortDescriptionAl.trim() !== ''
                       ? product.shortDescriptionAl.replace(/<[^>]*>/g, '').trim() || '—'
@@ -590,7 +615,7 @@ export function ProductDetailsScreen() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">English</p>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">English</p>
                   <p className="text-sm text-foreground">
                     {product.shortDescription && product.shortDescription.trim() !== '<p><br></p>' && product.shortDescription.trim() !== ''
                       ? product.shortDescription.replace(/<[^>]*>/g, '').trim() || '—'
@@ -623,7 +648,7 @@ export function ProductDetailsScreen() {
             {descriptionExpanded && (
               <div className="space-y-3">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Albanian</p>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Albanian</p>
                   <div className="text-sm text-foreground">
                     {product.descriptionAl && product.descriptionAl.trim() !== '<p><br></p>' && product.descriptionAl.trim() !== ''
                       ? <div dangerouslySetInnerHTML={{ __html: product.descriptionAl }} />
@@ -631,7 +656,7 @@ export function ProductDetailsScreen() {
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">English</p>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">English</p>
                   <div className="text-sm text-foreground">
                     {product.description && product.description.trim() !== '<p><br></p>' && product.description.trim() !== ''
                       ? <div dangerouslySetInnerHTML={{ __html: product.description }} />
@@ -684,15 +709,6 @@ export function ProductDetailsScreen() {
                   {t('products.transfer')}
                 </Button>
               )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleViewHistory}
-                className="h-10 gap-2"
-              >
-                <ClipboardList className="h-4 w-4" />
-                {t('products.fullHistory')}
-              </Button>
               {!product.hasBarcode && canEditProduct && (
                 <Button
                   variant="outline"

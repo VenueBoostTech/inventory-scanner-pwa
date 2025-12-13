@@ -345,6 +345,8 @@
     "transfer": "Transfertë",
     "first": "E para",
     "last": "E fundit",
+    "firstActivity": "Aktiviteti i Parë",
+    "mostRecentActivity": "Aktiviteti Më i Fundit",
     "recentActivity": "Aktiviteti i Fundit",
     "viewAll": "Shiko Të Gjitha",
     "description": "Përshkrimi",
@@ -425,6 +427,7 @@
   },
     "operations": {
     "title": "Operacionet",
+    "filteringByProduct": "Duke filtruar sipas produktit",
     "overview": "Përmbledhje e Operacioneve",
     "pendingTransfers": "Transferta në Pritje",
     "activeCounts": "Numërime Aktive",
