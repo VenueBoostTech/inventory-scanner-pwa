@@ -34,11 +34,14 @@ import {
   ChevronRight,
   X,
   Info,
+  Plus,
 } from 'lucide-react';
 import { useProducts } from '@/hooks/api/useProducts';
 import { useCategories } from '@/hooks/api/useProductMeta';
 import { useWarehouses } from '@/hooks/api/useWarehouses';
 import { Skeleton } from '@/components/ui/skeleton';
+import { authStore } from '@/stores/authStore';
+import { CreateProductModal } from './CreateProductModal';
 import type { Product } from '@/types/api';
 
 type QuickFilter = 'all' | 'low_stock' | 'out_of_stock' | 'no_barcode';
@@ -46,6 +49,7 @@ type QuickFilter = 'all' | 'low_stock' | 'out_of_stock' | 'no_barcode';
 export function ProductsScreen() {
   const { t, language } = useI18n();
   const navigate = useNavigate();
+  const canAddProduct = authStore((state) => state.canAddProduct());
   const [search, setSearch] = useState('');
   const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -56,6 +60,7 @@ export function ProductsScreen() {
   const [barcodeStatusFilter, setBarcodeStatusFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('title');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   // Get categories and warehouses for filters
   const { data: categoriesData } = useCategories();
@@ -253,6 +258,23 @@ export function ProductsScreen() {
     <div className="min-h-screen bg-background pb-20">
       <ScreenHeader title={t('products.title')} />
       <div className="space-y-4 px-4 py-4">
+        {/* Title and Create Button */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl font-semibold text-foreground">{t('products.title')}</h1>
+            <p className="text-sm text-muted-foreground">{t('products.subtitle')}</p>
+          </div>
+          {canAddProduct && (
+            <button
+              onClick={() => setCreateModalOpen(true)}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#164945] text-white hover:bg-[#123b37] transition-colors"
+              title={t('products.createProduct')}
+            >
+              <Plus className="h-5 w-5 fill-current" />
+            </button>
+          )}
+        </div>
+
         {/* Search Bar */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -693,6 +715,8 @@ export function ProductsScreen() {
           </Card>
         </div>
       </div>
+
+      <CreateProductModal open={createModalOpen} onOpenChange={setCreateModalOpen} />
     </div>
   );
 }

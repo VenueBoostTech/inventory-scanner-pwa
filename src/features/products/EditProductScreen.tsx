@@ -165,7 +165,7 @@ export function EditProductScreen() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">
-                  {t('products.title')} <span className="text-red-500">*</span>
+                  {t('products.titleLabel')} <span className="text-red-500">*</span>
                 </label>
                 <Input
                   value={title}
