@@ -144,19 +144,42 @@ export function ScanScreen() {
         });
         setSkuCode('');
       } else {
+        // Product not found - navigate to scan result screen with not found state
+        const scanResult = {
+          result: 'not_found' as const,
+        };
+        navigate('/scan/result', { 
+          state: { 
+            scanResult, 
+            barcode: skuCode,
+            source: 'sku_search' // Indicate this came from SKU search, not a scan
+          } 
+        });
+        setSkuCode('');
+      }
+    } catch (error: any) {
+      // If API returns 404 or not found, navigate to result screen
+      if (error?.response?.status === 404 || error?.response?.status === 400) {
+        const scanResult = {
+          result: 'not_found' as const,
+        };
+        navigate('/scan/result', { 
+          state: { 
+            scanResult, 
+            barcode: skuCode,
+            source: 'sku_search'
+          } 
+        });
+        setSkuCode('');
+      } else {
+        // For other errors (network, server), show toast
+        const errorMessage = error?.response?.data?.message || error?.message || t('scan.notFound');
         toast({
           title: t('common.error'),
-          description: t('scan.notFound'),
+          description: errorMessage,
           variant: 'destructive',
         });
       }
-    } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || error?.message || t('scan.notFound');
-      toast({
-        title: t('common.error'),
-        description: errorMessage,
-        variant: 'destructive',
-      });
     } finally {
       setIsSkuLoading(false);
     }

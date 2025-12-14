@@ -41,7 +41,7 @@ import { AdjustStockModal } from './AdjustStockModal';
 import { authStore } from '@/stores/authStore';
 
 export function ProductDetailsScreen() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -238,15 +238,25 @@ export function ProductDetailsScreen() {
             {!product.titleAl && product.title && (
               <p className="text-sm text-muted-foreground mt-1">{product.title}</p>
             )}
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-              {product.category && <span>{t('products.category')}: {product.category.name}</span>}
-              {product.brand && (
-                <>
-                  <span>•</span>
-                  <span>{t('products.brand')}: {product.brand.name}</span>
-                </>
-              )}
-            </div>
+            {/* Categories */}
+            {product.categories && product.categories.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 mt-2">
+                <span className="text-sm font-medium text-muted-foreground">{t('products.categories')}:</span>
+                {product.categories.map((cat, index) => {
+                  const catName = language === 'sq' && cat.nameAl ? cat.nameAl : cat.name;
+                  return (
+                    <Badge key={cat.id} variant="outline" className="text-xs">
+                      {catName}
+                    </Badge>
+                  );
+                })}
+              </div>
+            )}
+            {product.brand && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                <span>{t('products.brand')}: {product.brand.name}</span>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {canEditProduct && (
@@ -376,26 +386,30 @@ export function ProductDetailsScreen() {
                   </Button>
                 </div>
               ) : (
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">{t('products.barcode')}</p>
-                    <div className="flex items-center gap-2">
-                      <AlertCircle className="h-4 w-4 text-amber-600" />
-                      <p className="text-sm font-medium">{t('products.notLinked')}</p>
+                <>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">{t('products.barcode')}</p>
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-amber-600" />
+                        <p className="text-sm font-medium">{t('products.notLinked')}</p>
+                      </div>
                     </div>
                   </div>
                   {canEditProduct && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleLinkBarcode}
-                      className="h-10 gap-2"
-                    >
-                      <Tag className="h-4 w-4" />
-                      {t('products.link')}
-                    </Button>
+                    <div className="border-t border-border pt-2 mt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleLinkBarcode}
+                        className="w-full h-10 gap-2"
+                      >
+                        <LinkIcon className="h-4 w-4" />
+                        {t('products.linkBarcode')}
+                      </Button>
+                    </div>
                   )}
-                </div>
+                </>
               )}
               {product.articleNo && (
                 <>

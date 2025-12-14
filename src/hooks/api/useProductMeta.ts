@@ -3,8 +3,14 @@ import { apiClient } from '@/lib/api-client';
 
 export interface Category {
   id: string;
-  name: string;
+  name?: string;
   nameAl?: string | null;
+  // Hierarchical format fields
+  title?: string;
+  title_al?: string;
+  parent_id?: string | null;
+  children?: Category[];
+  products_count?: number;
 }
 
 export interface Brand {
@@ -12,11 +18,12 @@ export interface Brand {
   name: string;
 }
 
-export function useCategories() {
+export function useCategories(includeChildren?: boolean) {
   return useQuery({
-    queryKey: ['categories'],
+    queryKey: ['categories', includeChildren],
     queryFn: async () => {
-      const { data } = await apiClient.get<{ data: Category[] }>('/products/meta/categories');
+      const params = includeChildren ? { include_children: 'true' } : undefined;
+      const { data } = await apiClient.get<{ data: Category[] }>('/products/meta/categories', { params });
       return data.data || data;
     },
   });
