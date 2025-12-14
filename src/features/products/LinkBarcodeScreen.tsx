@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Dialog,
   DialogContent,
@@ -13,8 +14,8 @@ import {
 import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { useScanner } from '@/hooks/useScanner';
-import { useProduct, useUpdateProduct } from '@/hooks/api/useProducts';
-import { Package, CheckCircle2, AlertCircle, Zap } from 'lucide-react';
+import { useProduct, useUpdateProduct, useScanBarcode } from '@/hooks/api/useProducts';
+import { Package, CheckCircle2, AlertCircle, Zap, Loader2 } from 'lucide-react';
 
 export function LinkBarcodeScreen() {
   const { t } = useI18n();
@@ -29,12 +30,64 @@ export function LinkBarcodeScreen() {
   const [errorMessage, setErrorMessage] = useState('');
   const [conflictingProduct, setConflictingProduct] = useState<any>(null);
 
-  const { data: product } = useProduct(id || '');
+  const { data: product, isLoading } = useProduct(id || '');
   const { mutateAsync: updateProduct, isPending: isUpdating } = useUpdateProduct();
+  const { mutateAsync: scanBarcode } = useScanBarcode();
+  const [isScanningBarcode, setIsScanningBarcode] = useState(false);
+  const [notFoundModalOpen, setNotFoundModalOpen] = useState(false);
+  const [scannedBarcode, setScannedBarcode] = useState('');
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <ScreenHeader title={t('products.linkBarcode')} showBack />
+        <div className="space-y-4 px-4 py-4">
+          {/* Product Info Skeleton */}
+          <Card className="border border-border bg-white shadow-none">
+            <CardContent className="px-3 py-3">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-16 w-16 rounded-lg" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-24" />
+                  <Skeleton className="h-3 w-40" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Scan Barcode Skeleton */}
+          <Card className="border border-border bg-white shadow-none">
+            <CardContent className="px-3 py-3">
+              <Skeleton className="h-4 w-32 mb-3" />
+              <Skeleton className="h-48 w-full rounded-lg mb-3" />
+              <Skeleton className="h-10 w-full" />
+            </CardContent>
+          </Card>
+
+          {/* OR Divider */}
+          <div className="flex items-center gap-2">
+            <div className="flex-1 border-t border-border" />
+            <Skeleton className="h-3 w-8" />
+            <div className="flex-1 border-t border-border" />
+          </div>
+
+          {/* Manual Entry Skeleton */}
+          <Card className="border border-border bg-white shadow-none">
+            <CardContent className="px-3 py-3">
+              <Skeleton className="h-4 w-32 mb-3" />
+              <Skeleton className="h-10 w-full mb-3" />
+              <Skeleton className="h-10 w-full" />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -47,9 +100,45 @@ export function LinkBarcodeScreen() {
     );
   }
 
-  const handleDecoded = (code: string) => {
-    setBarcode(code);
-    stopScanning();
+  const handleDecoded = async (code: string) => {
+    if (!id) return;
+    
+    setIsScanningBarcode(true);
+    setScannedBarcode(code);
+    
+    try {
+      // Check if barcode exists in system
+      const scanResult = await scanBarcode({ barcode: code });
+      
+      if (scanResult.result === 'found' && scanResult.product) {
+        // Barcode is already linked to another product
+        setConflictingProduct(scanResult.product);
+        setErrorMessage(t('products.barcodeAlreadyLinked'));
+        setErrorModalOpen(true);
+        await stopScanning();
+      } else {
+        // Barcode not found - suggest manual link
+        setBarcode(code);
+        setNotFoundModalOpen(true);
+        await stopScanning();
+      }
+    } catch (error: any) {
+      // If 404 or not found, barcode is available
+      if (error?.response?.status === 404 || error?.response?.status === 400) {
+        setBarcode(code);
+        setNotFoundModalOpen(true);
+        await stopScanning();
+      } else {
+        toast({
+          title: t('common.error'),
+          description: error?.response?.data?.message || t('scan.scanError'),
+          variant: 'destructive',
+        });
+        await stopScanning();
+      }
+    } finally {
+      setIsScanningBarcode(false);
+    }
   };
 
   const handleCheckBarcode = async () => {
@@ -74,10 +163,25 @@ export function LinkBarcodeScreen() {
     setIsChecking(true);
 
     try {
-      // Check if barcode is available by trying to scan it
-      // If it returns a product, that product already has this barcode
-      // For now, we'll try to update the product with the barcode
-      // The backend should validate if barcode is already in use
+      // First check if barcode exists in system
+      try {
+        const scanResult = await scanBarcode({ barcode: barcode.trim() });
+        if (scanResult.result === 'found' && scanResult.product) {
+          // Barcode is already linked to another product
+          setConflictingProduct(scanResult.product);
+          setErrorMessage(t('products.barcodeAlreadyLinked'));
+          setErrorModalOpen(true);
+          setIsChecking(false);
+          return;
+        }
+      } catch (scanError: any) {
+        // If 404, barcode is available - continue to link
+        if (scanError?.response?.status !== 404 && scanError?.response?.status !== 400) {
+          throw scanError;
+        }
+      }
+
+      // Link the barcode
       await updateProduct({
         productId: id,
         barcode: barcode.trim(),
@@ -156,33 +260,69 @@ export function LinkBarcodeScreen() {
         <Card className="border border-border bg-white shadow-none">
           <CardContent className="px-3 py-3">
             <h3 className="text-sm font-semibold mb-3">{t('products.scanBarcode')}</h3>
-            <div className="relative w-full aspect-square overflow-hidden rounded-lg border border-border bg-muted/60 mb-3">
+            <div>
+              {isScanning ? (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="mb-3 w-full border-none bg-[#164945] text-white hover:bg-[#123b37]"
+                  onClick={() => void stopScanning()}
+                >
+                  {t('scan.stop')}
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  className="mb-3 w-full border-none bg-[#164945] text-white hover:bg-[#123b37]"
+                  onClick={() => void startScanning(handleDecoded)}
+                >
+                  {t('scan.startScanning')}
+                </Button>
+              )}
+            </div>
+            <div className="relative w-full" role="presentation">
               <div
                 id="scanner"
-                className="scanner-container h-full w-full"
+                className="scanner-container h-48 w-full overflow-hidden rounded-lg border bg-muted/60"
                 aria-label="Camera preview"
               />
               {!isScanning && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-muted-foreground">
-                  {t('products.pointCameraAtBarcode')}
+                  {t('scan.scannerPlaceholder')}
                 </div>
               )}
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full gap-2"
-              onClick={() => {
-                if (isScanning) {
-                  stopScanning();
-                } else {
-                  startScanning(handleDecoded);
-                }
-              }}
-            >
-              <Zap className="h-4 w-4" />
-              {isScanning ? t('scan.stop') : t('scan.startScanning')}
-            </Button>
+            {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
+            {isScanning && (
+              <div className="mt-3 rounded-lg border border-[#164945]/20 bg-[#164945]/5 p-3">
+                <div className="flex items-start gap-3">
+                  <Loader2 className="h-5 w-5 shrink-0 animate-spin text-[#164945] mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground mb-1">
+                      {t('scan.scanningInProgress')}
+                    </p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {t('scan.scanningTip')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            {isScanningBarcode && (
+              <div className="mt-3 rounded-lg border border-blue-500/20 bg-blue-500/5 p-3">
+                <div className="flex items-start gap-3">
+                  <Loader2 className="h-5 w-5 shrink-0 animate-spin text-blue-600 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground mb-1">
+                      {t('products.checking')}
+                    </p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {t('products.checkingBarcodeDesc')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -208,7 +348,14 @@ export function LinkBarcodeScreen() {
               disabled={!barcode || isChecking || isUpdating}
               className="w-full border-none bg-[#164945] text-white hover:bg-[#123b37]"
             >
-              {isChecking || isUpdating ? t('products.checking') : t('products.linkBarcode')}
+              {isChecking || isUpdating ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  {t('products.linking')}
+                </>
+              ) : (
+                t('products.linkBarcode')
+              )}
             </Button>
           </CardContent>
         </Card>
@@ -291,6 +438,55 @@ export function LinkBarcodeScreen() {
                   {t('products.viewProduct')}
                 </Button>
               )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Not Found Modal */}
+      <Dialog open={notFoundModalOpen} onOpenChange={setNotFoundModalOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-center">
+              <div className="flex flex-col items-center gap-2">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
+                  <AlertCircle className="h-8 w-8 text-blue-600" />
+                </div>
+                <div className="mt-2">{t('products.barcodeNotInSystem')}</div>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 text-center">
+            <p className="text-sm text-muted-foreground">
+              {t('products.barcodeNotInSystemDesc').replace('{barcode}', scannedBarcode || barcode)}
+            </p>
+            <p className="text-sm font-medium text-foreground">
+              {t('products.suggestManualLink')}
+            </p>
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setNotFoundModalOpen(false);
+                  setScannedBarcode('');
+                }}
+                className="flex-1"
+              >
+                {t('common.cancel')}
+              </Button>
+              <Button
+                onClick={() => {
+                  setNotFoundModalOpen(false);
+                  setScannedBarcode('');
+                  // Focus on manual input
+                  document.querySelector('input[placeholder*="barcode"]')?.focus();
+                }}
+                className="flex-1 border-none bg-[#164945] text-white hover:bg-[#123b37]"
+              >
+                {t('products.useManualLink')}
+              </Button>
             </div>
           </div>
         </DialogContent>

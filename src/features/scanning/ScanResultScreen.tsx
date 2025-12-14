@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useI18n } from '@/lib/i18n';
 import {
   CheckCircle2,
@@ -11,6 +12,7 @@ import {
   Search,
   Plus,
   Scan,
+  AlertCircle,
 } from 'lucide-react';
 import type { ScanResult } from '@/types/api';
 
@@ -21,7 +23,7 @@ interface LocationState {
 }
 
 export function ScanResultScreen() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -45,6 +47,29 @@ export function ScanResultScreen() {
 
   const isFound = scanResult.result === 'found' && scanResult.product;
   const product = scanResult.product;
+  
+  // Calculate stockStatus if not provided by backend
+  const getStockStatus = (product: any): 'in_stock' | 'low_stock' | 'out_of_stock' | 'not_tracked' => {
+    if (product.stockStatus) {
+      return product.stockStatus;
+    }
+    
+    if (!product.enableStock) {
+      return 'not_tracked';
+    }
+    
+    if (product.stockQuantity === 0) {
+      return 'out_of_stock';
+    }
+    
+    if (product.enableLowStockAlert && product.lowQuantity !== undefined && product.lowQuantity !== null && product.stockQuantity <= product.lowQuantity) {
+      return 'low_stock';
+    }
+    
+    return 'in_stock';
+  };
+  
+  const stockStatus = product ? getStockStatus(product) : 'not_tracked';
 
   if (isFound && product) {
     // Product Found Screen
@@ -65,6 +90,8 @@ export function ScanResultScreen() {
                     src={product.imagePath}
                     alt={product.title}
                     className="h-32 w-32 rounded-lg object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                 </div>
               ) : (
@@ -72,9 +99,28 @@ export function ScanResultScreen() {
                   <Package className="h-12 w-12 text-muted-foreground" />
                 </div>
               )}
-              <h2 className="text-lg font-semibold text-foreground">{product.title}</h2>
-              {product.titleAl && (
-                <p className="text-sm text-muted-foreground">{product.titleAl}</p>
+              <h2 className="text-lg font-semibold text-foreground">
+                {language === 'sq' && product.titleAl ? product.titleAl : product.title}
+              </h2>
+              {product.titleAl && product.title && language === 'sq' && (
+                <p className="text-sm text-muted-foreground mt-1">{product.title}</p>
+              )}
+              {product.titleAl && product.title && language !== 'sq' && (
+                <p className="text-sm text-muted-foreground mt-1">{product.titleAl}</p>
+              )}
+              
+              {/* Categories */}
+              {product.categories && product.categories.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 mt-2">
+                  {product.categories.map((cat) => {
+                    const catName = language === 'sq' && cat.nameAl ? cat.nameAl : cat.name;
+                    return (
+                      <Badge key={cat.id} variant="outline" className="text-xs">
+                        {catName}
+                      </Badge>
+                    );
+                  })}
+                </div>
               )}
             </CardContent>
           </Card>
@@ -86,38 +132,86 @@ export function ScanResultScreen() {
                   <span className="text-sm text-muted-foreground">{t('products.sku')}:</span>
                   <span className="text-sm font-medium">{product.sku}</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">{t('products.barcode')}:</span>
-                  <span className="text-sm font-medium">{product.barcode}</span>
-                </div>
-                {product.pricing?.priceEur && (
+                {product.barcode && (
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">{t('products.price')}:</span>
-                    <span className="text-sm font-medium">€{product.pricing.priceEur.toFixed(2)}</span>
+                    <span className="text-sm text-muted-foreground">{t('products.barcode')}:</span>
+                    <span className="text-sm font-medium">{product.barcode}</span>
                   </div>
                 )}
+                
+                {/* Pricing */}
+                {product.pricing && (
+                  <>
+                    {product.pricing.price && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">{t('products.price')}:</span>
+                        <span className="text-sm font-medium">
+                          {typeof product.pricing.price === 'object' && product.pricing.price.formatted
+                            ? product.pricing.price.formatted
+                            : typeof product.pricing.price === 'object' && product.pricing.price.amount !== undefined
+                            ? `${product.pricing.price.currencySymbol || ''}${product.pricing.price.amount}`
+                            : product.pricing.price}
+                        </span>
+                      </div>
+                    )}
+                    {product.pricing.priceEur && 
+                     product.pricing.price && 
+                     typeof product.pricing.price === 'object' && 
+                     product.pricing.price.currency !== 'EUR' && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">{t('products.priceEur')}:</span>
+                        <span className="text-sm font-medium">
+                          {typeof product.pricing.priceEur === 'object' && product.pricing.priceEur.formatted
+                            ? product.pricing.priceEur.formatted
+                            : typeof product.pricing.priceEur === 'object' && product.pricing.priceEur.amount !== undefined
+                            ? `€${product.pricing.priceEur.amount.toFixed(2)}`
+                            : `€${typeof product.pricing.priceEur === 'number' ? product.pricing.priceEur.toFixed(2) : product.pricing.priceEur}`}
+                        </span>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Stock Information */}
+          <Card className="border border-border bg-white shadow-none">
+            <CardContent className="px-3 py-3">
+              <h3 className="text-sm font-semibold mb-3">{t('products.stockStatus')}</h3>
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">{t('products.stock')}:</span>
                   <span className="text-sm font-medium">
                     {product.stockQuantity} {t('operations.units')}
                   </span>
                 </div>
+                {product.lowQuantity !== undefined && product.lowQuantity !== null && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">{t('products.lowQty')}:</span>
+                    <span className="text-sm font-medium">{product.lowQuantity}</span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">{t('operations.status')}:</span>
                   <span
                     className={`text-sm font-medium ${
-                      product.stockStatus === 'in_stock'
+                      stockStatus === 'in_stock'
                         ? 'text-emerald-600'
-                        : product.stockStatus === 'low_stock'
+                        : stockStatus === 'low_stock'
                         ? 'text-yellow-600'
-                        : 'text-red-600'
+                        : stockStatus === 'out_of_stock'
+                        ? 'text-red-600'
+                        : 'text-gray-600'
                     }`}
                   >
-                    {product.stockStatus === 'in_stock'
+                    {stockStatus === 'in_stock'
                       ? t('products.inStock')
-                      : product.stockStatus === 'low_stock'
+                      : stockStatus === 'low_stock'
                       ? t('products.lowStockStatus')
-                      : t('products.outOfStock')}
+                      : stockStatus === 'out_of_stock'
+                      ? t('products.outOfStock')
+                      : t('products.notTracked')}
                   </span>
                 </div>
               </div>
