@@ -175,7 +175,9 @@ export function ScanResultScreen() {
         <Card className="border border-border bg-white shadow-none">
           <CardContent className="px-3 py-3">
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">{t('scan.scannedBarcode')}:</p>
+              <p className="text-sm text-muted-foreground">
+                {source === 'sku_search' ? t('scan.searchedSku') : t('scan.scannedBarcode')}:
+              </p>
               <p className="text-lg font-semibold text-foreground">{barcode}</p>
             </div>
           </CardContent>
@@ -184,36 +186,70 @@ export function ScanResultScreen() {
         <Card className="border border-border bg-white shadow-none">
           <CardContent className="px-3 py-3">
             <p className="text-sm text-muted-foreground text-center">
-              {t('scan.barcodeNotInSystem')}
+              {source === 'sku_search' 
+                ? t('scan.skuNotInSystem') 
+                : t('scan.barcodeNotInSystem')}
             </p>
           </CardContent>
         </Card>
 
-        <Button
-          className="w-full border-none bg-[#164945] text-white hover:bg-[#123b37]"
-          onClick={() => navigate('/scan/search', { state: { barcode } })}
-        >
-          <Search className="mr-2 h-4 w-4" />
-          {t('scan.searchAndLink')}
-        </Button>
+        {source === 'sku_search' ? (
+          <>
+            <Button
+              className="w-full border-none bg-[#164945] text-white hover:bg-[#123b37]"
+              onClick={() => navigate('/products')}
+            >
+              <Search className="mr-2 h-4 w-4" />
+              {t('scan.searchProducts')}
+            </Button>
 
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={() => navigate('/scan/create-product', { state: { barcode } })}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          {t('scan.createNewProduct')}
-        </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate('/scan/create-product', { state: { sku: barcode } })}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              {t('scan.createNewProduct')}
+            </Button>
 
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={() => navigate('/scan')}
-        >
-          <Scan className="mr-2 h-4 w-4" />
-          {t('scan.scanAgain')}
-        </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate('/scan')}
+            >
+              <Search className="mr-2 h-4 w-4" />
+              {t('scan.searchAgain')}
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button
+              className="w-full border-none bg-[#164945] text-white hover:bg-[#123b37]"
+              onClick={() => navigate('/scan/search', { state: { barcode } })}
+            >
+              <Search className="mr-2 h-4 w-4" />
+              {t('scan.searchAndLink')}
+            </Button>
+
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate('/scan/create-product', { state: { barcode } })}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              {t('scan.createNewProduct')}
+            </Button>
+
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate('/scan')}
+            >
+              <Scan className="mr-2 h-4 w-4" />
+              {t('scan.scanAgain')}
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );
