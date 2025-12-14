@@ -58,8 +58,8 @@ export function ProductsScreen() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [warehouseFilter, setWarehouseFilter] = useState<string>('all');
   const [barcodeStatusFilter, setBarcodeStatusFilter] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<string>('title');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [sortBy, setSortBy] = useState<string>('createdAt');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
   // Get categories and warehouses for filters
