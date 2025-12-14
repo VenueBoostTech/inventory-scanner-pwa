@@ -22,7 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCreateProduct } from '@/hooks/api/useCreateProduct';
 import { useCategories } from '@/hooks/api/useProductMeta';
 import { useWarehouses } from '@/hooks/api/useWarehouses';
-import { Loader2, Upload, X, Package } from 'lucide-react';
+import { Loader2, Upload, X } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface CreateProductModalProps {

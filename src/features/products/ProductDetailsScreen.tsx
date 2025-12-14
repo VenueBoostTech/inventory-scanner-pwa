@@ -242,7 +242,7 @@ export function ProductDetailsScreen() {
             {product.categories && product.categories.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 mt-2">
                 <span className="text-sm font-medium text-muted-foreground">{t('products.categories')}:</span>
-                {product.categories.map((cat, index) => {
+                {product.categories.map((cat) => {
                   const catName = language === 'sq' && cat.nameAl ? cat.nameAl : cat.name;
                   return (
                     <Badge key={cat.id} variant="outline" className="text-xs">

@@ -17,6 +17,12 @@ export interface Product {
     name: string;
     nameAl?: string | null;
   } | null;
+  categories?: Array<{
+    id: string;
+    name: string;
+    nameAl?: string | null;
+    categoryUrl?: string;
+  }>;
   brand: {
     id: string;
     name: string;
