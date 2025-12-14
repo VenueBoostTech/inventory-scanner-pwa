@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,6 +32,7 @@ interface CreateProductModalProps {
 
 export function CreateProductModal({ open, onOpenChange }: CreateProductModalProps) {
   const { t, language } = useI18n();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { mutateAsync: createProduct, isPending } = useCreateProduct();
   
@@ -240,6 +242,11 @@ export function CreateProductModal({ open, onOpenChange }: CreateProductModalPro
       });
 
       handleClose();
+      
+      // Navigate to the newly created product
+      if (result?.product?.id) {
+        navigate(`/products/${result.product.id}`);
+      }
     } catch (error: any) {
       const errorMessage = error?.response?.data?.message || error?.message || t('products.createError');
       toast({

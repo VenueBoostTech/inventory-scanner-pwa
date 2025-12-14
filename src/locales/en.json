@@ -300,6 +300,7 @@
     "lowStockStatus": "Low Stock",
     "outOfStock": "Out of Stock",
     "category": "Category",
+    "categories": "Categories",
     "selectCategory": "Select category...",
     "allCategories": "All Categories",
     "barcodeStatus": "Barcode Status",

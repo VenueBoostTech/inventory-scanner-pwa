@@ -300,6 +300,7 @@
     "lowStockStatus": "Stok i Ulët",
     "outOfStock": "Pa Stok",
     "allCategories": "Të gjitha Kategoritë",
+    "categories": "Kategoritë",
     "barcodeStatus": "Statusi i Kodit",
 
     "missingBarcode": "Kod i Munguar",
